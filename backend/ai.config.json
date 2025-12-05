@@ -1,0 +1,10 @@
+{
+  "severityWeight": 3,
+  "deadlineWeight": 2,
+  "transitionWeight": 4,
+  "ageWeight": 1,
+  "manualWeight": 5,
+  "mode": "rulebased",
+  "localLlmPath": "/path/to/llama.cpp/main",
+  "modelPath": "/path/to/model.gguf"
+}
