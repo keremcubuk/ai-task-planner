@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { fetchTasks, prioritizeTasks, exportXlsx, reorderTasks, resetDb } from '../lib/api';
 import { TasksTable } from '../components/TasksTable';
 import Link from 'next/link';
-import { RefreshCw, Download, Upload, Trash2, Search } from 'lucide-react';
+import { RefreshCw, Download, Upload, Trash2, Search, Info } from 'lucide-react';
 import { Modal } from '../components/Modal';
 import { TaskForm } from '../components/TaskForm';
 import { TaskDetail } from '../components/TaskDetail';
@@ -12,6 +12,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
   const [selectedTaskId, setSelectedTaskId] = useState<number | null>(null);
 
   const loadTasks = async () => {
@@ -116,9 +117,14 @@ export default function Dashboard() {
                   <Download size={18} /> Stats
                </button>
              </div>
-             <button onClick={handlePrioritize} className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700">
-                <RefreshCw size={18} /> AI Prioritize
-             </button>
+             <div className="flex gap-2">
+                <button onClick={handlePrioritize} className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700">
+                    <RefreshCw size={18} /> AI Prioritize
+                </button>
+                <button onClick={() => setIsInfoModalOpen(true)} className="flex items-center justify-center w-10 h-10 bg-gray-200 text-gray-600 rounded-full hover:bg-gray-300" title="How it works?">
+                    <Info size={20} />
+                </button>
+             </div>
           </div>
       </div>
 
@@ -165,6 +171,41 @@ export default function Dashboard() {
             }} 
           />
         )}
+      </Modal>
+
+      <Modal isOpen={isInfoModalOpen} onClose={() => setIsInfoModalOpen(false)} title="How AI Prioritization Works">
+        <div className="space-y-4 text-gray-700">
+            <p>The AI Priority score is calculated based on three main factors:</p>
+            
+            <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
+                <h4 className="font-bold text-blue-900 mb-2">1. Severity (Technical Impact)</h4>
+                <p className="text-sm">Based on the 'Severity' field. Critical issues get the highest base points.</p>
+                <ul className="list-disc list-inside mt-2 text-sm text-blue-800">
+                    <li>Critical: High Impact</li>
+                    <li>Major: Medium Impact</li>
+                    <li>Minor: Low Impact</li>
+                </ul>
+            </div>
+
+            <div className="bg-green-50 p-4 rounded-lg border border-green-100">
+                <h4 className="font-bold text-green-900 mb-2">2. Urgency (Due Date)</h4>
+                <p className="text-sm">Tasks closer to their due date receive a higher score multiplier. Overdue tasks are prioritized highest.</p>
+            </div>
+
+            <div className="bg-purple-50 p-4 rounded-lg border border-purple-100">
+                <h4 className="font-bold text-purple-900 mb-2">3. Manual Override (Manager/Business Factor)</h4>
+                <p className="text-sm">The <strong>'Manual Priority (0-5)'</strong> field acts as a multiplier for business urgency or VIP requests.</p>
+                <ul className="list-disc list-inside mt-2 text-sm text-purple-800">
+                    <li>0: Standard Priority</li>
+                    <li>3: High Importance (Manager Request)</li>
+                    <li>5: Emergency / "Fire" Mode</li>
+                </ul>
+            </div>
+
+            <p className="text-sm italic text-gray-500 mt-4">
+                Total Score = (Severity Base) + (Time Urgency) + (Manual Priority × Weight)
+            </p>
+        </div>
       </Modal>
     </>
   );
