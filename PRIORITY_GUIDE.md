@@ -4,31 +4,46 @@ Bu belge, **AI Task Planner** uygulamasının görevleri nasıl puanladığını
 
 ## 🎯 Önceliklendirme Felsefesi
 
-Uygulamamız, görevlerin önem sırasını belirlemek için **Hibrit Puanlama Sistemi** kullanır. Bu sistem, hem teknik gereklilikleri (mühendislik bakış açısı) hem de iş dünyasının gerçeklerini (yönetici/müşteri baskısı) dengelemeyi amaçlar.
+Uygulamamız, görevlerin önem sırasını belirlemek için **Ağırlıklı Puanlama Sistemi** kullanır. Bu sistem, birden fazla faktörü ağırlıklandırılmış olarak değerlendirir ve her bir faktörün toplam puana etkisi önceden belirlenmiş ağırlıklarla çarpılarak hesaplanır.
 
 Formülün temel mantığı şöyledir:
-> **Toplam Skor** = (Teknik Şiddet) + (Zaman Aciliyeti) + (İş Faktörü / Manuel Müdahale)
+> **Toplam Skor** = 
+> (Acil Faktörü × 3) + 
+> (Bitiş Tarihi Faktörü × 2) + 
+> (Geçiş Tarihi Faktörü × 4) + 
+> (Görev Yaşı Faktörü × 1) + 
+> (Manuel Öncelik × 5)
 
 ---
 
 ## 📊 Puanlama Faktörleri
 
-### 1. Teknik Şiddet (Severity)
-Görevin sisteme olan teknik etkisini belirtir. Genellikle yazılımcı veya teknik lider tarafından belirlenir.
+### 1. Acil Faktörü (Severity) - Ağırlık: 3x
+Görevin teknik önemini belirtir. Daha yüksek şiddet değerleri daha yüksek puan getirir.
 
-*   **Critical (Kritik)**: Sistem çalışmıyor, veri kaybı var, güvenlik açığı. (Yüksek Puan)
-*   **Major (Önemli)**: Ana fonksiyonlardan biri çalışmıyor ama workaround var. (Orta Puan)
-*   **Minor (Düşük)**: Kozmetik hatalar, küçük iyileştirmeler. (Düşük Puan)
+*   **Critical (5)**: Sistem çalışmıyor, veri kaybı var, güvenlik açığı.
+*   **Major (3)**: Ana fonksiyonlardan biri çalışmıyor ama workaround var.
+*   **Minor (1)**: Kozmetik hatalar, küçük iyileştirmeler.
 
-### 2. Zaman Aciliyeti (Urgency)
-Bitiş tarihine (Due Date) ne kadar kaldığına göre dinamik olarak hesaplanır.
+### 2. Bitiş Tarihi Faktörü (Due Date) - Ağırlık: 2x
+Görevin bitiş tarihine göre hesaplanır. Yaklaşan veya geçmiş tarihler daha yüksek puan getirir.
 
-*   **Gecikmiş (Overdue)**: Tarihi geçmiş işler en yüksek çarpanı alır.
-*   **Bugün/Yarın**: Yüksek çarpan alır.
-*   **İleri Tarihli**: Düşük veya nötr etki eder.
+*   **Geçmişte (1.0)**: Tarihi geçmiş görevler en yüksek puanı alır.
+*   **Bugün (0.8)**: Bitiş tarihi bugün olan görevler.
+*   **Yakın (0.6-0.2)**: Yaklaşan tarihler kademeli olarak azalan puan alır.
+*   **Uzak (0.1)**: İleri tarihli görevler en düşük puanı alır.
 
-### 3. İş Faktörü / Manuel Müdahale (Manual Priority)
-Burası "insan faktörünün" devreye girdiği yerdir. Yöneticilerin, müşterilerin veya piyasa koşullarının dayattığı aciliyeti temsil eder. `0-5` arasında bir değer alır ve skoru **agresif bir şekilde** etkiler.
+### 3. Geçiş Tarihi Faktörü (Transition Date) - Ağırlık: 4x
+Görevin son durum değişikliğinden bu yana geçen süreye göre hesaplanır. Uzun süredir bekleyen görevlere öncelik verir.
+
+### 4. Görev Yaşı Faktörü (Task Age) - Ağırlık: 1x
+Görevin oluşturulma tarihinden itibaren geçen süreyi ifade eder. 30 günü aşan görevler maksimum puanı alır.
+
+*   **0-30 gün**: Normalize edilmiş değer (gün sayısı/30)
+*   **30+ gün**: 1.0 (maksimum değer)
+
+### 5. Manuel Öncelik (Manual Priority) - Ağırlık: 5x
+Kullanıcı tarafından atanan öncelik değeri (0-5 arası). En güçlü etkiye sahip faktördür.
 
 ---
 

@@ -131,14 +131,15 @@ export const TaskDetail: React.FC<TaskDetailProps> = ({ taskId, onClose, onUpdat
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Manual Priority (0-5)</label>
-          <input 
-            type="number" 
-            min="0" 
-            max="5" 
+          <select 
             value={manualPriority}
             onChange={(e) => setManualPriority(Number(e.target.value))}
             className="w-full border-gray-300 rounded-md shadow-sm p-2 border text-gray-900"
-          />
+          >
+            {[0, 1, 2, 3, 4, 5].map(p => (
+              <option key={p} value={p}>{p} {p === 0 ? '(None)' : p === 5 ? '(Highest)' : ''}</option>
+            ))}
+          </select>
           <p className="text-xs text-gray-500 mt-1">Higher value increases AI score.</p>
         </div>
       </div>

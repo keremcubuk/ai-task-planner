@@ -133,7 +133,9 @@ export class AiService implements OnModuleInit {
   private getTaskAgeDays(createdAt: Date, now: Date): number {
     const diffTime = now.getTime() - createdAt.getTime();
     const days = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-    return days;
+    // Normalize age score: cap at 30 days to return 0-1 range
+    // Old implementation was returning raw days (e.g. 100) which dominated the score
+    return Math.min(days, 30) / 30;
   }
 
   private getManualPriorityNormalised(manualPriority: number | null): number {

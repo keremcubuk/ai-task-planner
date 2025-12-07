@@ -1,7 +1,18 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UnauthorizedException } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  Query,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { TasksService } from './tasks.service';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
+import { Prisma } from '@prisma/client';
 
 @Controller('tasks')
 export class TasksController {
@@ -38,21 +49,62 @@ export class TasksController {
 
   @Get()
   findAll(
-    @Query('sort') sort?: string, 
+    @Query('sort') sort?: string,
     @Query('order') order?: 'asc' | 'desc',
     @Query('project') project?: string,
-    @Query('search') search?: string
+    @Query('search') search?: string,
+    @Query('status') status?: string,
+    @Query('assignedTo') assignedTo?: string,
+    @Query('severity') severity?: string,
+    @Query('minAiScore') minAiScore?: string,
+    @Query('maxAiScore') maxAiScore?: string,
+    @Query('aiScores') aiScores?: string,
+    @Query('dueStartDate') dueStartDate?: string,
+    @Query('dueEndDate') dueEndDate?: string,
   ) {
-    const where: any = {};
+    const where: Prisma.TaskWhereInput = {};
     if (project) {
-      where.project = project;
+      const projects = project.split(',').map((p) => p.trim());
+      where.project = { in: projects };
     }
     if (search) {
       where.OR = [
         { title: { contains: search } },
-        { description: { contains: search } }
+        { description: { contains: search } },
       ];
     }
+
+    if (status) {
+      const statuses = status.split(',').map((s) => s.trim());
+      where.status = { in: statuses };
+    }
+
+    if (assignedTo) {
+      where.assignedTo = { contains: assignedTo };
+    }
+
+    if (severity) {
+      where.severity = severity;
+    }
+
+    if (minAiScore || maxAiScore || aiScores) {
+      const aiScoreFilter: { gte?: number; lte?: number; in?: number[] } = {};
+      if (minAiScore) aiScoreFilter.gte = parseFloat(minAiScore);
+      if (maxAiScore) aiScoreFilter.lte = parseFloat(maxAiScore);
+      if (aiScores) {
+        const scores = aiScores.split(',').map((s) => parseFloat(s.trim()));
+        aiScoreFilter.in = scores;
+      }
+      where.aiScore = aiScoreFilter;
+    }
+
+    if (dueStartDate || dueEndDate) {
+      const dateFilter: { gte?: Date; lte?: Date } = {};
+      if (dueStartDate) dateFilter.gte = new Date(dueStartDate);
+      if (dueEndDate) dateFilter.lte = new Date(dueEndDate);
+      where.dueDate = dateFilter;
+    }
+
     const orderBy = sort ? { [sort]: order || 'asc' } : undefined;
     return this.tasksService.findAll({ where, orderBy });
   }

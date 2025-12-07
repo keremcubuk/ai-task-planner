@@ -1,5 +1,25 @@
 import axios from 'axios';
 
+export interface Task {
+  id: number;
+  externalId?: string;
+  title: string;
+  description?: string;
+  source?: string;
+  project?: string;
+  severity?: string;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+  transitionDate?: string;
+  dueDate?: string;
+  assignedTo?: string;
+  manualPriority?: number;
+  aiPriority: number;
+  aiScore: number;
+  position: number;
+}
+
 const api = axios.create({
   baseURL: 'http://localhost:3000',
 });
@@ -14,22 +34,35 @@ export const getProjectsStats = async () => {
   return response.data;
 };
 
-export const fetchTasks = async (params: { sort?: string; order?: 'asc' | 'desc'; project?: string; search?: string } = {}) => {
+export const fetchTasks = async (params: { 
+  sort?: string; 
+  order?: 'asc' | 'desc'; 
+  project?: string; 
+  search?: string;
+  status?: string;
+  assignedTo?: string;
+  severity?: string;
+  minAiScore?: number;
+  maxAiScore?: number;
+  aiScores?: string;
+  dueStartDate?: string;
+  dueEndDate?: string;
+} = {}): Promise<Task[]> => {
   const response = await api.get('/tasks', { params });
   return response.data;
 };
 
-export const fetchTask = async (id: number) => {
+export const fetchTask = async (id: number): Promise<Task> => {
   const response = await api.get(`/tasks/${id}`);
   return response.data;
 };
 
-export const createTask = async (data: any) => {
+export const createTask = async (data: Partial<Omit<Task, 'id' | 'createdAt' | 'updatedAt'>>) => {
   const response = await api.post('/tasks', data);
   return response.data;
 };
 
-export const updateTask = async (id: number, data: any) => {
+export const updateTask = async (id: number, data: Partial<Omit<Task, 'id' | 'createdAt' | 'updatedAt'>>) => {
   const response = await api.patch(`/tasks/${id}`, data);
   return response.data;
 };

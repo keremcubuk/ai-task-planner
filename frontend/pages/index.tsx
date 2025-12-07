@@ -1,38 +1,111 @@
-import React, { useEffect, useState } from 'react';
-import { fetchTasks, prioritizeTasks, exportXlsx, reorderTasks, resetDb } from '../lib/api';
+import React, { useEffect, useState, useCallback } from 'react';
+import { fetchTasks, prioritizeTasks, exportXlsx, reorderTasks, resetDb, getProjectsStats, Task } from '../lib/api';
 import { TasksTable } from '../components/TasksTable';
+import { TaskFilters } from '../components/TaskFilters';
+import { AiPriorityInfo } from '../components/AiPriorityInfo';
 import Link from 'next/link';
-import { RefreshCw, Download, Upload, Trash2, Search, Info } from 'lucide-react';
+import { RefreshCw, Download, Upload, Trash2, Info } from 'lucide-react';
 import { Modal } from '../components/Modal';
 import { TaskForm } from '../components/TaskForm';
 import { TaskDetail } from '../components/TaskDetail';
 
 export default function Dashboard() {
-  const [tasks, setTasks] = useState<any[]>([]);
+  const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
   const [selectedTaskId, setSelectedTaskId] = useState<number | null>(null);
+  const [isExportOpen, setIsExportOpen] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
+  const [availableProjects, setAvailableProjects] = useState<string[]>([]);
 
-  const loadTasks = async () => {
+  useEffect(() => {
+    getProjectsStats().then((stats: { name: string }[]) => {
+      setAvailableProjects(stats.map(s => s.name).filter(n => n !== 'No Project'));
+    });
+  }, []);
+
+  const [filters, setFilters] = useState({
+    status: [] as string[],
+    assignedTo: '',
+    severity: '',
+    minAiScore: '',
+    maxAiScore: '',
+    aiScores: '',
+    dueStartDate: '',
+    dueEndDate: '',
+    project: [] as string[]
+  });
+
+  const loadTasks = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await fetchTasks({ search });
+      const data = await fetchTasks({ 
+        search,
+        status: filters.status.length > 0 ? filters.status.join(',') : undefined,
+        assignedTo: filters.assignedTo || undefined,
+        severity: filters.severity || undefined,
+        minAiScore: filters.minAiScore ? Number(filters.minAiScore) : undefined,
+        maxAiScore: filters.maxAiScore ? Number(filters.maxAiScore) : undefined,
+        aiScores: filters.aiScores || undefined,
+        dueStartDate: filters.dueStartDate || undefined,
+        dueEndDate: filters.dueEndDate || undefined,
+        project: filters.project.length > 0 ? filters.project.join(',') : undefined
+      });
       setTasks(data);
     } catch (error) {
       console.error('Failed to load tasks', error);
     } finally {
       setLoading(false);
     }
-  };
+  }, [search, filters]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
       loadTasks();
     }, 500);
     return () => clearTimeout(timer);
-  }, [search]);
+  }, [loadTasks]); // Reload when loadTasks changes (which depends on search/filters)
+
+  const handleFilterChange = (key: string, value: string | string[]) => {
+     setFilters(prev => ({ ...prev, [key]: value }));
+  };
+
+  const toggleStatusFilter = (status: string) => {
+    setFilters(prev => {
+        const current = prev.status;
+        const updated = current.includes(status) 
+            ? current.filter(s => s !== status)
+            : [...current, status];
+        return { ...prev, status: updated };
+    });
+  };
+
+  const toggleProjectFilter = (project: string) => {
+    setFilters(prev => {
+        const current = prev.project;
+        const updated = current.includes(project) 
+            ? current.filter(p => p !== project)
+            : [...current, project];
+        return { ...prev, project: updated };
+    });
+  };
+
+  const clearFilters = () => {
+    setFilters({
+        status: [],
+        assignedTo: '',
+        severity: '',
+        minAiScore: '',
+        maxAiScore: '',
+        aiScores: '',
+        dueStartDate: '',
+        dueEndDate: '',
+        project: []
+    });
+    setSearch('');
+  };
 
   const handlePrioritize = async () => {
     setLoading(true);
@@ -60,18 +133,22 @@ export default function Dashboard() {
     }
   };
 
-  const handleSort = (field: string) => {
+  const handleSort = (field: keyof Task) => {
     // Client-side sort for demo
-    // Toggle direction if same field? Simplified for now
-    const sorted = [...tasks].sort((a: any, b: any) => {
-       if (a[field] < b[field]) return -1;
-       if (a[field] > b[field]) return 1;
+    const sorted = [...tasks].sort((a: Task, b: Task) => {
+       const valA = a[field];
+       const valB = b[field];
+       
+       if (valA === undefined || valB === undefined) return 0;
+       
+       if (valA < valB) return -1;
+       if (valA > valB) return 1;
        return 0;
     });
     setTasks(sorted);
   };
 
-  const handleReorder = async (newTasks: any[]) => {
+  const handleReorder = async (newTasks: Task[]) => {
     setTasks(newTasks);
     try {
       await reorderTasks(newTasks.map(t => t.id));
@@ -109,13 +186,38 @@ export default function Dashboard() {
              <button onClick={() => setIsCreateModalOpen(true)} className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700">
                 <Upload size={18} className="rotate-90" /> New Task
              </button>
-             <div className="flex gap-2">
-               <button onClick={() => handleExport('raw')} className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700" title="Export Raw Data">
-                  <Download size={18} /> Raw
+             <div className="relative">
+               <button 
+                 onClick={() => setIsExportOpen(!isExportOpen)} 
+                 className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+               >
+                  <Download size={18} /> Export
                </button>
-               <button onClick={() => handleExport('stats')} className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded hover:bg-emerald-700" title="Export Statistics">
-                  <Download size={18} /> Stats
-               </button>
+               
+               {isExportOpen && (
+                 <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-50 border border-gray-100">
+                   <div className="py-1">
+                     <button
+                       onClick={() => {
+                         handleExport('raw');
+                         setIsExportOpen(false);
+                       }}
+                       className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                     >
+                       Raw Data
+                     </button>
+                     <button
+                       onClick={() => {
+                         handleExport('stats');
+                         setIsExportOpen(false);
+                       }}
+                       className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                     >
+                       Statistics
+                     </button>
+                   </div>
+                 </div>
+               )}
              </div>
              <div className="flex gap-2">
                 <button onClick={handlePrioritize} className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700">
@@ -128,16 +230,18 @@ export default function Dashboard() {
           </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow p-4 mb-6 flex items-center gap-4 border border-gray-200">
-        <Search className="text-gray-400" size={20} />
-        <input 
-          type="text" 
-          placeholder="Search tasks..." 
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="flex-1 border-none focus:ring-0 text-gray-700 outline-none"
-        />
-      </div>
+      <TaskFilters 
+        filters={filters}
+        search={search}
+        setSearch={setSearch}
+        showFilters={showFilters}
+        setShowFilters={setShowFilters}
+        availableProjects={availableProjects}
+        onFilterChange={handleFilterChange}
+        onToggleStatus={toggleStatusFilter}
+        onToggleProject={toggleProjectFilter}
+        onClearFilters={clearFilters}
+      />
 
       <div className="bg-white rounded-lg shadow p-6">
         {loading ? (
@@ -174,38 +278,7 @@ export default function Dashboard() {
       </Modal>
 
       <Modal isOpen={isInfoModalOpen} onClose={() => setIsInfoModalOpen(false)} title="How AI Prioritization Works">
-        <div className="space-y-4 text-gray-700">
-            <p>The AI Priority score is calculated based on three main factors:</p>
-            
-            <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
-                <h4 className="font-bold text-blue-900 mb-2">1. Severity (Technical Impact)</h4>
-                <p className="text-sm">Based on the 'Severity' field. Critical issues get the highest base points.</p>
-                <ul className="list-disc list-inside mt-2 text-sm text-blue-800">
-                    <li>Critical: High Impact</li>
-                    <li>Major: Medium Impact</li>
-                    <li>Minor: Low Impact</li>
-                </ul>
-            </div>
-
-            <div className="bg-green-50 p-4 rounded-lg border border-green-100">
-                <h4 className="font-bold text-green-900 mb-2">2. Urgency (Due Date)</h4>
-                <p className="text-sm">Tasks closer to their due date receive a higher score multiplier. Overdue tasks are prioritized highest.</p>
-            </div>
-
-            <div className="bg-purple-50 p-4 rounded-lg border border-purple-100">
-                <h4 className="font-bold text-purple-900 mb-2">3. Manual Override (Manager/Business Factor)</h4>
-                <p className="text-sm">The <strong>'Manual Priority (0-5)'</strong> field acts as a multiplier for business urgency or VIP requests.</p>
-                <ul className="list-disc list-inside mt-2 text-sm text-purple-800">
-                    <li>0: Standard Priority</li>
-                    <li>3: High Importance (Manager Request)</li>
-                    <li>5: Emergency / "Fire" Mode</li>
-                </ul>
-            </div>
-
-            <p className="text-sm italic text-gray-500 mt-4">
-                Total Score = (Severity Base) + (Time Urgency) + (Manual Priority × Weight)
-            </p>
-        </div>
+        <AiPriorityInfo />
       </Modal>
     </>
   );

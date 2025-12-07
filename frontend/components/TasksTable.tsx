@@ -2,7 +2,6 @@ import React from 'react';
 import { PriorityBadge } from './PriorityBadge';
 import { SeverityBadge } from './SeverityBadge';
 import { ArrowUpDown, GripVertical } from 'lucide-react';
-import Link from 'next/link';
 import {
   DndContext, 
   closestCenter,
@@ -20,6 +19,7 @@ import {
   useSortable
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { Task } from '../lib/api';
 
 const formatDate = (dateString: string) => {
   if (!dateString) return '-';
@@ -31,20 +31,10 @@ const formatDate = (dateString: string) => {
   return `${day}-${month}-${year}`;
 };
 
-interface Task {
-  id: number;
-  externalId?: string;
-  title: string;
-  status: string;
-  severity: string;
-  dueDate: string;
-  aiPriority: number;
-  aiScore: number;
-}
 
 interface TasksTableProps {
   tasks: Task[];
-  onSort: (field: string) => void;
+  onSort: (field: keyof Task) => void;
   onReorder: (newTasks: Task[]) => void;
   onTaskClick?: (taskId: number) => void;
 }
@@ -85,12 +75,12 @@ function SortableRow({ task, index, onTaskClick }: { task: Task; index: number; 
       </td>
       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 border-b border-gray-200">{task.status}</td>
       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 border-b border-gray-200">
-        <SeverityBadge severity={task.severity} />
+        <SeverityBadge severity={task.severity || 'unknown'} />
       </td>
       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 border-b border-gray-200">
         <PriorityBadge score={task.aiScore} priority={task.aiPriority} />
       </td>
-      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 border-b border-gray-200">{formatDate(task.dueDate)}</td>
+      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 border-b border-gray-200">{formatDate(task.dueDate || '')}</td>
     </tr>
   );
 }
