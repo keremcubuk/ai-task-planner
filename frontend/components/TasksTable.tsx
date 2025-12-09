@@ -61,14 +61,15 @@ function SortableRow({ task, index, onTaskClick }: { task: Task; index: number; 
         </div>
       </td>
       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 border-b border-gray-200">{index}</td>
-      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 border-b border-gray-200">
+      <td className="px-6 py-4 text-sm font-medium text-gray-900 border-b border-gray-200 max-w-xs">
         <a 
           href={`/tasks/${task.id}`} 
           onClick={(e) => { 
             e.preventDefault(); 
             onTaskClick?.(task.id); 
           }} 
-          className="text-blue-600 hover:underline cursor-pointer"
+          className="text-blue-600 hover:underline cursor-pointer block truncate"
+          title={task.title}
         >
           {task.title}
         </a>
@@ -116,12 +117,39 @@ export const TasksTable: React.FC<TasksTableProps> = ({ tasks, onSort, onReorder
           <thead className="bg-gray-50 sticky top-0 z-10 shadow-sm">
             <tr>
               <th className="w-10 px-2 border-b border-gray-200 bg-gray-50"></th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200 bg-gray-50">#</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer border-b border-gray-200 bg-gray-50" onClick={() => onSort('title')}>Title <ArrowUpDown size={14} className="inline"/></th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer border-b border-gray-200 bg-gray-50" onClick={() => onSort('status')}>Status <ArrowUpDown size={14} className="inline"/></th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer border-b border-gray-200 bg-gray-50" onClick={() => onSort('severity')}>Severity <ArrowUpDown size={14} className="inline"/></th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer border-b border-gray-200 bg-gray-50" onClick={() => onSort('aiPriority')}>AI Priority <ArrowUpDown size={14} className="inline"/></th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer border-b border-gray-200 bg-gray-50" onClick={() => onSort('dueDate')}>Due Date <ArrowUpDown size={14} className="inline"/></th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200 bg-gray-50">
+                #
+              </th>
+              <th
+                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer border-b border-gray-200 bg-gray-50"
+                onClick={() => onSort("title")}
+              >
+                Title <ArrowUpDown size={14} className="inline" />
+              </th>
+              <th
+                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer border-b border-gray-200 bg-gray-50"
+                onClick={() => onSort("status")}
+              >
+                Status <ArrowUpDown size={14} className="inline" />
+              </th>
+              <th
+                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer border-b border-gray-200 bg-gray-50"
+                onClick={() => onSort("severity")}
+              >
+                Severity <ArrowUpDown size={14} className="inline" />
+              </th>
+              <th
+                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer border-b border-gray-200 bg-gray-50"
+                onClick={() => onSort("aiPriority")}
+              >
+                AI Priority <ArrowUpDown size={14} className="inline" />
+              </th>
+              <th
+                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer border-b border-gray-200 bg-gray-50"
+                onClick={() => onSort("dueDate")}
+              >
+                Due Date <ArrowUpDown size={14} className="inline" />
+              </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">

@@ -21,18 +21,21 @@ export class ExportService {
     const workbook = XLSX.utils.book_new();
 
     if (type === 'raw') {
-      const rawData = tasks.map(t => ({
-        'ID': t.externalId || t.id,
+      // Import servisi ile tam uyumlu sütun isimleri
+      const rawData = tasks.map((t) => ({
+        'Task ID': t.externalId || String(t.id),
         'Title': t.title,
-        'Description': t.description,
+        'Description': t.description || '',
         'Status': this.formatStatus(t.status),
         'Severity': this.formatSeverity(t.severity),
-        'Due Date': t.dueDate,
-        'Created Date': t.createdAt,
-        'Assigned To': t.assignedTo,
-        'Project': t.project,
-        'Manual Priority': t.manualPriority,
-        'Source': t.source
+        'Due Date': t.dueDate ? this.formatDateForExcel(t.dueDate) : '',
+        'Created Date': t.createdAt ? this.formatDateForExcel(t.createdAt) : '',
+        'Assigned To': t.assignedTo || '',
+        'Project Name': t.project || '',
+        'Manual Priority': t.manualPriority ?? '',
+        'Source': t.source || '',
+        'AI Score': t.aiScore ?? '',
+        'AI Priority': t.aiPriority ?? '',
       }));
       const worksheet = XLSX.utils.json_to_sheet(rawData);
       XLSX.utils.book_append_sheet(workbook, worksheet, 'Tasks');
@@ -92,6 +95,13 @@ export class ExportService {
 
   private formatSeverity(severity: string | null) {
     return severity ? severity.charAt(0).toUpperCase() + severity.slice(1) : '';
+  }
+
+  private formatDateForExcel(date: Date | null): string {
+    if (!date) return '';
+    const d = new Date(date);
+    if (isNaN(d.getTime())) return '';
+    return d.toISOString().split('T')[0]; // YYYY-MM-DD format
   }
 
   private groupBy(array: any[], key: string): Record<string, number> {

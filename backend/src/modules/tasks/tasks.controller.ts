@@ -63,15 +63,43 @@ export class TasksController {
     @Query('dueEndDate') dueEndDate?: string,
   ) {
     const where: Prisma.TaskWhereInput = {};
+
+    // Project filter - "No Project" için null değerli taskları da dahil et
+    let projectFilter: Prisma.TaskWhereInput | undefined;
     if (project) {
       const projects = project.split(',').map((p) => p.trim());
-      where.project = { in: projects };
+      const hasNoProject = projects.includes('No Project');
+      const otherProjects = projects.filter((p) => p !== 'No Project');
+
+      if (hasNoProject && otherProjects.length > 0) {
+        projectFilter = {
+          OR: [{ project: null }, { project: { in: otherProjects } }],
+        };
+      } else if (hasNoProject) {
+        projectFilter = { project: null };
+      } else {
+        projectFilter = { project: { in: projects } };
+      }
     }
+
+    // Search filter
+    let searchFilter: Prisma.TaskWhereInput | undefined;
     if (search) {
-      where.OR = [
-        { title: { contains: search } },
-        { description: { contains: search } },
-      ];
+      searchFilter = {
+        OR: [
+          { title: { contains: search } },
+          { description: { contains: search } },
+        ],
+      };
+    }
+
+    // Combine project and search filters with AND
+    if (projectFilter && searchFilter) {
+      where.AND = [projectFilter, searchFilter];
+    } else if (projectFilter) {
+      Object.assign(where, projectFilter);
+    } else if (searchFilter) {
+      Object.assign(where, searchFilter);
     }
 
     if (status) {
