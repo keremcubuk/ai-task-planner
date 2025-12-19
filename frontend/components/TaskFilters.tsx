@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
 import { Search, Filter, X, ChevronDown } from 'lucide-react';
+import { AssigneeSelect } from './AssigneeSelect';
+import { StatusFilter } from './StatusFilter';
+import { SeveritySelect } from './SeveritySelect';
 
 interface TaskFiltersProps {
   filters: {
     status: string[];
-    assignedTo: string;
+    assignedTo: string[];
     severity: string;
     minAiScore: string;
     maxAiScore: string;
@@ -18,9 +21,12 @@ interface TaskFiltersProps {
   showFilters: boolean;
   setShowFilters: (show: boolean) => void;
   availableProjects: string[];
+  availableAssignees: string[];
   onFilterChange: (key: string, value: string | string[]) => void;
   onToggleStatus: (status: string) => void;
   onToggleProject: (project: string) => void;
+  onToggleAssignee: (assignee: string) => void;
+  onToggleAllAssignees: () => void;
   onClearFilters: () => void;
 }
 
@@ -31,9 +37,12 @@ export const TaskFilters: React.FC<TaskFiltersProps> = ({
   showFilters,
   setShowFilters,
   availableProjects,
+  availableAssignees,
   onFilterChange,
   onToggleStatus,
   onToggleProject,
+  onToggleAssignee,
+  onToggleAllAssignees,
   onClearFilters
 }) => {
   const [isProjectDropdownOpen, setIsProjectDropdownOpen] = useState(false);
@@ -61,51 +70,24 @@ export const TaskFilters: React.FC<TaskFiltersProps> = ({
         {showFilters && (
             <div className="pt-4 border-t border-gray-100 grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
                 
-                {/* Status Filter */}
-                <div className="space-y-2">
-                    <label className="text-xs font-semibold text-gray-500 uppercase">Status</label>
-                    <div className="flex flex-wrap gap-2">
-                        {['open', 'in_progress', 'done'].map(status => (
-                            <button
-                                key={status}
-                                onClick={() => onToggleStatus(status)}
-                                className={`px-3 py-1 text-sm rounded-full border ${
-                                    filters.status.includes(status) 
-                                    ? 'bg-blue-100 border-blue-300 text-blue-800' 
-                                    : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
-                                }`}
-                            >
-                                {status.replace('_', ' ')}
-                            </button>
-                        ))}
-                    </div>
-                </div>
+                <StatusFilter 
+                    selectedStatuses={filters.status} 
+                    onToggle={onToggleStatus} 
+                />
 
-                {/* Severity Filter */}
-                <div className="space-y-2">
-                    <label className="text-xs font-semibold text-gray-500 uppercase">Severity</label>
-                    <select 
-                        value={filters.severity} 
-                        onChange={(e) => onFilterChange('severity', e.target.value)}
-                        className="w-full text-sm border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-gray-900 h-10"
-                    >
-                        <option value="">All Severities</option>
-                        <option value="critical">Critical</option>
-                        <option value="major">Major</option>
-                        <option value="minor">Minor</option>
-                        <option value="low">Low</option>
-                    </select>
-                </div>
+                <SeveritySelect 
+                    value={filters.severity} 
+                    onChange={(value) => onFilterChange('severity', value)} 
+                />
 
                 {/* Assigned To */}
                 <div className="space-y-2">
                     <label className="text-xs font-semibold text-gray-500 uppercase">Assigned To</label>
-                    <input 
-                        type="text" 
-                        placeholder="Filter by assignee..." 
-                        value={filters.assignedTo}
-                        onChange={(e) => onFilterChange('assignedTo', e.target.value)}
-                        className="w-full text-sm border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-gray-900 h-10"
+                    <AssigneeSelect
+                        selectedAssignees={filters.assignedTo}
+                        availableAssignees={availableAssignees}
+                        onToggleAssignee={onToggleAssignee}
+                        onToggleAll={onToggleAllAssignees}
                     />
                 </div>
 
@@ -176,7 +158,7 @@ export const TaskFilters: React.FC<TaskFiltersProps> = ({
                         placeholder="e.g. 10, 15, 20 (comma separated)" 
                         value={filters.aiScores}
                         onChange={(e) => onFilterChange('aiScores', e.target.value)}
-                        className="w-full text-sm border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-gray-900 h-10"
+                        className="w-full text-sm border border-gray-300 rounded-md px-3 py-2 bg-white h-10 focus:outline-none focus:ring-1 focus:ring-blue-500 text-gray-900 placeholder-gray-400"
                     />
                 </div>
 
@@ -188,14 +170,14 @@ export const TaskFilters: React.FC<TaskFiltersProps> = ({
                             type="date" 
                             value={filters.dueStartDate}
                             onChange={(e) => onFilterChange('dueStartDate', e.target.value)}
-                            className="w-full text-sm border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-gray-900 h-10"
+                            className="w-full text-sm border border-gray-300 rounded-md px-3 py-2 bg-white h-10 focus:outline-none focus:ring-1 focus:ring-blue-500 text-gray-900"
                         />
-                        <span className="text-gray-400">-</span>
+                        <span className="text-gray-400 flex-shrink-0">-</span>
                         <input 
                             type="date" 
                             value={filters.dueEndDate}
                             onChange={(e) => onFilterChange('dueEndDate', e.target.value)}
-                            className="w-full text-sm border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-gray-900 h-10"
+                            className="w-full text-sm border border-gray-300 rounded-md px-3 py-2 bg-white h-10 focus:outline-none focus:ring-1 focus:ring-blue-500 text-gray-900"
                         />
                     </div>
                 </div>

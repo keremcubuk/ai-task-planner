@@ -82,6 +82,7 @@ function SortableRow({ task, index, onTaskClick }: { task: Task; index: number; 
         <PriorityBadge score={task.aiScore} priority={task.aiPriority} />
       </td>
       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 border-b border-gray-200">{formatDate(task.dueDate || '')}</td>
+      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 border-b border-gray-200">{task.assignedTo || '-'}</td>
     </tr>
   );
 }
@@ -149,6 +150,12 @@ export const TasksTable: React.FC<TasksTableProps> = ({ tasks, onSort, onReorder
                 onClick={() => onSort("dueDate")}
               >
                 Due Date <ArrowUpDown size={14} className="inline" />
+              </th>
+              <th
+                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer border-b border-gray-200 bg-gray-50"
+                onClick={() => onSort("assignedTo")}
+              >
+                Assigned To <ArrowUpDown size={14} className="inline" />
               </th>
             </tr>
           </thead>

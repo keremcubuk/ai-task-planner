@@ -1,6 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
-import { Home, PieChart, Folder } from 'lucide-react';
+import { Home, PieChart, Folder, Calendar } from 'lucide-react';
 import { useRouter } from 'next/router';
 
 export const Layout = ({ children }: { children: React.ReactNode }) => {
@@ -23,6 +23,9 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
                 </Link>
                 <Link href="/projects" className={`inline-flex items-center px-1 pt-1 text-sm font-medium border-b-2 ${isActive('/projects')}`}>
                   <Folder size={18} className="mr-2"/> Projects
+                </Link>
+                <Link href="/calendar" className={`inline-flex items-center px-1 pt-1 text-sm font-medium border-b-2 ${isActive('/calendar')}`}>
+                  <Calendar size={18} className="mr-2"/> Calendar
                 </Link>
                 <Link href="/analytics" className={`inline-flex items-center px-1 pt-1 text-sm font-medium border-b-2 ${isActive('/analytics')}`}>
                   <PieChart size={18} className="mr-2"/> Analytics

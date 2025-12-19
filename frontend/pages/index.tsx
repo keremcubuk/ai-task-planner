@@ -19,6 +19,10 @@ export default function Dashboard() {
   const [isExportOpen, setIsExportOpen] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [availableProjects, setAvailableProjects] = useState<string[]>([]);
+  const [availableAssignees, setAvailableAssignees] = useState<string[]>([]);
+  const [isInitialized, setIsInitialized] = useState(false);
+  const [sortField, setSortField] = useState<keyof Task | null>(null);
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
   useEffect(() => {
     getProjectsStats().then((stats: { name: string }[]) => {
@@ -28,7 +32,7 @@ export default function Dashboard() {
 
   const [filters, setFilters] = useState({
     status: [] as string[],
-    assignedTo: '',
+    assignedTo: [] as string[],
     severity: '',
     minAiScore: '',
     maxAiScore: '',
@@ -41,10 +45,24 @@ export default function Dashboard() {
   const loadTasks = useCallback(async () => {
     setLoading(true);
     try {
+      // First load all tasks to get available assignees
+      const allData = await fetchTasks({});
+      const uniqueAssignees = [...new Set(allData.map((t: Task) => t.assignedTo || 'Unassigned'))];
+      setAvailableAssignees(uniqueAssignees);
+      
+      // Initialize assignedTo filter only on first load
+      if (!isInitialized) {
+        setFilters(prev => ({ ...prev, assignedTo: uniqueAssignees }));
+        setIsInitialized(true);
+      }
+      
+      // Apply filters - only filter assignedTo if not all selected
+      const shouldFilterAssignee = filters.assignedTo.length > 0 && filters.assignedTo.length < uniqueAssignees.length;
+      
       const data = await fetchTasks({ 
         search,
         status: filters.status.length > 0 ? filters.status.join(',') : undefined,
-        assignedTo: filters.assignedTo || undefined,
+        assignedTo: shouldFilterAssignee ? filters.assignedTo.join(',') : undefined,
         severity: filters.severity || undefined,
         minAiScore: filters.minAiScore ? Number(filters.minAiScore) : undefined,
         maxAiScore: filters.maxAiScore ? Number(filters.maxAiScore) : undefined,
@@ -59,7 +77,7 @@ export default function Dashboard() {
     } finally {
       setLoading(false);
     }
-  }, [search, filters]);
+  }, [search, filters, isInitialized]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -92,10 +110,27 @@ export default function Dashboard() {
     });
   };
 
+  const toggleAssigneeFilter = (assignee: string) => {
+    setFilters(prev => ({
+      ...prev,
+      assignedTo: prev.assignedTo.includes(assignee)
+        ? prev.assignedTo.filter(a => a !== assignee)
+        : [...prev.assignedTo, assignee]
+    }));
+  };
+
+  const toggleAllAssignees = () => {
+    if (filters.assignedTo.length === availableAssignees.length) {
+      setFilters(prev => ({ ...prev, assignedTo: [] }));
+    } else {
+      setFilters(prev => ({ ...prev, assignedTo: availableAssignees }));
+    }
+  };
+
   const clearFilters = () => {
     setFilters({
         status: [],
-        assignedTo: '',
+        assignedTo: availableAssignees,
         severity: '',
         minAiScore: '',
         maxAiScore: '',
@@ -134,15 +169,19 @@ export default function Dashboard() {
   };
 
   const handleSort = (field: keyof Task) => {
-    // Client-side sort for demo
+    const newDirection = sortField === field && sortDirection === 'asc' ? 'desc' : 'asc';
+    setSortField(field);
+    setSortDirection(newDirection);
+    
     const sorted = [...tasks].sort((a: Task, b: Task) => {
        const valA = a[field];
        const valB = b[field];
        
-       if (valA === undefined || valB === undefined) return 0;
+       if (valA === undefined || valA === null) return 1;
+       if (valB === undefined || valB === null) return -1;
        
-       if (valA < valB) return -1;
-       if (valA > valB) return 1;
+       if (valA < valB) return newDirection === 'asc' ? -1 : 1;
+       if (valA > valB) return newDirection === 'asc' ? 1 : -1;
        return 0;
     });
     setTasks(sorted);
@@ -237,9 +276,12 @@ export default function Dashboard() {
         showFilters={showFilters}
         setShowFilters={setShowFilters}
         availableProjects={availableProjects}
+        availableAssignees={availableAssignees}
         onFilterChange={handleFilterChange}
         onToggleStatus={toggleStatusFilter}
         onToggleProject={toggleProjectFilter}
+        onToggleAssignee={toggleAssigneeFilter}
+        onToggleAllAssignees={toggleAllAssignees}
         onClearFilters={clearFilters}
       />
 

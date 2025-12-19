@@ -108,7 +108,21 @@ export class TasksController {
     }
 
     if (assignedTo) {
-      where.assignedTo = { contains: assignedTo };
+      const assignees = assignedTo.split(',').map((a) => a.trim());
+      // Handle 'Unassigned' case - convert to null check
+      if (assignees.includes('Unassigned')) {
+        const otherAssignees = assignees.filter((a) => a !== 'Unassigned');
+        if (otherAssignees.length > 0) {
+          where.OR = [
+            { assignedTo: { in: otherAssignees } },
+            { assignedTo: null },
+          ];
+        } else {
+          where.assignedTo = null;
+        }
+      } else {
+        where.assignedTo = { in: assignees };
+      }
     }
 
     if (severity) {
