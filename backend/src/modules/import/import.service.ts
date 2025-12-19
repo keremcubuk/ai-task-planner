@@ -36,7 +36,9 @@ export class ImportService {
       const count = await this.saveTasks(tasks, 'xlsx');
       return { count, message: 'XLSX imported successfully' };
     } catch (error) {
-      throw new BadRequestException('Failed to process XLSX file: ' + error.message);
+      throw new BadRequestException(
+        'Failed to process XLSX file: ' + error.message,
+      );
     }
   }
 
@@ -44,7 +46,11 @@ export class ImportService {
    * Title + Project + Source kombinasyonundan benzersiz bir hash oluşturur.
    * Bu hash, farklı kaynaklardan gelen aynı task'ları tespit etmek için kullanılır.
    */
-  private generateContentHash(title: string, project?: string, source?: string): string {
+  private generateContentHash(
+    title: string,
+    project?: string,
+    source?: string,
+  ): string {
     const normalizedTitle = (title || '').toLowerCase().trim();
     const normalizedProject = (project || '').toLowerCase().trim();
     const normalizedSource = (source || '').toLowerCase().trim();
@@ -59,19 +65,41 @@ export class ImportService {
 
     for (const row of rawData) {
       // Basic mapping - can be improved with a mapping object from frontend
-      const title = row['Title'] || row['title'] || row['Task Name'] || row['Subject'];
+      const title =
+        row['Title'] || row['title'] || row['Task Name'] || row['Subject'];
       if (!title) continue;
 
-      const description = row['Description'] || row['description'] || row['Notes'];
-      const status = row['Status'] || row['status'] || row['Progress'] || row['progress']; // open, in_progress, done
+      const description =
+        row['Description'] || row['description'] || row['Notes'];
+      const status =
+        row['Status'] || row['status'] || row['Progress'] || row['progress']; // open, in_progress, done
       const severity = row['Severity'] || row['severity'] || row['Priority']; // critical, major, minor
-      const dueDate = row['Due Date'] || row['Due date'] || row['due date'] || row['dueDate'] || row['Deadline'];
-      const createdAt = row['Created Date'] || row['createdAt'] || row['Date Created'] || row['Start Date'];
-      const externalId = row['Task ID'] || row['ID'] || row['TaskId'] || row['External ID'];
-      const assignedTo = row['Assigned To'] || row['assignedTo'] || row['Owner'] || row['Assignee'];
+      const dueDate =
+        row['Due Date'] ||
+        row['Due date'] ||
+        row['due date'] ||
+        row['dueDate'] ||
+        row['Deadline'];
+      const createdAt =
+        row['Created Date'] ||
+        row['createdAt'] ||
+        row['Date Created'] ||
+        row['Start Date'];
+      const externalId =
+        row['Task ID'] || row['ID'] || row['TaskId'] || row['External ID'];
+      const assignedTo =
+        row['Assigned To'] ||
+        row['assignedTo'] ||
+        row['Owner'] ||
+        row['Assignee'];
 
       // Project Name kolonu - Excel'den oku
-      const project = row['Project Name'] || row['Project  Name'] || row['project name'] || row['ProjectName'] || row['project'];
+      const project =
+        row['Project Name'] ||
+        row['Project  Name'] ||
+        row['project name'] ||
+        row['ProjectName'] ||
+        row['project'];
 
       // Source kolonu - Excel'de varsa onu kullan, yoksa default (xlsx/csv)
       const sourceFromExcel = row['Source'] || row['source'];
@@ -97,9 +125,16 @@ export class ImportService {
         externalId: externalId ? String(externalId) : undefined,
         assignedTo: assignedTo ? String(assignedTo) : undefined,
         contentHash: contentHash,
-        manualPriority: manualPriority !== undefined && manualPriority !== '' ? Number(manualPriority) : undefined,
-        aiScore: aiScore !== undefined && aiScore !== '' ? Number(aiScore) : undefined,
-        aiPriority: aiPriority !== undefined && aiPriority !== '' ? Number(aiPriority) : undefined,
+        manualPriority:
+          manualPriority !== undefined && manualPriority !== ''
+            ? Number(manualPriority)
+            : undefined,
+        aiScore:
+          aiScore !== undefined && aiScore !== '' ? Number(aiScore) : undefined,
+        aiPriority:
+          aiPriority !== undefined && aiPriority !== ''
+            ? Number(aiPriority)
+            : undefined,
       };
 
       // Önce externalId ile kontrol et (güvenilir kaynaklardan gelen ID)
@@ -155,7 +190,8 @@ export class ImportService {
     if (s === 'in progress') return 'in_progress';
     if (s === 'not started') return 'open';
 
-    if (s.includes('done') || s.includes('complete') || s === '100%') return 'done';
+    if (s.includes('done') || s.includes('complete') || s === '100%')
+      return 'done';
     if (s.includes('progress')) return 'in_progress';
     return 'open';
   }

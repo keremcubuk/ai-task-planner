@@ -58,30 +58,53 @@ export class TasksService {
 
   async getProjectsStats() {
     const allTasks = await this.prisma.task.findMany();
-    const projects: Record<string, { total: number; completed: number; critical: number }> = {};
+    const projects: Record<
+      string,
+      { total: number; completed: number; critical: number }
+    > = {};
 
     for (const task of allTasks) {
       const p = task.project || 'No Project';
       if (!projects[p]) projects[p] = { total: 0, completed: 0, critical: 0 };
       projects[p].total++;
-      if (task.status === 'done' || task.status === 'completed') projects[p].completed++;
+      if (task.status === 'done' || task.status === 'completed')
+        projects[p].completed++;
       if (task.severity === 'critical') projects[p].critical++;
     }
 
-    return Object.entries(projects).map(([name, stats]) => ({ name, ...stats }));
+    return Object.entries(projects).map(([name, stats]) => ({
+      name,
+      ...stats,
+      projectStatus:
+        stats.total > 0 && stats.completed === stats.total
+          ? 'done'
+          : 'in_progress',
+    }));
   }
 
   async getAnalytics() {
     try {
       const allTasks = await this.prisma.task.findMany();
       const totalTasks = allTasks.length;
-      
+
       const byStatus: Record<string, number> = {};
       const bySeverity: Record<string, number> = {};
       const byAssignedTo: Record<string, number> = {};
-      const byAssigneePerformance: Record<string, { total: number; completed: number }> = {};
-      const byProject: Record<string, { total: number; closed: number; inProgress: number; critical: number; minor: number }> = {};
-      
+      const byAssigneePerformance: Record<
+        string,
+        { total: number; completed: number }
+      > = {};
+      const byProject: Record<
+        string,
+        {
+          total: number;
+          closed: number;
+          inProgress: number;
+          critical: number;
+          minor: number;
+        }
+      > = {};
+
       let totalDurationMs = 0;
       let doneCount = 0;
 
@@ -89,7 +112,7 @@ export class TasksService {
         // Status count
         const s = task.status || 'unknown';
         byStatus[s] = (byStatus[s] || 0) + 1;
-        
+
         // Severity count
         const sev = task.severity || 'unknown';
         bySeverity[sev] = (bySeverity[sev] || 0) + 1;
@@ -101,14 +124,19 @@ export class TasksService {
         // Project Stats
         const project = task.project || 'No Project';
         if (!byProject[project]) {
-          byProject[project] = { total: 0, closed: 0, inProgress: 0, critical: 0, minor: 0 };
+          byProject[project] = {
+            total: 0,
+            closed: 0,
+            inProgress: 0,
+            critical: 0,
+            minor: 0,
+          };
         }
         byProject[project].total++;
         if (s === 'done' || s === 'completed') byProject[project].closed++;
         if (s === 'in_progress') byProject[project].inProgress++;
         if (sev === 'critical') byProject[project].critical++;
         if (sev === 'minor' || sev === 'low') byProject[project].minor++;
-
 
         // Assignee Performance
         if (!byAssigneePerformance[assignee]) {
@@ -129,9 +157,8 @@ export class TasksService {
         }
       }
 
-      const avgCompletionTimeDays = doneCount > 0 
-        ? (totalDurationMs / doneCount) / (1000 * 60 * 60 * 24) 
-        : 0;
+      const avgCompletionTimeDays =
+        doneCount > 0 ? totalDurationMs / doneCount / (1000 * 60 * 60 * 24) : 0;
 
       return {
         totalTasks,

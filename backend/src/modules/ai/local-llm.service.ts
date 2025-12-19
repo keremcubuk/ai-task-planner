@@ -1,13 +1,21 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { spawn } from 'child_process';
 
+interface LlmConfig {
+  localLlmPath: string;
+  modelPath: string;
+}
+
 @Injectable()
 export class LocalLlmService {
   private readonly logger = new Logger(LocalLlmService.name);
 
-  async generatePriority(taskDescription: string, config: any): Promise<number> {
+  async generatePriority(
+    taskDescription: string,
+    config: LlmConfig,
+  ): Promise<number> {
     const { localLlmPath, modelPath } = config;
-    
+
     if (!localLlmPath || !modelPath) {
       this.logger.warn('Local LLM path or model path not configured');
       return 0;
@@ -19,12 +27,21 @@ export class LocalLlmService {
     Return ONLY the number.
     `;
 
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       // Example for llama.cpp: ./main -m model.gguf -p "prompt" -n 10
-      const process = spawn(localLlmPath, ['-m', modelPath, '-p', prompt, '-n', '10', '--temp', '0']);
-      
+      const process = spawn(localLlmPath, [
+        '-m',
+        modelPath,
+        '-p',
+        prompt,
+        '-n',
+        '10',
+        '--temp',
+        '0',
+      ]);
+
       let output = '';
-      process.stdout.on('data', (data) => {
+      process.stdout.on('data', (data: Buffer) => {
         output += data.toString();
       });
 
@@ -34,7 +51,7 @@ export class LocalLlmService {
           resolve(50); // Default fallback
           return;
         }
-        
+
         // Extract number from output
         const match = output.match(/(\d+)/);
         if (match) {
@@ -44,10 +61,10 @@ export class LocalLlmService {
           resolve(50);
         }
       });
-      
+
       process.on('error', (err) => {
-         this.logger.error('Failed to spawn LLM process', err);
-         resolve(50);
+        this.logger.error('Failed to spawn LLM process', err);
+        resolve(50);
       });
     });
   }

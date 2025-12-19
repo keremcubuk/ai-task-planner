@@ -23,7 +23,7 @@ export class AiService implements OnModuleInit {
 
   constructor(
     private prisma: PrismaService,
-    private localLlmService: LocalLlmService
+    private localLlmService: LocalLlmService,
   ) {}
 
   onModuleInit() {
@@ -44,7 +44,7 @@ export class AiService implements OnModuleInit {
         transitionWeight: 4,
         ageWeight: 1,
         manualWeight: 5,
-        mode: 'rulebased'
+        mode: 'rulebased',
       };
     }
   }
@@ -62,12 +62,12 @@ export class AiService implements OnModuleInit {
       if (this.config.mode === 'local-llm') {
         score = await this.localLlmService.generatePriority(
           `${task.title}: ${task.description || ''}`,
-          this.config
+          this.config,
         );
       } else {
         score = this.calculateRuleBasedScore(task, now);
       }
-      
+
       updates.push(
         this.prisma.task.update({
           where: { id: task.id },
@@ -75,18 +75,26 @@ export class AiService implements OnModuleInit {
         }),
       );
     }
-    
+
     await Promise.all(updates);
 
-    return { message: `Prioritized ${updates.length} tasks`, count: updates.length };
+    return {
+      message: `Prioritized ${updates.length} tasks`,
+      count: updates.length,
+    };
   }
 
   private calculateRuleBasedScore(task: Task, now: Date): number {
     const severityFactor = this.getSeverityFactor(task.severity);
     const deadlineFactor = this.getDeadlineFactor(task.dueDate, now);
-    const transitionUrgency = this.getTransitionUrgency(task.transitionDate, now);
+    const transitionUrgency = this.getTransitionUrgency(
+      task.transitionDate,
+      now,
+    );
     const taskAgeDays = this.getTaskAgeDays(task.createdAt, now);
-    const manualPriorityNormalised = this.getManualPriorityNormalised(task.manualPriority);
+    const manualPriorityNormalised = this.getManualPriorityNormalised(
+      task.manualPriority,
+    );
 
     const score =
       this.config.severityWeight * severityFactor +

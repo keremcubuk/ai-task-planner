@@ -20,6 +20,14 @@ export interface Task {
   position: number;
 }
 
+export interface ProjectStats {
+  name: string;
+  total: number;
+  completed: number;
+  critical: number;
+  projectStatus?: 'done' | 'in_progress' | string;
+}
+
 const api = axios.create({
   baseURL: 'http://localhost:3000',
 });
@@ -29,7 +37,7 @@ export const getAnalytics = async () => {
   return response.data;
 };
 
-export const getProjectsStats = async () => {
+export const getProjectsStats = async (): Promise<ProjectStats[]> => {
   const response = await api.get('/tasks/projects');
   return response.data;
 };

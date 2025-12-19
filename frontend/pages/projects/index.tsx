@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { getProjectsStats } from '../../lib/api';
-import { Search, AlertCircle, CheckCircle } from 'lucide-react';
+import { getProjectsStats, ProjectStats } from '../../lib/api';
+import { Search } from 'lucide-react';
 import { useRouter } from 'next/router';
+import { ProjectCard } from '../../components/ProjectCard';
 
 export default function ProjectsList() {
-  const [projects, setProjects] = useState<any[]>([]);
+  const [projects, setProjects] = useState<ProjectStats[]>([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const router = useRouter();
@@ -28,6 +29,9 @@ export default function ProjectsList() {
     p.name.toLowerCase().includes(search.toLowerCase())
   );
 
+  const inProgressProjects = filteredProjects.filter((p) => p.projectStatus !== 'done');
+  const doneProjects = filteredProjects.filter((p) => p.projectStatus === 'done');
+
   if (loading) return <div className="p-8">Loading...</div>;
 
   return (
@@ -49,52 +53,39 @@ export default function ProjectsList() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredProjects.map((project) => (
-            <div 
-              key={project.name} 
-              className="bg-white rounded-lg shadow hover:shadow-md transition-shadow cursor-pointer border border-gray-200"
-              onClick={() => router.push(`/projects/${encodeURIComponent(project.name)}`)}
-            >
-              <div className="p-6">
-                <h3 className="text-xl font-semibold text-gray-900 mb-4 truncate" title={project.name}>
-                  {project.name}
-                </h3>
-                
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center text-sm">
-                    <span className="text-gray-500">Total Tasks</span>
-                    <span className="font-medium bg-gray-100 px-2 py-0.5 rounded text-gray-700">{project.total}</span>
-                  </div>
-                  <div className="flex justify-between items-center text-sm">
-                    <span className="text-gray-500 flex items-center gap-1"><CheckCircle size={14} className="text-green-500"/> Completed</span>
-                    <span className="font-medium text-green-700">{project.completed}</span>
-                  </div>
-                  <div className="flex justify-between items-center text-sm">
-                    <span className="text-gray-500 flex items-center gap-1"><AlertCircle size={14} className="text-red-500"/> Critical</span>
-                    <span className="font-medium text-red-700">{project.critical}</span>
-                  </div>
-                </div>
-                
-                <div className="mt-4 pt-4 border-t border-gray-100">
-                   <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div 
-                        className="bg-blue-600 h-2 rounded-full" 
-                        style={{ width: `${project.total > 0 ? (project.completed / project.total) * 100 : 0}%` }}
-                      ></div>
-                   </div>
-                   <p className="text-xs text-right mt-1 text-gray-400">
-                     {project.total > 0 ? Math.round((project.completed / project.total) * 100) : 0}% done
-                   </p>
-                </div>
-              </div>
+        {inProgressProjects.length > 0 && (
+          <div className="space-y-3">
+            <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wide">In Progress</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {inProgressProjects.map((project) => (
+                <ProjectCard
+                  key={project.name}
+                  project={project}
+                  onClick={() => router.push(`/projects/${encodeURIComponent(project.name)}`)}
+                />
+              ))}
             </div>
-          ))}
-        </div>
+          </div>
+        )}
+
+        {doneProjects.length > 0 && (
+          <div className="space-y-3">
+            <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wide">Completed</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {doneProjects.map((project) => (
+                <ProjectCard
+                  key={project.name}
+                  project={project}
+                  onClick={() => router.push(`/projects/${encodeURIComponent(project.name)}`)}
+                />
+              ))}
+            </div>
+          </div>
+        )}
         
         {filteredProjects.length === 0 && (
            <div className="text-center py-12 text-gray-500">
-             No projects found matching "{search}"
+             No projects found matching &quot;{search}&quot;
            </div>
         )}
     </div>
