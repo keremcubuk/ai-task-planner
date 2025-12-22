@@ -27,3 +27,11 @@ model Task {
   aiScore         Float?
   position        Int       @default(0)
 }
+
+model ConfluenceCookie {
+  id          Int      @id @default(autoincrement())
+  domain      String   @unique
+  cookies     String   // JSON string of cookies
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}

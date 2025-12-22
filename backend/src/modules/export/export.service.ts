@@ -4,17 +4,16 @@ import { Prisma, Task } from '@prisma/client';
 import * as XLSX from 'xlsx';
 import * as path from 'path';
 import * as fs from 'fs';
-
-type ExportFilter = {
-  status?: string;
-  severity?: string;
-};
+import { ExportFilter, ExportResult } from '../../shared/types/common.types';
 
 @Injectable()
 export class ExportService {
   constructor(private prisma: PrismaService) {}
 
-  async exportToXlsx(filter?: ExportFilter, type: 'raw' | 'stats' = 'raw') {
+  async exportToXlsx(
+    filter?: ExportFilter,
+    type: 'raw' | 'stats' = 'raw',
+  ): Promise<ExportResult> {
     const where: Prisma.TaskWhereInput = {};
     if (filter?.status) where.status = filter.status;
     if (filter?.severity) where.severity = filter.severity;

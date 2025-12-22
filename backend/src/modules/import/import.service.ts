@@ -1,43 +1,60 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException, Logger } from '@nestjs/common';
 import { PrismaService } from '../../shared/prisma/prisma.service';
 import * as fs from 'fs';
 import csv from 'csv-parser';
 import * as XLSX from 'xlsx';
 import * as crypto from 'crypto';
+import {
+  ImportedTask,
+  ImportResult,
+  getErrorMessage,
+  getErrorStack,
+} from '../../shared/types/common.types';
 
 @Injectable()
 export class ImportService {
+  private readonly logger = new Logger(ImportService.name);
+
   constructor(private prisma: PrismaService) {}
 
-  async importCsv(filePath: string) {
-    const tasks: any[] = [];
-    return new Promise((resolve, reject) => {
-      fs.createReadStream(filePath)
-        .pipe(csv())
-        .on('data', (data: any) => tasks.push(data))
-        .on('end', async () => {
-          try {
-            const count = await this.saveTasks(tasks, 'csv');
-            resolve({ count, message: 'CSV imported successfully' });
-          } catch (error) {
-            reject(error);
-          }
-        })
-        .on('error', (error: any) => reject(error));
-    });
+  async importCsv(filePath: string): Promise<ImportResult> {
+    const tasks: ImportedTask[] = [];
+
+    try {
+      await new Promise<void>((resolve, reject) => {
+        fs.createReadStream(filePath)
+          .pipe(csv())
+          .on('data', (data: ImportedTask) => tasks.push(data))
+          .on('end', () => resolve())
+          .on('error', (error: Error) => reject(error));
+      });
+
+      const count = await this.saveTasks(tasks, 'csv');
+      return { count, message: 'CSV imported successfully' };
+    } catch (error) {
+      const errorMessage = getErrorMessage(error);
+      const errorStack = getErrorStack(error);
+      this.logger.error(`CSV import failed: ${errorMessage}`, errorStack);
+      throw new BadRequestException(
+        `Failed to process CSV file: ${errorMessage}`,
+      );
+    }
   }
 
-  async importXlsx(filePath: string) {
+  async importXlsx(filePath: string): Promise<ImportResult> {
     try {
       const workbook = XLSX.readFile(filePath);
       const sheetName = workbook.SheetNames[0];
       const sheet = workbook.Sheets[sheetName];
-      const tasks = XLSX.utils.sheet_to_json(sheet);
+      const tasks = XLSX.utils.sheet_to_json<ImportedTask>(sheet);
       const count = await this.saveTasks(tasks, 'xlsx');
       return { count, message: 'XLSX imported successfully' };
     } catch (error) {
+      const errorMessage = getErrorMessage(error);
+      const errorStack = getErrorStack(error);
+      this.logger.error(`XLSX import failed: ${errorMessage}`, errorStack);
       throw new BadRequestException(
-        'Failed to process XLSX file: ' + error.message,
+        `Failed to process XLSX file: ${errorMessage}`,
       );
     }
   }
@@ -59,9 +76,11 @@ export class ImportService {
     return crypto.createHash('md5').update(content).digest('hex');
   }
 
-  private async saveTasks(rawData: any[], defaultSource: string) {
+  private async saveTasks(
+    rawData: ImportedTask[],
+    defaultSource: string,
+  ): Promise<number> {
     let count = 0;
-    let skippedDuplicates = 0;
 
     for (const row of rawData) {
       // Basic mapping - can be improved with a mapping object from frontend
@@ -120,8 +139,8 @@ export class ImportService {
         project: project ? String(project) : undefined,
         status: this.normalizeStatus(status),
         severity: this.normalizeSeverity(severity),
-        dueDate: dueDate ? new Date(dueDate) : undefined,
-        createdAt: createdAt ? new Date(createdAt) : undefined,
+        dueDate: this.safeParseDate(dueDate),
+        createdAt: this.safeParseDate(createdAt) || new Date(), // Default to now if invalid/missing
         externalId: externalId ? String(externalId) : undefined,
         assignedTo: assignedTo ? String(assignedTo) : undefined,
         contentHash: contentHash,
@@ -160,8 +179,6 @@ export class ImportService {
           where: { id: existing.id },
           data: taskData,
         });
-
-        skippedDuplicates++;
       } else {
         // Yeni task oluştur
         await this.prisma.task.create({ data: taskData });
@@ -202,5 +219,82 @@ export class ImportService {
     if (s.includes('critical') || s.includes('high')) return 'critical';
     if (s.includes('major') || s.includes('medium')) return 'major';
     return 'minor';
+  }
+
+  private safeParseDate(dateValue: unknown): Date | undefined {
+    if (!dateValue) return undefined;
+
+    // Handle empty strings, null, undefined, or just whitespace
+    if (typeof dateValue === 'string' && dateValue.trim() === '')
+      return undefined;
+    if (dateValue === '-' || dateValue === 'N/A' || dateValue === 'n/a')
+      return undefined;
+
+    // Helper function to safely convert dateValue to string
+    const dateValueToString = (value: unknown): string => {
+      if (typeof value === 'string') return value;
+      if (typeof value === 'number') return String(value);
+      if (value instanceof Date) return value.toISOString();
+      if (typeof value === 'object' && value !== null) {
+        return JSON.stringify(value);
+      }
+      return String(value);
+    };
+
+    try {
+      let date: Date;
+
+      if (dateValue instanceof Date) {
+        date = dateValue;
+      } else if (typeof dateValue === 'number') {
+        // Excel dates are stored as numbers (days since 1900-01-01)
+        // If number is less than 100, it's likely not a valid Excel date
+        if (dateValue < 100) {
+          this.logger.warn(
+            `Suspicious numeric date value: ${dateValue}, skipping`,
+          );
+          return undefined;
+        }
+        // Convert Excel date number to JavaScript Date
+        // Excel epoch: 1900-01-01 (but Excel incorrectly treats 1900 as leap year)
+        const excelEpoch = new Date(1900, 0, 1);
+        const daysOffset = dateValue - 2; // -2 to account for Excel's leap year bug and 0-indexing
+        date = new Date(
+          excelEpoch.getTime() + daysOffset * 24 * 60 * 60 * 1000,
+        );
+      } else if (typeof dateValue === 'string') {
+        date = new Date(dateValue);
+      } else {
+        this.logger.warn(
+          `Invalid date type: ${typeof dateValue}, value: ${dateValueToString(dateValue)}`,
+        );
+        return undefined;
+      }
+
+      // Check if the date is valid
+      if (isNaN(date.getTime())) {
+        this.logger.warn(
+          `Invalid date format: ${dateValueToString(dateValue)}`,
+        );
+        return undefined;
+      }
+
+      // Reject dates before 2000 or after 2100 as likely errors
+      const year = date.getFullYear();
+      if (year < 2000 || year > 2100) {
+        this.logger.warn(
+          `Date year ${year} is out of reasonable range (2000-2100), skipping date: ${dateValueToString(dateValue)}`,
+        );
+        return undefined;
+      }
+
+      return date;
+    } catch (error) {
+      const errorMessage = getErrorMessage(error);
+      this.logger.warn(
+        `Error parsing date '${dateValueToString(dateValue)}': ${errorMessage}`,
+      );
+      return undefined;
+    }
   }
 }

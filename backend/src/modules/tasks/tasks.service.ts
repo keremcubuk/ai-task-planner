@@ -1,9 +1,17 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../shared/prisma/prisma.service';
 import { Prisma } from '@prisma/client';
+import {
+  AnalyticsResponse,
+  ProjectDetails,
+  AssigneePerformance,
+  getErrorMessage,
+} from '../../shared/types/common.types';
 
 @Injectable()
 export class TasksService {
+  private readonly logger = new Logger(TasksService.name);
+
   constructor(private prisma: PrismaService) {}
 
   create(data: Prisma.TaskCreateInput) {
@@ -82,7 +90,7 @@ export class TasksService {
     }));
   }
 
-  async getAnalytics() {
+  async getAnalytics(): Promise<AnalyticsResponse> {
     try {
       const allTasks = await this.prisma.task.findMany();
       const totalTasks = allTasks.length;
@@ -90,20 +98,8 @@ export class TasksService {
       const byStatus: Record<string, number> = {};
       const bySeverity: Record<string, number> = {};
       const byAssignedTo: Record<string, number> = {};
-      const byAssigneePerformance: Record<
-        string,
-        { total: number; completed: number }
-      > = {};
-      const byProject: Record<
-        string,
-        {
-          total: number;
-          closed: number;
-          inProgress: number;
-          critical: number;
-          minor: number;
-        }
-      > = {};
+      const byAssigneePerformance: Record<string, AssigneePerformance> = {};
+      const byProject: Record<string, ProjectDetails> = {};
 
       let totalDurationMs = 0;
       let doneCount = 0;
@@ -170,7 +166,8 @@ export class TasksService {
         avgCompletionTimeDays: Math.round(avgCompletionTimeDays * 10) / 10,
       };
     } catch (error) {
-      console.error('Error in getAnalytics:', error);
+      const errorMessage = getErrorMessage(error);
+      this.logger.error(`Error in getAnalytics: ${errorMessage}`);
       throw error;
     }
   }

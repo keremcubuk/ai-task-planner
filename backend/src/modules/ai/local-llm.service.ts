@@ -1,10 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { spawn } from 'child_process';
-
-interface LlmConfig {
-  localLlmPath: string;
-  modelPath: string;
-}
+import { LlmConfig } from '../../shared/types/common.types';
 
 @Injectable()
 export class LocalLlmService {

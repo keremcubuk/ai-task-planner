@@ -4,17 +4,7 @@ import { Task } from '@prisma/client';
 import * as fs from 'fs';
 import * as path from 'path';
 import { LocalLlmService } from './local-llm.service';
-
-interface AiConfig {
-  severityWeight: number;
-  deadlineWeight: number;
-  transitionWeight: number;
-  ageWeight: number;
-  manualWeight: number;
-  mode?: string;
-  localLlmPath?: string;
-  modelPath?: string;
-}
+import { AiConfig, getErrorMessage } from '../../shared/types/common.types';
 
 @Injectable()
 export class AiService implements OnModuleInit {
@@ -34,10 +24,13 @@ export class AiService implements OnModuleInit {
     try {
       const configPath = path.join(process.cwd(), 'ai.config.json');
       const configFile = fs.readFileSync(configPath, 'utf-8');
-      this.config = JSON.parse(configFile);
+      this.config = JSON.parse(configFile) as AiConfig;
       this.logger.log('AI Config loaded successfully');
     } catch (error) {
-      this.logger.error('Failed to load AI config, using defaults', error);
+      const errorMessage = getErrorMessage(error);
+      this.logger.error(
+        `Failed to load AI config, using defaults: ${errorMessage}`,
+      );
       this.config = {
         severityWeight: 3,
         deadlineWeight: 2,
@@ -50,19 +43,35 @@ export class AiService implements OnModuleInit {
   }
 
   async prioritizeTasks() {
+    // Only prioritize tasks that are not done or completed
     const tasks = await this.prisma.task.findMany({
-      where: { status: { not: 'done' } },
+      where: {
+        status: {
+          notIn: ['done', 'completed'],
+        },
+      },
     });
+
+    this.logger.log(
+      `Prioritizing ${tasks.length} tasks (excluding done/completed)`,
+    );
 
     const updates = [];
     const now = new Date();
 
     for (const task of tasks) {
       let score = 0;
-      if (this.config.mode === 'local-llm') {
+      if (
+        this.config.mode === 'local-llm' &&
+        this.config.localLlmPath &&
+        this.config.modelPath
+      ) {
         score = await this.localLlmService.generatePriority(
           `${task.title}: ${task.description || ''}`,
-          this.config,
+          {
+            localLlmPath: this.config.localLlmPath,
+            modelPath: this.config.modelPath,
+          },
         );
       } else {
         score = this.calculateRuleBasedScore(task, now);
@@ -79,7 +88,7 @@ export class AiService implements OnModuleInit {
     await Promise.all(updates);
 
     return {
-      message: `Prioritized ${updates.length} tasks`,
+      message: `Prioritized ${updates.length} tasks (excluded done/completed)`,
       count: updates.length,
     };
   }

@@ -120,3 +120,50 @@ export const exportXlsx = async (type: 'raw' | 'stats' = 'raw') => {
   });
   return response;
 };
+
+// Confluence Crawler API
+export interface ConfluenceTask {
+  projectName: string;
+  projectStatus: string;
+  source: string;
+  taskId: string;
+  taskName: string;
+  progress: string;
+  assignedTo: string;
+  priority: string;
+  description: string;
+  createdDate: string;
+  dueDate: string;
+}
+
+export interface ConfluenceCrawlResponse {
+  success: boolean;
+  pageTitle: string;
+  projectStatus: string;
+  tasks: ConfluenceTask[];
+  totalCount: number;
+  url?: string;
+  error?: string;
+}
+
+export const crawlConfluence = async (
+  url: string,
+  cookies?: string,
+): Promise<ConfluenceCrawlResponse> => {
+  const response = await api.post('/confluence/crawl', { url, cookies });
+  return response.data;
+};
+
+export const confirmConfluenceTasks = async (
+  tasks: ConfluenceTask[],
+): Promise<{ count: number; message: string }> => {
+  const response = await api.post('/confluence/confirm', { tasks });
+  return response.data;
+};
+
+export const extractConfluenceCookies = async (
+  baseUrl: string,
+): Promise<{ success: boolean; cookies: string; error?: string }> => {
+  const response = await api.post('/confluence/extract-cookies', { baseUrl });
+  return response.data;
+};
