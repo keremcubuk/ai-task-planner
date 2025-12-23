@@ -173,7 +173,7 @@ export class ConfluenceService {
       }
 
       const browser = await puppeteer.default.launch({
-        headless: 'new',
+        headless: true,
         args: [
           '--no-sandbox',
           '--disable-setuid-sandbox',
@@ -454,22 +454,23 @@ export class ConfluenceService {
         // Find header row - look for <th> elements or first row with <td>
         const allRows = table.querySelectorAll('tr');
         let headerRowIndex = -1;
+        let headerCellIndexesToSkip: number[] = [];
 
         // Try to find row with <th> elements
         for (let i = 0; i < allRows.length; i++) {
           const thCells = allRows[i].querySelectorAll('th');
           if (thCells.length > 0) {
             headerRowIndex = i;
-            console.log(`\n=== TABLE HEADER DEBUG (Row ${i}) ===`);
-            console.log(`Found ${thCells.length} header cells`);
             thCells.forEach((cell, index) => {
+              // Skip if this th has class numberingColumn
+              if (cell.classList.contains('numberingColumn')) {
+                headerCellIndexesToSkip.push(index);
+                return;
+              }
               const headerText = (cell.textContent || '').trim();
               const finalHeader = headerText || `Column_${index}`;
-              console.log(`  [${index}] "${headerText}" -> "${finalHeader}"`);
               headers.push(finalHeader);
             });
-            console.log('Final headers:', headers);
-            console.log('================================\n');
             break;
           }
         }
@@ -479,8 +480,11 @@ export class ConfluenceService {
           headerRowIndex = 0;
           const firstRowCells = allRows[0].querySelectorAll('td');
           firstRowCells.forEach((cell, index) => {
+            if (cell.classList.contains('numberingColumn')) {
+              headerCellIndexesToSkip.push(index);
+              return;
+            }
             const headerText = (cell.textContent || '').trim();
-            // If header is empty, use a placeholder like "Column_0", "Column_1", etc.
             headers.push(headerText || `Column_${index}`);
           });
         }
@@ -497,25 +501,23 @@ export class ConfluenceService {
           const cells = row.querySelectorAll('td');
           if (cells.length === 0) return;
 
-          console.log(`\n=== DATA ROW ${index} DEBUG ===`);
-          console.log(
-            `Found ${cells.length} data cells, ${headers.length} headers`,
-          );
-
           const rowData: any = {};
-          cells.forEach((cell, cellIndex) => {
+          let dataCellIndex = 0;
+          for (let cellIndex = 0; cellIndex < cells.length; cellIndex++) {
+            const cell = cells[cellIndex];
+            if (
+              headerCellIndexesToSkip.includes(cellIndex) ||
+              cell.classList.contains('numberingColumn')
+            ) {
+              continue;
+            }
             const cellValue = (cell.textContent || '').trim();
-            const headerName = headers[cellIndex];
-            console.log(
-              `  [${cellIndex}] "${cellValue}" -> header: "${headerName}"`,
-            );
+            const headerName = headers[dataCellIndex];
             if (headerName) {
               rowData[headerName] = cellValue;
             }
-          });
-
-          console.log('Row data:', rowData);
-          console.log('================================\n');
+            dataCellIndex++;
+          }
 
           // Skip empty rows
           const hasContent = Object.values(rowData).some(
