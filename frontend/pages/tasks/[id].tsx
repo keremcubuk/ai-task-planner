@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
-import { fetchTask, updateTask, deleteTask } from '../../lib/api';
+import { fetchTask, updateTask, deleteTask, Task } from '../../lib/api';
 import { PriorityBadge } from '../../components/PriorityBadge';
 import { SeverityBadge } from '../../components/SeverityBadge';
 import { Save, Trash2, ArrowLeft } from 'lucide-react';
@@ -8,7 +8,7 @@ import { Save, Trash2, ArrowLeft } from 'lucide-react';
 export default function TaskDetail() {
   const router = useRouter();
   const { id } = router.query;
-  const [task, setTask] = useState<any>(null);
+  const [task, setTask] = useState<Task | null>(null);
   const [loading, setLoading] = useState(true);
   const [manualPriority, setManualPriority] = useState<number>(0);
   const [status, setStatus] = useState('');
@@ -140,7 +140,7 @@ export default function TaskDetail() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label className="block text-sm font-medium text-gray-700">Severity</label>
-            <div className="mt-1"><SeverityBadge severity={task.severity} /></div>
+            <div className="mt-1"><SeverityBadge severity={task.severity || 'unknown'} /></div>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700">Due Date</label>

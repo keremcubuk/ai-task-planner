@@ -22,6 +22,7 @@ model Task {
   transitionDate  DateTime?
   dueDate         DateTime?
   assignedTo      String?
+  componentName   String?   // UI component name from Checklist Items
   manualPriority  Int?
   aiPriority      Int?
   aiScore         Float?

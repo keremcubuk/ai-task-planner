@@ -17,6 +17,19 @@ export class ImportService {
 
   constructor(private prisma: PrismaService) {}
 
+  private safeCellToString(value: unknown): string {
+    if (value === null || value === undefined) return '';
+    if (typeof value === 'string') return value;
+    if (typeof value === 'number' || typeof value === 'boolean') {
+      return String(value);
+    }
+    if (value instanceof Date) return value.toISOString();
+    if (typeof value === 'object') return JSON.stringify(value);
+    if (typeof value === 'function') return '[function]';
+    if (typeof value === 'symbol') return value.toString();
+    return '';
+  }
+
   async importCsv(filePath: string): Promise<ImportResult> {
     const tasks: ImportedTask[] = [];
 
@@ -109,7 +122,7 @@ export class ImportService {
       if (titleRaw && typeof titleRaw === 'string') {
         title = titleRaw.trim();
       } else if (titleRaw) {
-        title = String(titleRaw).trim();
+        title = this.safeCellToString(titleRaw).trim();
       }
 
       if (!title) {
@@ -134,7 +147,7 @@ export class ImportService {
       if (descriptionRaw && typeof descriptionRaw === 'string') {
         description = descriptionRaw;
       } else if (descriptionRaw) {
-        description = String(descriptionRaw);
+        description = this.safeCellToString(descriptionRaw);
       }
 
       const status =
@@ -174,6 +187,22 @@ export class ImportService {
         row['Owner'] ||
         row['Assignee'];
 
+      // Component Name kolonu - Checklist Items'dan oku
+      const componentNameRaw =
+        row['Checklist Items'] ||
+        row['checklist items'] ||
+        row['Component Name'] ||
+        row['componentName'] ||
+        row['Component'] ||
+        row['component'];
+
+      let componentName: string | undefined;
+      if (componentNameRaw && typeof componentNameRaw === 'string') {
+        componentName = componentNameRaw;
+      } else if (componentNameRaw) {
+        componentName = this.safeCellToString(componentNameRaw);
+      }
+
       // Project Name kolonu - Excel'den oku
       const project =
         row['Project Name'] ||
@@ -205,6 +234,7 @@ export class ImportService {
         createdAt: this.safeParseDate(createdAt) || new Date(), // Default to now if invalid/missing
         externalId: externalId ? String(externalId) : undefined,
         assignedTo: assignedTo ? String(assignedTo) : undefined,
+        componentName: componentName,
         contentHash: contentHash,
         manualPriority:
           manualPriority !== undefined && manualPriority !== ''

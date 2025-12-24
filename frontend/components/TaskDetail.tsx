@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { fetchTask, updateTask, deleteTask } from '../lib/api';
+import { fetchTask, updateTask, deleteTask, Task } from '../lib/api';
 import { PriorityBadge } from './PriorityBadge';
 import { SeverityBadge } from './SeverityBadge';
 import { Save, Trash2 } from 'lucide-react';
@@ -21,7 +21,7 @@ interface TaskDetailProps {
 }
 
 export const TaskDetail: React.FC<TaskDetailProps> = ({ taskId, onClose, onUpdate }) => {
-  const [task, setTask] = useState<any>(null);
+  const [task, setTask] = useState<Task | null>(null);
   const [loading, setLoading] = useState(true);
   const [manualPriority, setManualPriority] = useState<number>(0);
   const [status, setStatus] = useState('');
@@ -154,15 +154,21 @@ export const TaskDetail: React.FC<TaskDetailProps> = ({ taskId, onClose, onUpdat
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
           <label className="block text-sm font-medium text-gray-700">Severity</label>
-          <div className="mt-1"><SeverityBadge severity={task.severity} /></div>
+          <div className="mt-1"><SeverityBadge severity={task.severity || 'unknown'} /></div>
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700">Due Date</label>
-          <div className="mt-1 text-gray-900">{formatDate(task.dueDate)}</div>
+          <div className="mt-1 text-gray-900">{formatDate(task.dueDate || '')}</div>
         </div>
         <div>
            <label className="block text-sm font-medium text-gray-700">Assigned To</label>
            <div className="mt-1 text-gray-900 font-medium">{task.assignedTo || 'Unassigned'}</div>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Component</label>
+          <div className="mt-1 text-gray-900 font-medium bg-indigo-50 px-3 py-1 rounded inline-block">
+            {task.componentName || 'Unknown'}
+          </div>
         </div>
       </div>
     </div>
