@@ -33,6 +33,7 @@ export class AiController {
     @Query('model') model?: string,
   ) {
     // Include ALL tasks (active and completed) for historical analysis
+    // Also include componentName for priority-based extraction
     const tasks = await this.prisma.task.findMany({
       select: {
         id: true,
@@ -40,6 +41,7 @@ export class AiController {
         description: true,
         status: true,
         severity: true,
+        componentName: true,
       },
       orderBy: {
         createdAt: 'desc',

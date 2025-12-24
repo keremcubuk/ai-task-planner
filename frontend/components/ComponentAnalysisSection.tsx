@@ -104,7 +104,7 @@ export function ComponentAnalysisSection({
                       className="w-full px-4 py-3 flex items-center justify-between hover:bg-gray-50"
                     >
                       <div className="flex items-center gap-3 flex-wrap">
-                        <span className="font-medium text-gray-900 capitalize">
+                        <span className="font-medium text-gray-900">
                           {component.name}
                         </span>
 

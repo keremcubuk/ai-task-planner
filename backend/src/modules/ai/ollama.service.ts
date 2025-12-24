@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import * as http from 'http';
+import { getAllComponentNames, KNOWN_COMPONENTS } from './component-types';
 
 export interface OllamaConfig {
   baseUrl: string;
@@ -35,114 +36,8 @@ export class OllamaService {
     model: 'llama3.2',
   };
 
-  // Common UI component patterns for fallback detection
-  private readonly componentPatterns: RegExp[] = [
-    /\b(bottom\s*sheet)\b/gi,
-    /\b(modal)\b/gi,
-    /\b(dialog)\b/gi,
-    /\b(popup)\b/gi,
-    /\b(toast)\b/gi,
-    /\b(snackbar)\b/gi,
-    /\b(alert)\b/gi,
-    /\b(button)\b/gi,
-    /\b(input)\b/gi,
-    /\b(text\s*field)\b/gi,
-    /\b(text\s*input)\b/gi,
-    /\b(dropdown)\b/gi,
-    /\b(select)\b/gi,
-    /\b(checkbox)\b/gi,
-    /\b(radio\s*button)\b/gi,
-    /\b(switch)\b/gi,
-    /\b(toggle)\b/gi,
-    /\b(slider)\b/gi,
-    /\b(progress\s*bar)\b/gi,
-    /\b(spinner)\b/gi,
-    /\b(loader)\b/gi,
-    /\b(loading)\b/gi,
-    /\b(card)\b/gi,
-    /\b(list)\b/gi,
-    /\b(table)\b/gi,
-    /\b(grid)\b/gi,
-    /\b(tab)\b/gi,
-    /\b(tabs)\b/gi,
-    /\b(tab\s*bar)\b/gi,
-    /\b(navigation)\b/gi,
-    /\b(nav\s*bar)\b/gi,
-    /\b(navbar)\b/gi,
-    /\b(header)\b/gi,
-    /\b(footer)\b/gi,
-    /\b(sidebar)\b/gi,
-    /\b(menu)\b/gi,
-    /\b(drawer)\b/gi,
-    /\b(accordion)\b/gi,
-    /\b(carousel)\b/gi,
-    /\b(image)\b/gi,
-    /\b(avatar)\b/gi,
-    /\b(badge)\b/gi,
-    /\b(chip)\b/gi,
-    /\b(tag)\b/gi,
-    /\b(label)\b/gi,
-    /\b(label\s*value)\b/gi,
-    /\b(tooltip)\b/gi,
-    /\b(icon)\b/gi,
-    /\b(form)\b/gi,
-    /\b(date\s*picker)\b/gi,
-    /\b(time\s*picker)\b/gi,
-    /\b(color\s*picker)\b/gi,
-    /\b(file\s*upload)\b/gi,
-    /\b(search\s*bar)\b/gi,
-    /\b(search\s*field)\b/gi,
-    /\b(pagination)\b/gi,
-    /\b(stepper)\b/gi,
-    /\b(breadcrumb)\b/gi,
-    /\b(divider)\b/gi,
-    /\b(separator)\b/gi,
-    /\b(skeleton)\b/gi,
-    /\b(placeholder)\b/gi,
-    /\b(empty\s*state)\b/gi,
-    /\b(error\s*state)\b/gi,
-    /\b(success\s*state)\b/gi,
-    /\b(banner)\b/gi,
-    /\b(notification)\b/gi,
-    /\b(fab)\b/gi,
-    /\b(floating\s*action\s*button)\b/gi,
-    /\b(scroll\s*view)\b/gi,
-    /\b(webview)\b/gi,
-    /\b(map)\b/gi,
-    /\b(chart)\b/gi,
-    /\b(graph)\b/gi,
-    /\b(video\s*player)\b/gi,
-    /\b(audio\s*player)\b/gi,
-    /\b(player)\b/gi,
-    /\b(rating)\b/gi,
-    /\b(star\s*rating)\b/gi,
-    /\b(review)\b/gi,
-    /\b(comment)\b/gi,
-    /\b(text\s*area)\b/gi,
-    /\b(rich\s*text)\b/gi,
-    /\b(editor)\b/gi,
-    /\b(code\s*editor)\b/gi,
-    /\b(syntax\s*highlighter)\b/gi,
-    /\b(markdown)\b/gi,
-    /\b(preview)\b/gi,
-    /\b(thumbnail)\b/gi,
-    /\b(gallery)\b/gi,
-    /\b(lightbox)\b/gi,
-    /\b(overlay)\b/gi,
-    /\b(backdrop)\b/gi,
-    /\b(sheet)\b/gi,
-    /\b(panel)\b/gi,
-    /\b(pane)\b/gi,
-    /\b(section)\b/gi,
-    /\b(container)\b/gi,
-    /\b(wrapper)\b/gi,
-    /\b(layout)\b/gi,
-    /\b(view)\b/gi,
-    /\b(screen)\b/gi,
-    /\b(page)\b/gi,
-    /\b(component)\b/gi,
-    /\b(widget)\b/gi,
-  ];
+  // Component data loaded from component-keywords.json via component-types.ts
+  private readonly knownComponents: string[] = getAllComponentNames();
 
   async isOllamaAvailable(config?: Partial<OllamaConfig>): Promise<boolean> {
     const baseUrl = config?.baseUrl || this.defaultConfig.baseUrl;
@@ -181,7 +76,7 @@ export class OllamaService {
     const baseUrl = config?.baseUrl || this.defaultConfig.baseUrl;
     const model = config?.model || this.defaultConfig.model;
 
-    const prompt = `Analyze the following text and extract UI component names mentioned in it. 
+    const prompt = `Analyze the following text and extract UI component names mentioned in it.
 UI components are things like: button, modal, dialog, bottom sheet, label, input, dropdown, card, list, table, etc.
 Return ONLY a JSON array of component names found, nothing else. If no components found, return [].
 Example output: ["bottom sheet", "label value", "button"]
@@ -264,42 +159,285 @@ JSON array:`;
     });
   }
 
-  extractComponentsWithPatterns(text: string): string[] {
-    const components: Set<string> = new Set();
+  /**
+   * Match text against component-keywords.json aliases
+   * Returns canonical component name if found
+   * Uses word boundary matching for better accuracy
+   */
+  private matchKeywords(text: string): string | null {
     const lowerText = text.toLowerCase();
 
-    for (const pattern of this.componentPatterns) {
-      const matches = lowerText.match(pattern);
-      if (matches) {
-        for (const match of matches) {
-          components.add(match.toLowerCase().trim());
+    // Sort components by alias length (longest first) to prefer specific matches
+    const sortedComponents = [...KNOWN_COMPONENTS].sort((a, b) => {
+      const maxLenA = Math.max(...a.aliases.map((al: string) => al.length));
+      const maxLenB = Math.max(...b.aliases.map((al: string) => al.length));
+      return maxLenB - maxLenA;
+    });
+
+    for (const component of sortedComponents) {
+      for (const alias of component.aliases) {
+        // Try word boundary match first (more accurate)
+        const wordBoundaryRegex = new RegExp(
+          `\\b${this.escapeRegex(alias)}\\b`,
+          'i',
+        );
+        if (wordBoundaryRegex.test(lowerText)) {
+          return component.name;
+        }
+        // Fallback to simple includes for partial matches
+        if (lowerText.includes(alias)) {
+          return component.name;
         }
       }
     }
-
-    return Array.from(components);
+    return null;
   }
 
-  async extractComponents(
-    text: string,
+  /**
+   * Escape special regex characters
+   */
+  private escapeRegex(str: string): string {
+    return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+
+  /**
+   * Extract component name from title if it starts with a component reference
+   * Examples:
+   * - "Datatable componenti içinde..." -> "datatable"
+   * - "Tooltip component header hatası" -> "tooltip"
+   * - "Button'da renk sorunu" -> "button"
+   */
+  private extractComponentFromTitleStart(title: string): string | null {
+    const lowerTitle = title.toLowerCase().trim();
+
+    // Pattern 1: "[ComponentName] component[i]" at start
+    // Matches: "Datatable componenti", "Tooltip component", etc.
+    for (const comp of this.knownComponents) {
+      const pattern = new RegExp(`^${comp}\\s+component[ia]?\\b`, 'i');
+      if (pattern.test(lowerTitle)) {
+        return comp;
+      }
+    }
+
+    // Pattern 2: Component name as first word
+    // This catches cases like "Tooltip header hatası" or "Datatable içinde"
+    const firstWord = lowerTitle.split(/\s+/)[0];
+    if (firstWord && this.knownComponents.includes(firstWord.toLowerCase())) {
+      return firstWord.toLowerCase();
+    }
+
+    return null;
+  }
+
+  /**
+   * Extract CamelCase/PascalCase component names from text
+   * Priority: Cfa* prefixed names > other PascalCase names > generic words
+   * Example: "CfaProcessConfirmationWidget header hatası" -> ["CfaProcessConfirmationWidget"]
+   */
+  private extractCamelCaseComponents(text: string): string[] {
+    const components: string[] = [];
+
+    // 1. Find Cfa-prefixed PascalCase names (highest priority)
+    // Matches: CfaButton, CfaProcessConfirmationWidget, etc.
+    const cfaPascalCaseRegex = /\bCfa[A-Z][a-zA-Z0-9]*\b/g;
+    const cfaPascalMatches = text.match(cfaPascalCaseRegex) || [];
+    components.push(...cfaPascalMatches);
+
+    // 2. Find cfa- prefixed kebab-case names
+    // Matches: cfa-button, cfa-process-confirmation-widget, etc.
+    const cfaKebabRegex = /\bcfa-[a-z0-9-]+\b/gi;
+    const cfaKebabMatches = text.match(cfaKebabRegex) || [];
+    components.push(...cfaKebabMatches);
+
+    // 3. Find @cfa-web-components imports
+    // Matches: @cfa-web-components/cfa-page-header
+    const importRegex = /@cfa-web-components\/([a-z0-9-]+)/gi;
+    const importMatches = Array.from(text.matchAll(importRegex));
+    for (const match of importMatches) {
+      components.push(match[1]); // Just the component name part
+    }
+
+    // 4. Find other PascalCase component names (lower priority than Cfa*)
+    // Matches: ButtonComponent, InputField, etc.
+    // But NOT generic single words like Header, Footer
+    const pascalCaseRegex = /\b[A-Z][a-z]+(?:[A-Z][a-z0-9]*)+\b/g;
+    const pascalMatches = text.match(pascalCaseRegex) || [];
+    for (const match of pascalMatches) {
+      // Skip if it's already captured as Cfa* component
+      if (!match.startsWith('Cfa')) {
+        components.push(match);
+      }
+    }
+
+    return components;
+  }
+
+  /**
+   * Filter and prioritize components:
+   * - Prefer Cfa* and PascalCase names (more specific)
+   * - Keep longer/more specific names over shorter ones
+   */
+  private prioritizeComponents(components: string[]): string[] {
+    if (components.length === 0) return [];
+
+    // Normalize and deduplicate
+    const normalized = Array.from(
+      new Set(components.map((c) => c.trim()).filter((c) => c.length > 0)),
+    );
+
+    // Sort by specificity: Cfa* > PascalCase > others, then by length
+    normalized.sort((a, b) => {
+      const aIsCfa = a.startsWith('Cfa') || a.startsWith('cfa-');
+      const bIsCfa = b.startsWith('Cfa') || b.startsWith('cfa-');
+      const aIsPascal = /^[A-Z][a-z]+(?:[A-Z][a-z0-9]*)+$/.test(a);
+      const bIsPascal = /^[A-Z][a-z]+(?:[A-Z][a-z0-9]*)+$/.test(b);
+
+      // Cfa* components have highest priority
+      if (aIsCfa && !bIsCfa) return -1;
+      if (!aIsCfa && bIsCfa) return 1;
+
+      // PascalCase components have second priority
+      if (aIsPascal && !bIsPascal) return -1;
+      if (!aIsPascal && bIsPascal) return 1;
+
+      // Otherwise sort by length (longer = more specific)
+      return b.length - a.length;
+    });
+
+    // Filter out components that are substrings of longer ones
+    const filtered: string[] = [];
+    for (const comp of normalized) {
+      const lowerComp = comp.toLowerCase();
+      const isDuplicate = filtered.some((existing) =>
+        existing.toLowerCase().includes(lowerComp),
+      );
+      if (!isDuplicate) {
+        filtered.push(comp);
+      }
+    }
+
+    return filtered;
+  }
+
+  /**
+   * Extract component for a single task using priority system:
+   * 1. task.componentName (if exists) - most accurate
+   * 2. Title starts with component name (e.g., "Datatable componenti...")
+   * 3. Title match against keywords.json
+   * 4. Title scan for cfa-* / CamelCase patterns
+   * 5. Description match against keywords.json
+   * 6. Description scan for cfa-* / CamelCase patterns
+   * 7. AI fallback with CamelCase/PascalCase priority
+   * 8. Generic UI term extraction (last resort)
+   */
+  async extractComponentForTask(
+    task: {
+      componentName?: string | null;
+      title: string;
+      description?: string | null;
+    },
     useOllama: boolean = true,
     config?: Partial<OllamaConfig>,
   ): Promise<string[]> {
-    if (useOllama) {
-      const isAvailable = await this.isOllamaAvailable(config);
-      if (isAvailable) {
-        const llmComponents = await this.extractComponentsWithLLM(text, config);
-        if (llmComponents.length > 0) {
-          return llmComponents;
+    const results: string[] = [];
+
+    // Priority 1: Use componentName if it exists (most accurate)
+    if (task.componentName && task.componentName.trim().length > 0) {
+      results.push(task.componentName.trim());
+      return results;
+    }
+
+    // Priority 2: Check if title starts with a component name
+    // This is VERY high priority because it's explicit user intent
+    // Examples: "Datatable componenti içinde...", "Tooltip header hatası"
+    const titleStartComponent = this.extractComponentFromTitleStart(
+      task.title || '',
+    );
+    if (titleStartComponent) {
+      results.push(titleStartComponent);
+      return results;
+    }
+
+    // Priority 3: Match title against component-keywords.json
+    const titleKeywordMatch = this.matchKeywords(task.title || '');
+    if (titleKeywordMatch) {
+      results.push(titleKeywordMatch);
+      return results;
+    }
+
+    // Priority 4: Extract CamelCase/cfa-* components from title
+    const titleCamelCase = this.extractCamelCaseComponents(task.title || '');
+    const prioritizedTitle = this.prioritizeComponents(titleCamelCase);
+    if (prioritizedTitle.length > 0) {
+      results.push(...prioritizedTitle);
+      return results;
+    }
+
+    // Priority 5: Check description if title didn't yield results
+    if (task.description) {
+      // 5a: Check if description mentions component explicitly
+      // Pattern: "[component] componentinin" or "[component] component"
+      const descComponentPattern =
+        /\b([a-z]+(?:table|tooltip|dropdown|select|input|button|modal|dialog|popover|menu|card|list|grid|form|chart|editor|picker|slider|switch|checkbox|radio|badge|chip|avatar|calendar|tree|panel|toolbar|navbar|sidebar|footer|header))\s+component[iu]/gi;
+      const descMatch = task.description.match(descComponentPattern);
+      if (descMatch && descMatch[0]) {
+        const componentName = descMatch[0]
+          .replace(/\s+component[iu].*/gi, '')
+          .trim()
+          .toLowerCase();
+        if (componentName) {
+          results.push(componentName);
+          return results;
         }
-      } else {
-        this.logger.warn(
-          'Ollama is not available, falling back to pattern matching',
-        );
+      }
+
+      // 5b: Match description against keywords
+      const descKeywordMatch = this.matchKeywords(task.description);
+      if (descKeywordMatch) {
+        results.push(descKeywordMatch);
+        return results;
+      }
+
+      // 5c: Extract CamelCase/cfa-* from description
+      const descCamelCase = this.extractCamelCaseComponents(task.description);
+      const prioritizedDesc = this.prioritizeComponents(descCamelCase);
+      if (prioritizedDesc.length > 0) {
+        results.push(...prioritizedDesc);
+        return results;
       }
     }
 
-    return this.extractComponentsWithPatterns(text);
+    // Priority 5: AI fallback (Ollama) - only if enabled and available
+    if (useOllama) {
+      const isAvailable = await this.isOllamaAvailable(config);
+      if (isAvailable) {
+        const textToAnalyze =
+          `${task.title || ''} ${task.description || ''}`.trim();
+        if (textToAnalyze) {
+          try {
+            const llmComponents = await this.extractComponentsWithLLM(
+              textToAnalyze,
+              config,
+            );
+            // Filter LLM results to prefer specific over generic
+            const prioritizedLlm = this.prioritizeComponents(llmComponents);
+            if (prioritizedLlm.length > 0) {
+              results.push(...prioritizedLlm);
+              return results;
+            }
+          } catch (error) {
+            this.logger.warn(
+              `LLM extraction failed for task: ${task.title}`,
+              error,
+            );
+          }
+        }
+      }
+    }
+
+    // If all methods fail, return empty array
+    // This means the task has no detectable component
+    return results;
   }
 
   async analyzeTasksForComponents(
@@ -309,6 +447,7 @@ JSON array:`;
       description?: string | null;
       status: string | null;
       severity?: string | null;
+      componentName?: string | null;
     }[],
     useOllama: boolean = true,
     config?: Partial<OllamaConfig>,
@@ -332,20 +471,26 @@ JSON array:`;
     let analyzedCount = 0;
 
     for (const task of tasks) {
-      const textToAnalyze = `${task.title} ${task.description || ''}`.trim();
-      if (!textToAnalyze) continue;
-
-      const components = await this.extractComponents(
-        textToAnalyze,
+      // Use the new priority-based extraction
+      const components = await this.extractComponentForTask(
+        {
+          componentName: task.componentName,
+          title: task.title,
+          description: task.description,
+        },
         useOllama,
         config,
       );
+
       analyzedCount++;
 
       const isCompleted = task.status === 'done' || task.status === 'completed';
 
       for (const component of components) {
+        // Normalize to lowercase for grouping
         const normalizedComponent = component.toLowerCase().trim();
+        if (!normalizedComponent) continue;
+
         if (!componentMap.has(normalizedComponent)) {
           componentMap.set(normalizedComponent, {
             count: 0,

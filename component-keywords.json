@@ -1,0 +1,65 @@
+{
+  "button": ["button", "Button", "btn"],
+  "button-primary": ["button-primary", "ButtonPrimary", "primary-button"],
+  "button-secondary": ["button-secondary", "ButtonSecondary", "secondary-button"],
+  "button-icon": ["button-icon", "ButtonIcon", "icon-button"],
+  "button-link": ["button-link", "ButtonLink", "link-button"],
+
+  "datatable": ["datatable", "DataTable", "data-table", "table"],
+  "datatable-row": ["datatable-row", "DataTableRow", "table-row"],
+  "datatable-cell": ["datatable-cell", "DataTableCell", "table-cell"],
+  "datatable-pagination": ["datatable-pagination", "DataTablePagination", "table-pagination"],
+  "datatable-filter": ["datatable-filter", "DataTableFilter", "table-filter"],
+
+  "infobox": ["infobox", "InfoBox", "info-box"],
+  "alert": ["alert", "Alert"],
+  "alert-success": ["alert-success", "AlertSuccess", "success-alert"],
+  "alert-warning": ["alert-warning", "AlertWarning", "warning-alert"],
+  "alert-error": ["alert-error", "AlertError", "error-alert"],
+
+  "tooltip": ["tooltip", "Tooltip"],
+  "popover": ["popover", "Popover"],
+  "modal": ["modal", "Modal", "dialog"],
+  "drawer": ["drawer", "Drawer", "sidebar-drawer"],
+
+  "datepicker": ["datepicker", "DatePicker", "date-picker"],
+  "timepicker": ["timepicker", "TimePicker", "time-picker"],
+  "calendar": ["calendar", "Calendar"],
+  "calendar-day": ["calendar-day", "CalendarDay"],
+  "calendar-month": ["calendar-month", "CalendarMonth"],
+
+  "dropdown": ["dropdown", "Dropdown", "drop-down"],
+  "dropdown-item": ["dropdown-item", "DropdownItem", "dropdown-option"],
+  "select": ["select", "Select"],
+
+  "tabs": ["tabs", "Tabs", "tab-group"],
+  "tab": ["tab", "Tab"],
+  "accordion": ["accordion", "Accordion"],
+  "accordion-item": ["accordion-item", "AccordionItem"],
+
+  "breadcrumb": ["breadcrumb", "Breadcrumb", "breadcrumbs"],
+  "pagination": ["pagination", "Pagination"],
+  "stepper": ["stepper", "Stepper", "step-indicator"],
+
+  "card": ["card", "Card"],
+  "card-header": ["card-header", "CardHeader"],
+  "card-body": ["card-body", "CardBody"],
+  "card-footer": ["card-footer", "CardFooter"],
+
+  "badge": ["badge", "Badge"],
+  "chip": ["chip", "Chip"],
+  "avatar": ["avatar", "Avatar"],
+
+  "loader": ["loader", "Loader", "loading"],
+  "spinner": ["spinner", "Spinner"],
+  "progress-bar": ["progress-bar", "ProgressBar", "progressbar"],
+  "skeleton": ["skeleton", "Skeleton", "skeleton-loader"],
+
+  "toast": ["toast", "Toast"],
+  "notification": ["notification", "Notification"],
+
+  "layout-grid": ["layout-grid", "LayoutGrid", "grid-layout"],
+  "layout-flex": ["layout-flex", "LayoutFlex", "flex-layout"],
+  "container": ["container", "Container"],
+  "list-info-card": ["list-info-card", "ListInfoCard", "list-info-card","list info car"]
+}
