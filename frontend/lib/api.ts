@@ -167,3 +167,46 @@ export const extractConfluenceCookies = async (
   const response = await api.post('/confluence/extract-cookies', { baseUrl });
   return response.data;
 };
+
+// AI Component Analysis API
+export interface ComponentInfo {
+  name: string;
+  count: number;
+  activeTasks: number;
+  completedTasks: number;
+  tasks: {
+    id: number;
+    title: string;
+    description?: string;
+    status: string;
+    severity?: string;
+  }[];
+}
+
+export interface ComponentAnalysisResult {
+  components: ComponentInfo[];
+  totalTasks: number;
+  analyzedTasks: number;
+}
+
+export interface OllamaStatus {
+  available: boolean;
+  message: string;
+}
+
+export const getOllamaStatus = async (): Promise<OllamaStatus> => {
+  const response = await api.get('/ai/ollama-status');
+  return response.data;
+};
+
+export const getComponentAnalysis = async (
+  useOllama: boolean = true,
+  model?: string,
+): Promise<ComponentAnalysisResult> => {
+  const params: { useOllama?: string; model?: string } = {};
+  if (!useOllama) params.useOllama = 'false';
+  if (model) params.model = model;
+
+  const response = await api.get('/ai/component-analysis', { params });
+  return response.data;
+};

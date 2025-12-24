@@ -117,16 +117,14 @@ function parseDate(dateStr: string): string {
      try {
        if (format === formats[1]) {
          // YYYY-MM-DD format
-         let year: string, month: string, day: string;
-         [, year, month, day] = match;
+         const [, year, month, day] = match;
          const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
          if (!isNaN(date.getTime())) {
            return date.toISOString().split('T')[0];
          }
        } else if (format === formats[2]) {
          // DD MMM YYYY format
-         let day: string, monthStr: string, year: string;
-         [, day, monthStr, year] = match;
+         const [, day, monthStr, year] = match;
          // Convert month name to number
          const monthNames = [
            'january', 'february', 'march', 'april', 'may', 'june',
@@ -143,8 +141,7 @@ function parseDate(dateStr: string): string {
          }
        } else {
          // DD.MM.YYYY format
-         let day: string, month: string, year: string;
-         [, day, month, year] = match;
+         const [, day, month, year] = match;
          const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
          if (!isNaN(date.getTime())) {
            return date.toISOString().split('T')[0];

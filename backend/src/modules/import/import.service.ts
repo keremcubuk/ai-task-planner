@@ -43,11 +43,16 @@ export class ImportService {
 
   async importXlsx(filePath: string): Promise<ImportResult> {
     try {
+      this.logger.log(`Starting XLSX import from: ${filePath}`);
       const workbook = XLSX.readFile(filePath);
       const sheetName = workbook.SheetNames[0];
+      this.logger.log(`Reading sheet: ${sheetName}`);
       const sheet = workbook.Sheets[sheetName];
       const tasks = XLSX.utils.sheet_to_json<ImportedTask>(sheet);
+      this.logger.log(`Parsed ${tasks.length} rows from Excel`);
+      this.logger.log(`First row sample: ${JSON.stringify(tasks[0] || {})}`);
       const count = await this.saveTasks(tasks, 'xlsx');
+      this.logger.log(`Successfully saved ${count} tasks`);
       return { count, message: 'XLSX imported successfully' };
     } catch (error) {
       const errorMessage = getErrorMessage(error);
@@ -82,17 +87,74 @@ export class ImportService {
   ): Promise<number> {
     let count = 0;
 
-    for (const row of rawData) {
-      // Basic mapping - can be improved with a mapping object from frontend
-      const title =
-        row['Title'] || row['title'] || row['Task Name'] || row['Subject'];
-      if (!title) continue;
+    this.logger.log(`Processing ${rawData.length} rows`);
 
-      const description =
-        row['Description'] || row['description'] || row['Notes'];
+    for (const row of rawData) {
+      // Flexible column mapping - supports many common column name variations
+      const titleRaw =
+        row['Title'] ||
+        row['title'] ||
+        row['TITLE'] ||
+        row['Task Name'] ||
+        row['Task'] ||
+        row['task'] ||
+        row['Subject'] ||
+        row['subject'] ||
+        row['Name'] ||
+        row['name'] ||
+        row['Summary'] ||
+        row['summary'];
+
+      let title = '';
+      if (titleRaw && typeof titleRaw === 'string') {
+        title = titleRaw.trim();
+      } else if (titleRaw) {
+        title = String(titleRaw).trim();
+      }
+
+      if (!title) {
+        this.logger.warn(
+          `Skipping row without title. Available columns: ${Object.keys(row).join(', ')}`,
+        );
+        continue;
+      }
+
+      const descriptionRaw =
+        row['Description'] ||
+        row['description'] ||
+        row['DESCRIPTION'] ||
+        row['Notes'] ||
+        row['notes'] ||
+        row['Details'] ||
+        row['details'] ||
+        row['Comment'] ||
+        row['comment'];
+
+      let description: string | undefined;
+      if (descriptionRaw && typeof descriptionRaw === 'string') {
+        description = descriptionRaw;
+      } else if (descriptionRaw) {
+        description = String(descriptionRaw);
+      }
+
       const status =
-        row['Status'] || row['status'] || row['Progress'] || row['progress']; // open, in_progress, done
-      const severity = row['Severity'] || row['severity'] || row['Priority']; // critical, major, minor
+        row['Status'] ||
+        row['status'] ||
+        row['STATUS'] ||
+        row['Progress'] ||
+        row['progress'] ||
+        row['State'] ||
+        row['state'];
+
+      const severity =
+        row['Severity'] ||
+        row['severity'] ||
+        row['SEVERITY'] ||
+        row['Priority'] ||
+        row['priority'] ||
+        row['PRIORITY'] ||
+        row['Importance'] ||
+        row['importance'];
       const dueDate =
         row['Due Date'] ||
         row['Due date'] ||
@@ -134,7 +196,7 @@ export class ImportService {
 
       const taskData = {
         title,
-        description: description ? String(description) : undefined,
+        description: description,
         source: source,
         project: project ? String(project) : undefined,
         status: this.normalizeStatus(status),
@@ -175,18 +237,23 @@ export class ImportService {
 
       if (existing) {
         // Mevcut task'ı güncelle
+        this.logger.log(
+          `Updating existing task: ${title} (ID: ${existing.id})`,
+        );
         await this.prisma.task.update({
           where: { id: existing.id },
           data: taskData,
         });
       } else {
         // Yeni task oluştur
+        this.logger.log(`Creating new task: ${title}`);
         await this.prisma.task.create({ data: taskData });
       }
 
       count++;
     }
 
+    this.logger.log(`Finished processing. Total count: ${count}`);
     return count;
   }
 

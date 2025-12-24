@@ -159,6 +159,15 @@ export class ConfluenceService {
           this.logger.warn(
             `No saved cookies found for domain: ${domain}. Please login first.`,
           );
+          return {
+            success: false,
+            pageTitle: '',
+            projectStatus: '',
+            tasks: [],
+            totalCount: 0,
+            error:
+              'No authentication cookies found. Please login first using the cookie extraction feature.',
+          };
         }
       }
 
@@ -191,11 +200,25 @@ export class ConfluenceService {
           'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         );
 
-        // Cookie'leri yükle
+        // Load cookies if available
         if (cookiesJson) {
-          const cookies = this.parseCookies(cookiesJson);
-          if (cookies.length > 0) {
+          try {
+            const cookies = this.parseCookies(cookiesJson);
+            if (cookies.length === 0) {
+              throw new Error('No valid cookies found in the provided data');
+            }
             await page.setCookie(...cookies);
+          } catch (error) {
+            this.logger.error('Failed to parse or set cookies:', error);
+            return {
+              success: false,
+              pageTitle: '',
+              projectStatus: '',
+              tasks: [],
+              totalCount: 0,
+              error:
+                'Invalid or expired cookies. Please login again to get fresh cookies.',
+            };
           }
         }
 
@@ -205,12 +228,18 @@ export class ConfluenceService {
           timeout: 60000,
         });
 
-        // Login sayfasına yönlendirildi mi kontrol et
+        // Check if redirected to login page
         const currentUrl = page.url();
         if (this.isLoginPage(currentUrl)) {
-          throw new BadRequestException(
-            'Session expired or invalid cookies. Please update your cookies.',
-          );
+          return {
+            success: false,
+            pageTitle: '',
+            projectStatus: '',
+            tasks: [],
+            totalCount: 0,
+            error:
+              'Session expired or invalid cookies. Please login again to get fresh cookies.',
+          };
         }
 
         // Sayfa bilgilerini çıkar
@@ -244,12 +273,21 @@ export class ConfluenceService {
       }
     } catch (error) {
       this.logger.error('Confluence crawl error:', error);
-      if (error instanceof BadRequestException) {
-        throw error;
+
+      // For URL parsing errors
+      if (error instanceof TypeError && error.message.includes('Invalid URL')) {
+        throw new BadRequestException('Invalid URL format');
       }
-      throw new BadRequestException(
-        `Failed to crawl Confluence page: ${error.message}`,
-      );
+
+      // For other errors, return a structured error response instead of throwing
+      return {
+        success: false,
+        pageTitle: '',
+        projectStatus: '',
+        tasks: [],
+        totalCount: 0,
+        error: `Failed to access Confluence page: ${error.message || 'Unknown error'}. Please check your credentials and try again.`,
+      };
     }
   }
 
@@ -454,7 +492,7 @@ export class ConfluenceService {
         // Find header row - look for <th> elements or first row with <td>
         const allRows = table.querySelectorAll('tr');
         let headerRowIndex = -1;
-        let headerCellIndexesToSkip: number[] = [];
+        const headerCellIndexesToSkip: number[] = [];
 
         // Try to find row with <th> elements
         for (let i = 0; i < allRows.length; i++) {

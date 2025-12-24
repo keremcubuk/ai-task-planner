@@ -24,14 +24,21 @@ export default function FileImport({ onBack }: FileImportProps) {
     if (!file) return;
     setLoading(true);
     setError('');
+    setMessage('');
     try {
+      let result;
       if (type === 'csv') {
-        await importCsv(file);
+        result = await importCsv(file);
       } else {
-        await importXlsx(file);
+        result = await importXlsx(file);
       }
-      setMessage('Import successful!');
-      setTimeout(() => router.push('/'), 1500);
+      
+      if (result.count === 0) {
+        setError('No tasks imported. Please check your file column names (Title, Description, Status, Severity, etc.)');
+      } else {
+        setMessage(`Import successful! ${result.count} task(s) imported.`);
+        setTimeout(() => router.push('/'), 1500);
+      }
     } catch (err) {
       setError('Import failed. Check console.');
       console.error(err);
