@@ -43,6 +43,9 @@ export class AiService implements OnModuleInit {
   }
 
   async prioritizeTasks() {
+    // Reload config to get latest weights
+    this.loadConfig();
+
     // Only prioritize tasks that are not done or completed
     const tasks = await this.prisma.task.findMany({
       where: {

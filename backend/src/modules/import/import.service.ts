@@ -187,8 +187,8 @@ export class ImportService {
         row['Owner'] ||
         row['Assignee'];
 
-      // Component Name kolonu - Checklist Items'dan oku
-      const componentNameRaw =
+      // Checklist Items: kebab-case olanlar componentName, diğerleri project olarak ayıklanacak
+      const checklistRaw =
         row['Checklist Items'] ||
         row['checklist items'] ||
         row['Component Name'] ||
@@ -196,20 +196,50 @@ export class ImportService {
         row['Component'] ||
         row['component'];
 
-      let componentName: string | undefined;
-      if (componentNameRaw && typeof componentNameRaw === 'string') {
-        componentName = componentNameRaw;
-      } else if (componentNameRaw) {
-        componentName = this.safeCellToString(componentNameRaw);
+      let componentName: string | undefined = undefined;
+      let project: string | undefined = undefined;
+      if (checklistRaw && typeof checklistRaw === 'string') {
+        // Split by semicolon, trim, filter empty
+        const items = checklistRaw
+          .split(';')
+          .map((i) => i.trim())
+          .filter(Boolean);
+        for (const item of items) {
+          if (/^[a-z0-9]+(-[a-z0-9]+)+$/.test(item)) {
+            // kebab-case: componentName
+            componentName = item;
+          } else {
+            // not kebab-case: project
+            project = item;
+          }
+        }
+      } else if (checklistRaw) {
+        // fallback: try to stringify
+        const str = this.safeCellToString(checklistRaw);
+        const items = str
+          .split(';')
+          .map((i) => i.trim())
+          .filter(Boolean);
+        for (const item of items) {
+          if (/^[a-z0-9]+(-[a-z0-9]+)+$/.test(item)) {
+            componentName = item;
+          } else {
+            project = item;
+          }
+        }
       }
 
-      // Project Name kolonu - Excel'den oku
-      const project =
-        row['Project Name'] ||
-        row['Project  Name'] ||
-        row['project name'] ||
-        row['ProjectName'] ||
-        row['project'];
+      // Project Name kolonu - Excel'den oku, eğer Checklist Items'dan gelmediyse
+      if (!project) {
+        project =
+          row['Project Name'] ||
+          row['Project  Name'] ||
+          row['project name'] ||
+          row['ProjectName'] ||
+          row['project'];
+      }
+
+      // ...project assignment is now handled above...
 
       // Source kolonu - Excel'de varsa onu kullan, yoksa default (xlsx/csv)
       const sourceFromExcel = row['Source'] || row['source'];
