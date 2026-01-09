@@ -38,6 +38,8 @@ export interface ImportedTask {
   Notes?: string;
   Status?: string;
   status?: string;
+  'Bucket Name'?: string;
+  bucketName?: string;
   Progress?: string | number;
   progress?: string | number;
   Severity?: string;
@@ -97,6 +99,24 @@ export interface ProjectDetails {
   minor: number;
 }
 
+export interface BucketCategoryBreakdown {
+  done: number;
+  projectSolved: number;
+  declined: number;
+  design: number;
+  other: number;
+  none: number;
+}
+
+export interface OpenedByStats {
+  total: number;
+  firstCreatedAt?: string;
+  lastCreatedAt?: string;
+  issuesPerWeek: number;
+  last30Days: number;
+  bucketBreakdown: BucketCategoryBreakdown;
+}
+
 // Analytics Response
 export interface AnalyticsResponse {
   totalTasks: number;
@@ -105,6 +125,8 @@ export interface AnalyticsResponse {
   byAssignedTo: Record<string, number>;
   byAssigneePerformance: Record<string, AssigneePerformance>;
   byProject: Record<string, ProjectDetails>;
+  byOpenedBy: Record<string, OpenedByStats>;
+  byBucketCategory: BucketCategoryBreakdown;
   avgCompletionTimeDays: number;
 }
 

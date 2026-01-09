@@ -32,11 +32,38 @@ interface AnalyticsData {
   byAssignedTo: Record<string, number>;
   byAssigneePerformance: Record<string, AssigneePerformance>;
   byProject: Record<string, ProjectDetails>;
+  byOpenedBy: Record<
+    string,
+    {
+      total: number;
+      firstCreatedAt?: string;
+      lastCreatedAt?: string;
+      issuesPerWeek: number;
+      last30Days: number;
+      bucketBreakdown: {
+        done: number;
+        projectSolved: number;
+        declined: number;
+        design: number;
+        other: number;
+        none: number;
+      };
+    }
+  >;
+  byBucketCategory: {
+    done: number;
+    projectSolved: number;
+    declined: number;
+    design: number;
+    other: number;
+    none: number;
+  };
 }
 
 export default function Analytics() {
   const [data, setData] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [openerComments, setOpenerComments] = useState<Record<string, string>>({});
   const [componentData, setComponentData] = useState<ComponentAnalysisResult | null>(null);
   const [componentLoading, setComponentLoading] = useState(false);
   const [ollamaStatus, setOllamaStatus] = useState<OllamaStatus | null>(null);
@@ -47,7 +74,25 @@ export default function Analytics() {
   useEffect(() => {
     loadAnalytics();
     checkOllamaStatus();
+    try {
+      const raw = localStorage.getItem('openedByComments');
+      if (raw) setOpenerComments(JSON.parse(raw));
+    } catch {
+      setOpenerComments({});
+    }
   }, []);
+
+  const setOpenerComment = (openedBy: string, value: string) => {
+    setOpenerComments((prev) => {
+      const next = { ...prev, [openedBy]: value };
+      try {
+        localStorage.setItem('openedByComments', JSON.stringify(next));
+      } catch {
+        // ignore
+      }
+      return next;
+    });
+  };
 
   const loadAnalytics = async () => {
     try {
@@ -106,6 +151,9 @@ export default function Analytics() {
   const completedTasksCount =
     (data.byStatus?.done || 0) + (data.byStatus?.completed || 0);
   const criticalCount = data.bySeverity?.critical || 0;
+  const openedByEntries = Object.entries(data.byOpenedBy || {}).sort((a, b) => {
+    return (b[1]?.total || 0) - (a[1]?.total || 0);
+  });
 
   return (
     <div className="space-y-6">
@@ -115,6 +163,91 @@ export default function Analytics() {
           <div className="text-sm text-gray-500 mt-1">
             Overview of tasks, projects, assignees, and UI component hotspots.
           </div>
+        </div>
+      </div>
+
+      <div className="bg-white p-6 rounded-lg shadow">
+        <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center gap-2">
+          <BarChartIcon size={20} /> Issue Openers
+        </h3>
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Opened By
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Total
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  / Week
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Last 30d
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Project Solved
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Done
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Design
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Declined
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Other
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Comment
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {openedByEntries.map(([openedBy, stats]) => (
+                <tr key={openedBy}>
+                  <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                    {openedBy}
+                  </td>
+                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
+                    {stats.total}
+                  </td>
+                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
+                    {stats.issuesPerWeek}
+                  </td>
+                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
+                    {stats.last30Days}
+                  </td>
+                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
+                    {stats.bucketBreakdown.projectSolved}
+                  </td>
+                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
+                    {stats.bucketBreakdown.done}
+                  </td>
+                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
+                    {stats.bucketBreakdown.design}
+                  </td>
+                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
+                    {stats.bucketBreakdown.declined}
+                  </td>
+                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
+                    {stats.bucketBreakdown.other + stats.bucketBreakdown.none}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-gray-700 min-w-[280px]">
+                    <input
+                      className="w-full border-gray-300 rounded-md shadow-sm p-2 border text-gray-900"
+                      value={openerComments[openedBy] || ''}
+                      onChange={(e) => setOpenerComment(openedBy, e.target.value)}
+                      placeholder="Add a note..."
+                    />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
 

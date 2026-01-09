@@ -17,6 +17,27 @@ export class ImportService {
 
   constructor(private prisma: PrismaService) {}
 
+  private extractOpenerFromDescription(
+    description?: string,
+  ): string | undefined {
+    if (!description) return undefined;
+    const raw = String(description).trim();
+    if (!raw) return undefined;
+
+    const commaIndex = raw.indexOf(',');
+    if (commaIndex <= 0) return undefined;
+
+    const candidate = raw.slice(0, commaIndex).trim();
+    if (!candidate) return undefined;
+
+    // Heuristic: opener is usually a human name (letters/spaces, 2+ chars)
+    // Also allow optional trailing qualifier in parentheses, e.g. "Osman Unlu (Contractor)"
+    if (!/^[\p{L}][\p{L} .'-]{1,}(?:\s*\([^()]{1,80}\))?$/u.test(candidate))
+      return undefined;
+
+    return candidate;
+  }
+
   private safeCellToString(value: unknown): string {
     if (value === null || value === undefined) return '';
     if (typeof value === 'string') return value;
@@ -150,6 +171,9 @@ export class ImportService {
         description = this.safeCellToString(descriptionRaw);
       }
 
+      const openerFromDescription =
+        this.extractOpenerFromDescription(description);
+
       const status =
         row['Status'] ||
         row['status'] ||
@@ -158,6 +182,13 @@ export class ImportService {
         row['progress'] ||
         row['State'] ||
         row['state'];
+
+      const bucketName = row['Bucket Name'] || row['bucketName'];
+
+      const statusStr = status ? this.safeCellToString(status).trim() : '';
+      const bucketNameStr = bucketName
+        ? this.safeCellToString(bucketName).trim()
+        : '';
 
       const severity =
         row['Severity'] ||
@@ -258,12 +289,17 @@ export class ImportService {
         description: description,
         source: source,
         project: project ? String(project) : undefined,
-        status: this.normalizeStatus(status),
+        status:
+          statusStr !== ''
+            ? this.normalizeStatus(statusStr)
+            : this.normalizeBucketStatus(bucketNameStr) || 'open',
         severity: this.normalizeSeverity(severity),
         dueDate: this.safeParseDate(dueDate),
         createdAt: this.safeParseDate(createdAt) || new Date(), // Default to now if invalid/missing
         externalId: externalId ? String(externalId) : undefined,
         assignedTo: assignedTo ? String(assignedTo) : undefined,
+        openedBy: openerFromDescription,
+        bucketName: bucketNameStr !== '' ? bucketNameStr : undefined,
         componentName: componentName,
         contentHash: contentHash,
         manualPriority:
@@ -338,6 +374,45 @@ export class ImportService {
       return 'done';
     if (s.includes('progress')) return 'in_progress';
     return 'open';
+  }
+
+  private normalizeBucketStatus(bucketName: unknown): string | undefined {
+    if (!bucketName) return undefined;
+    let raw = '';
+    if (typeof bucketName === 'string') {
+      raw = bucketName;
+    } else if (
+      typeof bucketName === 'number' ||
+      typeof bucketName === 'boolean'
+    ) {
+      raw = String(bucketName);
+    } else if (bucketName instanceof Date) {
+      raw = bucketName.toISOString();
+    } else {
+      return undefined;
+    }
+
+    raw = raw.trim();
+    if (!raw) return undefined;
+
+    const s = raw.toLowerCase();
+
+    // Provided bucket statuses
+    // - "Done" / "Done - Proje Çözüldü" => done
+    if (s === 'done' || s.startsWith('done')) return 'done';
+
+    // - "No Need / Declined /Discarded" => done (closed), but bucketName preserves declined meaning
+    if (
+      s.includes('declined') ||
+      s.includes('discarded') ||
+      s.includes('no need')
+    )
+      return 'done';
+
+    // - "Tasarım" => in progress
+    if (s.includes('tasarım') || s.includes('tasarim')) return 'in_progress';
+
+    return undefined;
   }
 
   private normalizeSeverity(severity: any): string {

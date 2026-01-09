@@ -14,6 +14,7 @@ export interface Task {
   transitionDate?: string;
   dueDate?: string;
   assignedTo?: string;
+  openedBy?: string;
   componentName?: string;
   manualPriority?: number;
   aiPriority: number;

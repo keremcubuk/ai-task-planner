@@ -161,6 +161,10 @@ export const TaskDetail: React.FC<TaskDetailProps> = ({ taskId, onClose, onUpdat
           <div className="mt-1 text-gray-900">{formatDate(task.dueDate || '')}</div>
         </div>
         <div>
+           <label className="block text-sm font-medium text-gray-700">Opened By</label>
+           <div className="mt-1 text-gray-900 font-medium">{task.openedBy || '-'}</div>
+        </div>
+        <div>
            <label className="block text-sm font-medium text-gray-700">Assigned To</label>
            <div className="mt-1 text-gray-900 font-medium">{task.assignedTo || 'Unassigned'}</div>
         </div>
