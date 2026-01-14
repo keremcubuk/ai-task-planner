@@ -392,11 +392,11 @@ export default function ConfluenceCrawler({ onBack }: ConfluenceCrawlerProps) {
             </div>
           )}
 
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
             <table className="w-full text-sm">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-3 py-2 text-left">
+                  <th className="px-3 py-2 text-left sticky top-0 bg-gray-50 z-10">
                     <input
                       type="checkbox"
                       checked={selectedTasks.size === crawledTasks.length}
@@ -404,17 +404,17 @@ export default function ConfluenceCrawler({ onBack }: ConfluenceCrawlerProps) {
                       className="rounded"
                     />
                   </th>
-                  <th className="px-3 py-2 text-left font-bold text-gray-700">Project Name</th>
-                  <th className="px-3 py-2 text-left font-bold text-gray-700">Project Status</th>
-                  <th className="px-3 py-2 text-left font-bold text-gray-700">Source</th>
-                  <th className="px-3 py-2 text-left font-bold text-gray-700">Task ID</th>
-                  <th className="px-3 py-2 text-left font-bold text-gray-700">Task Name</th>
-                  <th className="px-3 py-2 text-left font-bold text-gray-700">Progress</th>
-                  <th className="px-3 py-2 text-left font-bold text-gray-700">Assigned To</th>
-                  <th className="px-3 py-2 text-left font-bold text-gray-700">Priority</th>
-                  <th className="px-3 py-2 text-left font-bold text-gray-700">Description</th>
-                  <th className="px-3 py-2 text-left font-bold text-gray-700">Created Date</th>
-                  <th className="px-3 py-2 text-left font-bold text-gray-700">Due Date</th>
+                  <th className="px-3 py-2 text-left font-bold text-gray-700 sticky top-0 bg-gray-50 z-10">Project Name</th>
+                  <th className="px-3 py-2 text-left font-bold text-gray-700 sticky top-0 bg-gray-50 z-10">Project Status</th>
+                  <th className="px-3 py-2 text-left font-bold text-gray-700 sticky top-0 bg-gray-50 z-10">Source</th>
+                  <th className="px-3 py-2 text-left font-bold text-gray-700 sticky top-0 bg-gray-50 z-10">Task ID</th>
+                  <th className="px-3 py-2 text-left font-bold text-gray-700 sticky top-0 bg-gray-50 z-10">Task Name</th>
+                  <th className="px-3 py-2 text-left font-bold text-gray-700 sticky top-0 bg-gray-50 z-10">Progress</th>
+                  <th className="px-3 py-2 text-left font-bold text-gray-700 sticky top-0 bg-gray-50 z-10">Assigned To</th>
+                  <th className="px-3 py-2 text-left font-bold text-gray-700 sticky top-0 bg-gray-50 z-10">Priority</th>
+                  <th className="px-3 py-2 text-left font-bold text-gray-700 sticky top-0 bg-gray-50 z-10">Description</th>
+                  <th className="px-3 py-2 text-left font-bold text-gray-700 sticky top-0 bg-gray-50 z-10">Created Date</th>
+                  <th className="px-3 py-2 text-left font-bold text-gray-700 sticky top-0 bg-gray-50 z-10">Due Date</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">

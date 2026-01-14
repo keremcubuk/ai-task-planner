@@ -19,7 +19,7 @@ export const StatusFilter: React.FC<StatusFilterProps> = ({ selectedStatuses, on
             className={`px-3 py-1 text-sm rounded-full border ${
               selectedStatuses.includes(status) 
                 ? 'bg-blue-100 border-blue-300 text-blue-800' 
-                : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
+                : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'
             }`}
           >
             {status.replace('_', ' ')}

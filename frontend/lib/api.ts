@@ -16,6 +16,7 @@ export interface Task {
   assignedTo?: string;
   openedBy?: string;
   componentName?: string;
+  bucketName?: string;
   manualPriority?: number;
   aiPriority: number;
   aiScore: number;
@@ -36,6 +37,13 @@ const api = axios.create({
 
 export const getAnalytics = async () => {
   const response = await api.get('/tasks/analytics');
+  return response.data;
+};
+
+export const getOpenerTickets = async (openedBy?: string, component?: string) => {
+  const response = await api.get('/tasks/analytics/opener-tickets', {
+    params: { openedBy, component },
+  });
   return response.data;
 };
 

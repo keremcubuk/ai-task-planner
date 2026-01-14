@@ -100,8 +100,8 @@ export interface ProjectDetails {
 }
 
 export interface BucketCategoryBreakdown {
-  done: number;
-  projectSolved: number;
+  solvedInComponent: number;
+  solvedInProject: number;
   declined: number;
   design: number;
   other: number;
@@ -115,6 +115,40 @@ export interface OpenedByStats {
   issuesPerWeek: number;
   last30Days: number;
   bucketBreakdown: BucketCategoryBreakdown;
+  topComponents: Array<{ component: string; count: number }>;
+  stuckComponents: Array<{
+    component: string;
+    total: number;
+    solvedInProject: number;
+    open: number;
+    stuckCount: number;
+  }>;
+  solvedInProjectComponents: Array<{
+    component: string;
+    total: number;
+    solvedInProject: number;
+    solvedRate: number;
+  }>;
+  completionRate: number;
+  qualityScore: number;
+  componentDiversity: number;
+}
+
+export interface AssigneeDetailedStats {
+  total: number;
+  completed: number;
+  open: number;
+  inProgress: number;
+  firstTaskAt?: string;
+  lastTaskAt?: string;
+  avgPerMonth: number;
+}
+
+export interface ComponentBucketStats {
+  total: number;
+  bucketBreakdown: BucketCategoryBreakdown;
+  solvedInProjectPercent: number;
+  solvedInComponentPercent: number;
 }
 
 // Analytics Response
@@ -124,10 +158,14 @@ export interface AnalyticsResponse {
   bySeverity: Record<string, number>;
   byAssignedTo: Record<string, number>;
   byAssigneePerformance: Record<string, AssigneePerformance>;
+  byAssigneeDetailed: Record<string, AssigneeDetailedStats>;
   byProject: Record<string, ProjectDetails>;
   byOpenedBy: Record<string, OpenedByStats>;
   byBucketCategory: BucketCategoryBreakdown;
+  byComponentBucket: Record<string, ComponentBucketStats>;
   avgCompletionTimeDays: number;
+  projectCount: number;
+  topProjectsByTickets: Array<{ project: string; count: number }>;
 }
 
 // Import Result

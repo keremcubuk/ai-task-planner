@@ -42,6 +42,17 @@ export class TasksController {
     return this.tasksService.getAnalytics();
   }
 
+  @Get('analytics/opener-tickets')
+  getOpenerTickets(
+    @Query('openedBy') openedBy?: string,
+    @Query('component') component?: string,
+  ) {
+    return this.tasksService.getTicketsByOpenerAndComponent(
+      openedBy,
+      component,
+    );
+  }
+
   @Get('projects')
   getProjectsStats() {
     return this.tasksService.getProjectsStats();

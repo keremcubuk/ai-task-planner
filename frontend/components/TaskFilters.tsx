@@ -57,7 +57,7 @@ export const TaskFilters: React.FC<TaskFiltersProps> = ({
               placeholder="Search tasks..." 
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="flex-1 border-none focus:ring-0 text-gray-700 outline-none"
+              className="flex-1 border-none focus:ring-0 outline-none bg-white text-gray-900 placeholder:text-gray-400"
             />
             <button 
                 onClick={() => setShowFilters(!showFilters)} 
