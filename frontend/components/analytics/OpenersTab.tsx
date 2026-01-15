@@ -109,7 +109,7 @@ export function OpenersTab({
               <ul>
                 <li>🟢 70 ve üzeri: Yüksek kalite</li>
                 <li>🟡 40-69: Orta kalite</li>
-                <li>🔴 39 ve altı: Düşük kalite (Kara Liste Adayı)</li>
+                <li>🔴 39 ve altı: Düşük kalite (Özel Destek İhtiyacı)</li>
               </ul>
               Yüksek skor = Componentte çözülen, nitelikli issue.
             </div>
@@ -301,7 +301,7 @@ export function OpenersTab({
                 </div>
                 {stats.qualityScore < 40 && (
                   <div className="text-[10px] font-bold text-red-600 bg-red-50 px-2 py-0.5 rounded-full mt-1 inline-block">
-                    Kara Liste Adayı
+                    Özel Destek İhtiyacı
                   </div>
                 )}
               </div>

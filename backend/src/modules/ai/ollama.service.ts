@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { OllamaClientService } from './ollama-client.service';
+import { OllamaClientService, OllamaConfig } from './ollama-client.service';
 import { ComponentDetectorService } from './component-detector.service';
 
 export interface ComponentAnalysisResult {
@@ -31,88 +31,164 @@ export class OllamaService {
     private readonly detector: ComponentDetectorService,
   ) {}
 
-  async isOllamaAvailable(config?: any): Promise<boolean> {
+  async isOllamaAvailable(config?: Partial<OllamaConfig>): Promise<boolean> {
     return this.client.isAvailable(config);
   }
 
+  /**
+   * Extract component for a single task using priority system:
+   * 1. task.componentName (if exists) - most accurate
+   * 2. Title starts with component name (e.g., "Datatable componenti...")
+   * 3. Title match against keywords.json
+   * 4. Title scan for cfa-* / CamelCase patterns
+   * 5. Description match against keywords.json
+   * 6. Description scan for cfa-* / CamelCase patterns
+   * 7. AI fallback with CamelCase/PascalCase priority
+   * 8. Generic UI term extraction (last resort)
+   */
+  async extractComponentForTask(
+    task: {
+      componentName?: string | null;
+      title: string;
+      description?: string | null;
+    },
+    useOllama: boolean = true,
+    config?: Partial<OllamaConfig>,
+  ): Promise<string[]> {
+    // First try the priority-based pattern matching from detector
+    const patternResults = this.detector.extractComponentForTask(task);
+    if (patternResults.length > 0) {
+      return patternResults;
+    }
+
+    // AI fallback (Ollama) - only if enabled and available
+    if (useOllama) {
+      const isAvailable = await this.client.isAvailable(config);
+      if (isAvailable) {
+        const textToAnalyze =
+          `${task.title || ''} ${task.description || ''}`.trim();
+        if (textToAnalyze) {
+          try {
+            const llmComponents = await this.client.extractComponentsWithLLM(
+              textToAnalyze,
+              config,
+            );
+            // Filter LLM results to prefer specific over generic
+            const prioritizedLlm =
+              this.detector.prioritizeComponents(llmComponents);
+            if (prioritizedLlm.length > 0) {
+              return prioritizedLlm;
+            }
+          } catch (error) {
+            this.logger.warn(
+              `LLM extraction failed for task: ${task.title}`,
+              error,
+            );
+          }
+        }
+      }
+    }
+
+    // If all methods fail, return empty array
+    return [];
+  }
+
   async analyzeTasksForComponents(
-    tasks: any[],
-    useOllama: boolean,
-    config?: any,
+    tasks: {
+      id: number;
+      title: string;
+      description?: string | null;
+      status: string | null;
+      severity?: string | null;
+      componentName?: string | null;
+    }[],
+    useOllama: boolean = true,
+    config?: Partial<OllamaConfig>,
   ): Promise<ComponentAnalysisResult> {
     this.logger.log(
       `Starting component analysis for ${tasks.length} tasks (useOllama: ${useOllama})`,
     );
 
-    const componentMap = new Map<string, ComponentInfo>();
+    const componentMap: Map<
+      string,
+      {
+        count: number;
+        activeTasks: number;
+        completedTasks: number;
+        tasks: {
+          id: number;
+          title: string;
+          description?: string;
+          status: string;
+          severity?: string;
+        }[];
+      }
+    > = new Map();
+
     let analyzedCount = 0;
 
     for (const task of tasks) {
-      const text = `${task.title || ''} ${task.description || ''}`.trim();
-      if (!text) continue;
+      // Use the priority-based extraction
+      const components = await this.extractComponentForTask(
+        {
+          componentName: task.componentName,
+          title: task.title,
+          description: task.description,
+        },
+        useOllama,
+        config,
+      );
 
-      let detectedComponents: string[] = [];
+      analyzedCount++;
 
-      if (useOllama) {
-        try {
-          const llmComponents = await this.client.extractComponentsWithLLM(
-            text,
-            config,
-          );
-          detectedComponents.push(...llmComponents);
-        } catch (error) {
-          this.logger.warn(
-            `LLM extraction failed for task ${task.id}, falling back to pattern matching`,
-          );
-        }
-      }
+      const isCompleted = task.status === 'done' || task.status === 'completed';
 
-      if (detectedComponents.length === 0) {
-        detectedComponents = this.detector.detectComponents(text, task.title);
-      }
+      for (const component of components) {
+        // Normalize to lowercase for grouping
+        const normalizedComponent = component.toLowerCase().trim();
+        if (!normalizedComponent) continue;
 
-      if (detectedComponents.length > 0) {
-        analyzedCount++;
-
-        for (const componentName of detectedComponents) {
-          const normalizedName = componentName.toLowerCase().trim();
-          if (!normalizedName) continue;
-
-          if (!componentMap.has(normalizedName)) {
-            componentMap.set(normalizedName, {
-              name: normalizedName,
-              count: 0,
-              activeTasks: 0,
-              completedTasks: 0,
-              tasks: [],
-            });
-          }
-
-          const info = componentMap.get(normalizedName)!;
-          info.count++;
-
-          const isActive =
-            task.status !== 'done' && task.status !== 'completed';
-          if (isActive) {
-            info.activeTasks++;
-          } else {
-            info.completedTasks++;
-          }
-
-          info.tasks.push({
-            id: task.id,
-            title: task.title,
-            description: task.description,
-            status: task.status,
-            severity: task.severity,
+        if (!componentMap.has(normalizedComponent)) {
+          componentMap.set(normalizedComponent, {
+            count: 0,
+            activeTasks: 0,
+            completedTasks: 0,
+            tasks: [],
           });
         }
+
+        const entry = componentMap.get(normalizedComponent)!;
+        entry.count++;
+        if (isCompleted) {
+          entry.completedTasks++;
+        } else {
+          entry.activeTasks++;
+        }
+        entry.tasks.push({
+          id: task.id,
+          title: task.title,
+          description: task.description || undefined,
+          status: task.status || 'unknown',
+          severity: task.severity || undefined,
+        });
       }
     }
 
-    const components = Array.from(componentMap.values()).sort(
-      (a, b) => b.activeTasks - a.activeTasks || b.count - a.count,
-    );
+    const components: ComponentInfo[] = Array.from(componentMap.entries())
+      .map(([name, data]) => ({
+        name,
+        count: data.count,
+        activeTasks: data.activeTasks,
+        completedTasks: data.completedTasks,
+        tasks: data.tasks,
+      }))
+      .sort((a, b) => {
+        // Sort by active tasks first (critical components), then by total count
+        if (a.activeTasks !== b.activeTasks) {
+          return b.activeTasks - a.activeTasks;
+        }
+        return b.count - a.count;
+      });
 
     this.logger.log(
       `Analysis complete: ${components.length} unique components found, ${analyzedCount} tasks analyzed`,

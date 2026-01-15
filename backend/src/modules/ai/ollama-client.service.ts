@@ -130,7 +130,10 @@ JSON array:`;
 
     try {
       const response = await this.generateCompletion(prompt, config);
-      const cleaned = response.trim().replace(/```json\n?/g, '').replace(/```\n?/g, '');
+      const cleaned = response
+        .trim()
+        .replace(/```json\n?/g, '')
+        .replace(/```\n?/g, '');
 
       try {
         const parsed = JSON.parse(cleaned);
