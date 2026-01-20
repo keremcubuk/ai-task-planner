@@ -9,6 +9,10 @@ import {
   AssigneePerformance,
   AssigneeDetailedStats,
   ComponentBucketStats,
+  TrendAnalyticsResponse,
+  PeriodComparison,
+  QuarterlyData,
+  YearlyComparison,
   getErrorMessage,
 } from '../../shared/types/common.types';
 
@@ -537,6 +541,326 @@ export class TasksService {
     } catch (error) {
       const errorMessage = getErrorMessage(error);
       this.logger.error(`Error in getAnalytics: ${errorMessage}`);
+      throw error;
+    }
+  }
+
+  async getTrendAnalytics(): Promise<TrendAnalyticsResponse> {
+    try {
+      const allTasks = await this.prisma.task.findMany({
+        select: {
+          id: true,
+          createdAt: true,
+          project: true,
+        },
+      });
+
+      const monthNames = [
+        'Ocak',
+        'Şubat',
+        'Mart',
+        'Nisan',
+        'Mayıs',
+        'Haziran',
+        'Temmuz',
+        'Ağustos',
+        'Eylül',
+        'Ekim',
+        'Kasım',
+        'Aralık',
+      ];
+
+      const getQuarter = (month: number): number => Math.floor(month / 3) + 1;
+      const getQuarterName = (quarter: number): string => `Q${quarter}`;
+
+      // Group tasks by various time periods
+      const tasksByWeek: Record<
+        string,
+        { count: number; projects: Set<string> }
+      > = {};
+      const tasksByMonth: Record<
+        string,
+        { count: number; projects: Set<string>; days: number }
+      > = {};
+      const tasksByQuarter: Record<
+        string,
+        {
+          count: number;
+          projects: Set<string>;
+          year: number;
+          quarter: number;
+          months: Record<string, number>;
+        }
+      > = {};
+      const tasksByYear: Record<
+        string,
+        {
+          count: number;
+          projects: Set<string>;
+          months: Record<number, { count: number; projects: Set<string> }>;
+          quarters: Record<
+            number,
+            { count: number; projects: Set<string> }
+          >;
+        }
+      > = {};
+
+      for (const task of allTasks) {
+        if (!task.createdAt) continue;
+
+        const date = new Date(task.createdAt);
+        const year = date.getFullYear();
+        const month = date.getMonth();
+        const quarter = getQuarter(month);
+        const project = task.project || 'No Project';
+
+        // Week key: year-weekNumber
+        const startOfYear = new Date(year, 0, 1);
+        const days = Math.floor(
+          (date.getTime() - startOfYear.getTime()) / (24 * 60 * 60 * 1000),
+        );
+        const weekNum = Math.ceil((days + startOfYear.getDay() + 1) / 7);
+        const weekKey = `${year}-W${String(weekNum).padStart(2, '0')}`;
+
+        if (!tasksByWeek[weekKey]) {
+          tasksByWeek[weekKey] = { count: 0, projects: new Set() };
+        }
+        tasksByWeek[weekKey].count++;
+        tasksByWeek[weekKey].projects.add(project);
+
+        // Month key: year-month
+        const monthKey = `${year}-${String(month + 1).padStart(2, '0')}`;
+        if (!tasksByMonth[monthKey]) {
+          const daysInMonth = new Date(year, month + 1, 0).getDate();
+          tasksByMonth[monthKey] = {
+            count: 0,
+            projects: new Set(),
+            days: daysInMonth,
+          };
+        }
+        tasksByMonth[monthKey].count++;
+        tasksByMonth[monthKey].projects.add(project);
+
+        // Quarter key: year-Qn
+        const quarterKey = `${year}-Q${quarter}`;
+        if (!tasksByQuarter[quarterKey]) {
+          tasksByQuarter[quarterKey] = {
+            count: 0,
+            projects: new Set(),
+            year,
+            quarter,
+            months: {},
+          };
+        }
+        tasksByQuarter[quarterKey].count++;
+        tasksByQuarter[quarterKey].projects.add(project);
+        const monthName = monthNames[month];
+        tasksByQuarter[quarterKey].months[monthName] =
+          (tasksByQuarter[quarterKey].months[monthName] || 0) + 1;
+
+        // Year
+        const yearKey = String(year);
+        if (!tasksByYear[yearKey]) {
+          tasksByYear[yearKey] = {
+            count: 0,
+            projects: new Set(),
+            months: {},
+            quarters: {},
+          };
+        }
+        tasksByYear[yearKey].count++;
+        tasksByYear[yearKey].projects.add(project);
+
+        if (!tasksByYear[yearKey].months[month]) {
+          tasksByYear[yearKey].months[month] = { count: 0, projects: new Set() };
+        }
+        tasksByYear[yearKey].months[month].count++;
+        tasksByYear[yearKey].months[month].projects.add(project);
+
+        if (!tasksByYear[yearKey].quarters[quarter]) {
+          tasksByYear[yearKey].quarters[quarter] = {
+            count: 0,
+            projects: new Set(),
+          };
+        }
+        tasksByYear[yearKey].quarters[quarter].count++;
+        tasksByYear[yearKey].quarters[quarter].projects.add(project);
+      }
+
+      // Build monthly comparisons
+      const sortedMonths = Object.keys(tasksByMonth).sort();
+      const monthly: PeriodComparison[] = sortedMonths.map((key, idx) => {
+        const data = tasksByMonth[key];
+        const prevKey = idx > 0 ? sortedMonths[idx - 1] : null;
+        const prevData = prevKey ? tasksByMonth[prevKey] : null;
+
+        const [yearStr, monthStr] = key.split('-');
+        const monthIndex = parseInt(monthStr) - 1;
+
+        return {
+          current: {
+            period: `${monthNames[monthIndex]} ${yearStr}`,
+            count: data.count,
+            dailyAverage: Math.round((data.count / data.days) * 100) / 100,
+            uniqueProjects: data.projects.size,
+          },
+          previous: prevData
+            ? {
+                period: prevKey!,
+                count: prevData.count,
+                dailyAverage:
+                  Math.round((prevData.count / prevData.days) * 100) / 100,
+                uniqueProjects: prevData.projects.size,
+              }
+            : null,
+          changePercent: prevData
+            ? Math.round(((data.count - prevData.count) / prevData.count) * 100)
+            : null,
+          projectChangePercent: prevData
+            ? Math.round(
+                ((data.projects.size - prevData.projects.size) /
+                  prevData.projects.size) *
+                  100,
+              )
+            : null,
+        };
+      });
+
+      // Build weekly comparisons (last 12 weeks)
+      const sortedWeeks = Object.keys(tasksByWeek).sort().slice(-12);
+      const weekly: PeriodComparison[] = sortedWeeks.map((key, idx) => {
+        const data = tasksByWeek[key];
+        const prevKey = idx > 0 ? sortedWeeks[idx - 1] : null;
+        const prevData = prevKey ? tasksByWeek[prevKey] : null;
+
+        return {
+          current: {
+            period: key,
+            count: data.count,
+            dailyAverage: Math.round((data.count / 7) * 100) / 100,
+            uniqueProjects: data.projects.size,
+          },
+          previous: prevData
+            ? {
+                period: prevKey!,
+                count: prevData.count,
+                dailyAverage: Math.round((prevData.count / 7) * 100) / 100,
+                uniqueProjects: prevData.projects.size,
+              }
+            : null,
+          changePercent:
+            prevData && prevData.count > 0
+              ? Math.round(
+                  ((data.count - prevData.count) / prevData.count) * 100,
+                )
+              : null,
+          projectChangePercent:
+            prevData && prevData.projects.size > 0
+              ? Math.round(
+                  ((data.projects.size - prevData.projects.size) /
+                    prevData.projects.size) *
+                    100,
+                )
+              : null,
+        };
+      });
+
+      // Build quarterly data
+      const sortedQuarters = Object.keys(tasksByQuarter).sort();
+      const quarterly: QuarterlyData[] = sortedQuarters.map((key) => {
+        const data = tasksByQuarter[key];
+        const totalInQuarter = data.count;
+        const months = Object.entries(data.months).map(([month, count]) => ({
+          month,
+          count,
+          percent:
+            totalInQuarter > 0
+              ? Math.round((count / totalInQuarter) * 100)
+              : 0,
+        }));
+
+        return {
+          quarter: getQuarterName(data.quarter),
+          year: data.year,
+          count: data.count,
+          months,
+          uniqueProjects: data.projects.size,
+        };
+      });
+
+      // Build yearly comparisons
+      const sortedYears = Object.keys(tasksByYear).sort();
+      const yearly: YearlyComparison[] = sortedYears.map((yearStr) => {
+        const data = tasksByYear[yearStr];
+        const year = parseInt(yearStr);
+
+        const months = Object.entries(data.months)
+          .map(([monthStr, monthData]) => ({
+            month: monthNames[parseInt(monthStr)],
+            monthNum: parseInt(monthStr) + 1,
+            count: monthData.count,
+            uniqueProjects: monthData.projects.size,
+          }))
+          .sort((a, b) => a.monthNum - b.monthNum);
+
+        const quarters = Object.entries(data.quarters)
+          .map(([qStr, qData]) => ({
+            quarter: getQuarterName(parseInt(qStr)),
+            count: qData.count,
+            uniqueProjects: qData.projects.size,
+          }))
+          .sort((a, b) => a.quarter.localeCompare(b.quarter));
+
+        return {
+          year,
+          months,
+          quarters,
+          total: data.count,
+          uniqueProjects: data.projects.size,
+        };
+      });
+
+      // Build year-over-year comparisons
+      const allMonths = monthNames.map((name, idx) => ({ name, idx }));
+      const monthComparisons = allMonths.map(({ name, idx }) => {
+        const years = sortedYears.map((yearStr) => {
+          const yearData = tasksByYear[yearStr];
+          const monthData = yearData?.months[idx];
+          return {
+            year: parseInt(yearStr),
+            count: monthData?.count || 0,
+            uniqueProjects: monthData?.projects.size || 0,
+          };
+        });
+        return { month: name, years };
+      });
+
+      const quarterComparisons = [1, 2, 3, 4].map((q) => {
+        const years = sortedYears.map((yearStr) => {
+          const yearData = tasksByYear[yearStr];
+          const qData = yearData?.quarters[q];
+          return {
+            year: parseInt(yearStr),
+            count: qData?.count || 0,
+            uniqueProjects: qData?.projects.size || 0,
+          };
+        });
+        return { quarter: getQuarterName(q), years };
+      });
+
+      return {
+        weekly,
+        monthly,
+        quarterly,
+        yearly,
+        yearOverYear: {
+          monthComparisons,
+          quarterComparisons,
+        },
+      };
+    } catch (error) {
+      const errorMessage = getErrorMessage(error);
+      this.logger.error(`Error in getTrendAnalytics: ${errorMessage}`);
       throw error;
     }
   }

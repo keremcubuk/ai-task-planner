@@ -168,6 +168,60 @@ export interface AnalyticsResponse {
   topProjectsByTickets: Array<{ project: string; count: number }>;
 }
 
+// Trend Analytics Types
+export interface PeriodData {
+  period: string;
+  count: number;
+  dailyAverage: number;
+  uniqueProjects: number;
+}
+
+export interface PeriodComparison {
+  current: PeriodData;
+  previous: PeriodData | null;
+  changePercent: number | null;
+  projectChangePercent: number | null;
+}
+
+export interface MonthlyDistribution {
+  month: string;
+  count: number;
+  percent: number;
+}
+
+export interface QuarterlyData {
+  quarter: string;
+  year: number;
+  count: number;
+  months: MonthlyDistribution[];
+  uniqueProjects: number;
+}
+
+export interface YearlyComparison {
+  year: number;
+  months: Array<{ month: string; monthNum: number; count: number; uniqueProjects: number }>;
+  quarters: Array<{ quarter: string; count: number; uniqueProjects: number }>;
+  total: number;
+  uniqueProjects: number;
+}
+
+export interface TrendAnalyticsResponse {
+  weekly: PeriodComparison[];
+  monthly: PeriodComparison[];
+  quarterly: QuarterlyData[];
+  yearly: YearlyComparison[];
+  yearOverYear: {
+    monthComparisons: Array<{
+      month: string;
+      years: Array<{ year: number; count: number; uniqueProjects: number }>;
+    }>;
+    quarterComparisons: Array<{
+      quarter: string;
+      years: Array<{ year: number; count: number; uniqueProjects: number }>;
+    }>;
+  };
+}
+
 // Import Result
 export interface ImportResult {
   count: number;

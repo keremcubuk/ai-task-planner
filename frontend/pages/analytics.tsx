@@ -6,15 +6,16 @@ import {
   ComponentAnalysisResult,
   OllamaStatus,
 } from '../lib/api';
-import { Folder, Users, UserCheck, Layers } from 'lucide-react';
+import { Folder, Users, UserCheck, Layers, TrendingUp } from 'lucide-react';
 import { Modal } from '../components/Modal';
 import { TaskDetail } from '../components/TaskDetail';
 import { ProjectsTab } from '../components/analytics/ProjectsTab';
 import { DevelopersTab } from '../components/analytics/DevelopersTab';
 import { OpenersTab } from '../components/analytics/OpenersTab';
 import { ComponentsTab } from '../components/analytics/ComponentsTab';
+import { TrendsTab } from '../components/analytics/TrendsTab';
 
-type TabType = 'projects' | 'developers' | 'openers' | 'components';
+type TabType = 'projects' | 'developers' | 'openers' | 'components' | 'trends';
 
 interface AnalyticsData {
   totalTasks: number;
@@ -202,6 +203,7 @@ export default function Analytics() {
     { id: 'developers', label: 'Developerlar', icon: <Users size={18} /> },
     { id: 'openers', label: 'Issue Açanlar', icon: <UserCheck size={18} /> },
     { id: 'components', label: 'Componentler', icon: <Layers size={18} /> },
+    { id: 'trends', label: 'Trend Analizi', icon: <TrendingUp size={18} /> },
   ];
 
   return (
@@ -276,6 +278,7 @@ export default function Analytics() {
             onTaskClick={(taskId) => setSelectedTaskId(taskId)}
           />
         )}
+        {activeTab === 'trends' && <TrendsTab />}
       </div>
 
       <Modal

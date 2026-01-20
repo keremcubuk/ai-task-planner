@@ -42,6 +42,11 @@ export class TasksController {
     return this.tasksService.getAnalytics();
   }
 
+  @Get('analytics/trends')
+  getTrendAnalytics() {
+    return this.tasksService.getTrendAnalytics();
+  }
+
   @Get('analytics/opener-tickets')
   getOpenerTickets(
     @Query('openedBy') openedBy?: string,
