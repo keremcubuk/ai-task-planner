@@ -7,6 +7,7 @@ import { ExportModule } from './modules/export/export.module';
 import { AiModule } from './modules/ai/ai.module';
 import { SharedModule } from './shared/shared.module';
 import { ConfluenceModule } from './modules/confluence/confluence.module';
+import { ProjectReviewScoreModule } from './modules/project-review-score/project-review-score.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { ConfluenceModule } from './modules/confluence/confluence.module';
     AiModule,
     SharedModule,
     ConfluenceModule,
+    ProjectReviewScoreModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -38,3 +38,24 @@ model ConfluenceCookie {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
+
+model ProjectReviewScore {
+  id              Int       @id @default(autoincrement())
+  projectName     String    // Confluence sayfa başlığından
+  projectId       String?   // DB'deki Task.project ile eşleşme
+  overallScore    Int       // 0-100
+  previousScore   Int?      // Önceki dönem puanı
+  status          String    // critical, warning, good
+  reportDate      DateTime  // Rapor tarihi
+  categories      String    // JSON: kategori bazlı puanlar
+  criticalIssues  String?   // JSON: kritik sorunlar
+  strengths       String?   // JSON: güçlü yönler
+  closedIssues    String?   // JSON: önceki dönemden kapanan sorunlar
+  remainingIssues String?   // JSON: kalan sorunlar
+  rawMarkdown     String    // Orijinal markdown
+  confluenceUrl   String?   // Kaynak URL
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@unique([projectName, reportDate])
+}

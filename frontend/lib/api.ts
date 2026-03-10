@@ -279,3 +279,149 @@ export const getTrendAnalytics = async (): Promise<TrendAnalyticsResponse> => {
   const response = await api.get('/tasks/analytics/trends');
   return response.data;
 };
+
+// Project Review Score API
+export interface ReviewScoreCategory {
+  name: string;
+  score: number;
+  maxScore: number;
+  status?: string;
+}
+
+export interface ReviewScoreCriticalIssue {
+  title: string;
+  severity: string;
+  pointImpact: string;
+  description: string;
+}
+
+export interface ReviewScoreStrength {
+  title: string;
+  description: string;
+}
+
+export interface ReviewScoreClosedIssue {
+  number: number;
+  rule: string;
+  severity: string;
+  description: string;
+  status: string;
+}
+
+export interface ReviewScoreRemainingIssue {
+  number: number;
+  title: string;
+  rule: string;
+  severity: string;
+  pointImpact: string;
+  description: string;
+  solution: string;
+}
+
+export interface ReviewScoreSummary {
+  id: number;
+  projectName: string;
+  projectId: string | null;
+  overallScore: number;
+  previousScore: number | null;
+  status: string;
+  reportDate: string;
+  confluenceUrl: string | null;
+  categorySummary: { name: string; score: number; maxScore: number }[];
+}
+
+export interface ReviewScoreDetail extends ReviewScoreSummary {
+  categories: string;
+  criticalIssues: string | null;
+  strengths: string | null;
+  closedIssues: string | null;
+  remainingIssues: string | null;
+  rawMarkdown: string;
+}
+
+export interface CrawlReviewResponse {
+  success: boolean;
+  projectName: string;
+  overallScore: number;
+  status: string;
+  parsed: {
+    projectName: string;
+    reportDate: string;
+    reviewStandard: string;
+    overallScore: number;
+    maxScore: number;
+    status: string;
+    statusEmoji: string;
+    categories: ReviewScoreCategory[];
+    criticalIssues: ReviewScoreCriticalIssue[];
+    strengths: ReviewScoreStrength[];
+  };
+  error?: string;
+}
+
+export const getReviewScores = async (): Promise<ReviewScoreSummary[]> => {
+  const response = await api.get('/project-review-scores');
+  return response.data;
+};
+
+export const getReviewScoreDetail = async (
+  projectName: string,
+  scoreId?: number,
+): Promise<ReviewScoreDetail> => {
+  const params: { scoreId?: string } = {};
+  if (scoreId) params.scoreId = String(scoreId);
+  const response = await api.get(
+    `/project-review-scores/${encodeURIComponent(projectName)}`,
+    { params },
+  );
+  return response.data;
+};
+
+export const getReviewScoreHistory = async (
+  projectName: string,
+): Promise<ReviewScoreSummary[]> => {
+  const response = await api.get(
+    `/project-review-scores/${encodeURIComponent(projectName)}/history`,
+  );
+  return response.data;
+};
+
+export const crawlReviewScore = async (
+  url: string,
+  cookies?: string,
+): Promise<CrawlReviewResponse> => {
+  const response = await api.post('/project-review-scores/crawl', {
+    url,
+    cookies,
+  });
+  return response.data;
+};
+
+export const saveReviewScore = async (
+  parsed: CrawlReviewResponse['parsed'],
+  confluenceUrl?: string,
+): Promise<{ id: number; message: string }> => {
+  const response = await api.post('/project-review-scores/save', {
+    parsed,
+    confluenceUrl,
+  });
+  return response.data;
+};
+
+export const importReviewMarkdown = async (
+  markdown: string,
+  confluenceUrl?: string,
+): Promise<{ id: number; message: string }> => {
+  const response = await api.post('/project-review-scores/import-markdown', {
+    markdown,
+    confluenceUrl,
+  });
+  return response.data;
+};
+
+export const deleteReviewScore = async (
+  id: number,
+): Promise<{ message: string }> => {
+  const response = await api.delete(`/project-review-scores/${id}`);
+  return response.data;
+};
