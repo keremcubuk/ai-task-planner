@@ -81,9 +81,20 @@ export class ImportValidatorService {
 
   normalizeSeverity(severity: any): string {
     if (!severity) return 'minor';
+
     const s = String(severity).toLowerCase();
-    if (s.includes('critical') || s.includes('high')) return 'critical';
-    if (s.includes('major') || s.includes('medium')) return 'major';
+
+    if (s.includes('critical') || s.includes('high') || s.includes('urgent')) {
+      return 'critical';
+    }
+    if (
+      s.includes('major') ||
+      s.includes('medium') ||
+      s.includes('important')
+    ) {
+      return 'major';
+    }
+
     return 'minor';
   }
 

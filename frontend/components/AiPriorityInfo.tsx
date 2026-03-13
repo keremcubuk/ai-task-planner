@@ -32,8 +32,8 @@ export const AiPriorityInfo: React.FC = () => {
             <p className="text-sm">Manager/Business factor. Highest weight impact.</p>
             <ul className="list-disc list-inside mt-2 text-sm text-purple-800">
                 <li>0: Standard Priority</li>
-                <li>3: High Importance (Manager Request)</li>
-                <li>5: Emergency / &quot;Fire&quot; Mode</li>
+                <li>3: High Importance</li>
+                <li>5: Production Issue / Emergency</li>
             </ul>
         </div>
 
