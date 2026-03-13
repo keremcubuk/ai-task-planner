@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Search, Filter, X, ChevronDown } from 'lucide-react';
-import { AssigneeSelect } from './AssigneeSelect';
+import { InputSelectMulti } from './ui';
 import { StatusFilter } from './StatusFilter';
 import { SeveritySelect } from './SeveritySelect';
 
@@ -80,16 +80,15 @@ export const TaskFilters: React.FC<TaskFiltersProps> = ({
                     onChange={(value) => onFilterChange('severity', value)} 
                 />
 
-                {/* Assigned To */}
-                <div className="space-y-2">
-                    <label className="text-xs font-semibold text-gray-500 uppercase">Assigned To</label>
-                    <AssigneeSelect
-                        selectedAssignees={filters.assignedTo}
-                        availableAssignees={availableAssignees}
-                        onToggleAssignee={onToggleAssignee}
-                        onToggleAll={onToggleAllAssignees}
-                    />
-                </div>
+                <InputSelectMulti
+                    label="Assigned To"
+                    selectedValues={filters.assignedTo}
+                    availableValues={availableAssignees}
+                    onToggleValue={onToggleAssignee}
+                    onToggleAll={onToggleAllAssignees}
+                    searchPlaceholder="Search assignees..."
+                    selectedCountText="assignees"
+                />
 
                 {/* Project Filter */}
                 <div className="space-y-2">

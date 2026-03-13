@@ -267,11 +267,33 @@ export default function ProjectReviewScoresPage() {
 
       {/* Crawl Modal */}
       {showCrawlModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-lg mx-4">
-            <h3 className="text-lg font-semibold mb-4">
-              Confluence&apos;tan Review Score Çek
-            </h3>
+        <div 
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+          onClick={() => {
+            setShowCrawlModal(false);
+            setCrawlUrl('');
+          }}
+        >
+          <div 
+            className="bg-white rounded-lg shadow-xl p-6 w-full max-w-lg mx-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-4 sticky top-0 bg-white pb-2">
+              <h3 className="text-lg font-semibold text-gray-900">
+                Confluence&apos;tan Review Score Çek
+              </h3>
+              <button
+                onClick={() => {
+                  setShowCrawlModal(false);
+                  setCrawlUrl('');
+                }}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
             <p className="text-sm text-gray-600 mb-4">
               AI Reports sayfasının Confluence URL&apos;ini girin. Sayfa içeriği
               parse edilerek skor bilgileri çıkarılacaktır.
@@ -307,11 +329,27 @@ export default function ProjectReviewScoresPage() {
 
       {/* Import Modal */}
       {showImportModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-2xl mx-4">
-            <h3 className="text-lg font-semibold mb-4 text-gray-900">
-              Markdown Import
-            </h3>
+        <div 
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+          onClick={() => setShowImportModal(false)}
+        >
+          <div 
+            className="bg-white rounded-lg shadow-xl p-6 w-full max-w-2xl mx-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-4 sticky top-0 bg-white pb-2">
+              <h3 className="text-lg font-semibold text-gray-900">
+                Markdown Import
+              </h3>
+              <button
+                onClick={() => setShowImportModal(false)}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
             <p className="text-sm text-gray-600 mb-4">
               AI Review Score markdown içeriğini buraya yapıştırın.
             </p>

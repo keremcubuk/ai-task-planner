@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { X } from 'lucide-react';
 import { getOpenerTickets, Task } from '../../lib/api';
+import { Button } from '../ui';
 
 interface OpenerTicketsModalProps {
   isOpen: boolean;
@@ -55,9 +56,15 @@ export function OpenerTicketsModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-6xl w-full max-h-[90vh] flex flex-col">
-        <div className="flex items-center justify-between p-6 border-b">
+    <div 
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+      onClick={onClose}
+    >
+      <div 
+        className="bg-white rounded-lg shadow-xl max-w-6xl w-full max-h-[90vh] flex flex-col"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between p-6 border-b sticky top-0 bg-white z-10">
           <div>
             <h2 className="text-xl font-bold text-gray-900">Ticketlar</h2>
             <div className="text-sm text-gray-500 mt-1">
@@ -67,12 +74,13 @@ export function OpenerTicketsModal({
               <span className="ml-2">({tickets.length} ticket)</span>
             </div>
           </div>
-          <button
+          <Button
+            variant="ghost"
+            size="md"
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
           >
             <X size={24} />
-          </button>
+          </Button>
         </div>
 
         <div className="flex-1 overflow-y-auto p-6">
@@ -139,12 +147,13 @@ export function OpenerTicketsModal({
         </div>
 
         <div className="border-t p-4 bg-gray-50">
-          <button
+          <Button
+            variant="secondary"
+            size="md"
             onClick={onClose}
-            className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors"
           >
             Kapat
-          </button>
+          </Button>
         </div>
       </div>
     </div>

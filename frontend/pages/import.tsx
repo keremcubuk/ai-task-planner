@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import { Upload, Globe, FileSpreadsheet } from 'lucide-react';
 import FileImport from '../components/import/FileImport';
 import ConfluenceCrawler from '../components/import/ConfluenceCrawler';
+import { Button } from '../components/ui';
 
 type ImportMode = 'select' | 'file' | 'confluence';
 
@@ -28,36 +29,41 @@ export default function ImportPage() {
         <p className="text-gray-600 mb-6">Choose an import method:</p>
 
         <div className="space-y-4">
-          <button
+          <Button
+            variant="outline"
+            size="md"
             onClick={() => setMode('file')}
-            className="w-full p-4 border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors flex items-center gap-4"
+            className="w-full p-4 h-auto justify-start"
           >
             <FileSpreadsheet className="w-8 h-8 text-blue-600" />
             <div className="text-left">
               <div className="font-semibold text-gray-900">File Import (CSV / XLSX)</div>
               <div className="text-sm text-gray-500">Import tasks from a spreadsheet file</div>
             </div>
-          </button>
+          </Button>
 
-          <button
+          <Button
+            variant="outline"
+            size="md"
             onClick={() => setMode('confluence')}
-            className="w-full p-4 border-2 border-gray-200 rounded-lg hover:border-purple-500 hover:bg-purple-50 transition-colors flex items-center gap-4"
+            className="w-full p-4 h-auto justify-start"
           >
             <Globe className="w-8 h-8 text-purple-600" />
             <div className="text-left">
               <div className="font-semibold text-gray-900">Confluence Crawler</div>
               <div className="text-sm text-gray-500">Crawl tasks from a Confluence page table</div>
             </div>
-          </button>
+          </Button>
         </div>
 
         <div className="mt-6 text-center">
-          <button 
-            onClick={() => router.back()} 
-            className="text-gray-500 hover:text-gray-700 text-sm"
+          <Button 
+            variant="ghost"
+            size="sm"
+            onClick={() => router.back()}
           >
             Cancel
-          </button>
+          </Button>
         </div>
       </div>
     </div>

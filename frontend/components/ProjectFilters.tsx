@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Search, Filter, X } from 'lucide-react';
 import { StatusFilter } from './StatusFilter';
 import { SeveritySelect } from './SeveritySelect';
-import { AssigneeSelect } from './AssigneeSelect';
+import { InputSelectMulti } from './ui';
 
 export interface ProjectFiltersState {
   status: string[];
@@ -66,15 +66,15 @@ export const ProjectFilters: React.FC<ProjectFiltersProps> = ({
             value={filters.severity} 
             onChange={onSeverityChange} 
           />
-          <div className="space-y-2">
-            <label className="text-xs font-semibold text-gray-500 uppercase">Assigned To</label>
-            <AssigneeSelect
-              selectedAssignees={filters.assignedTo}
-              availableAssignees={availableAssignees}
-              onToggleAssignee={onToggleAssignee}
+          <InputSelectMulti
+              label="Assigned To"
+              selectedValues={filters.assignedTo}
+              availableValues={availableAssignees}
+              onToggleValue={onToggleAssignee}
               onToggleAll={onToggleAllAssignees}
+              searchPlaceholder="Search assignees..."
+              selectedCountText="assignees"
             />
-          </div>
         </div>
       )}
 

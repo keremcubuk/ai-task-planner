@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { createTask } from '../lib/api';
 import { Save } from 'lucide-react';
+import { Button } from './ui';
 
 interface TaskFormProps {
   onClose: () => void;
@@ -121,20 +122,24 @@ export const TaskForm: React.FC<TaskFormProps> = ({ onClose, onSuccess }) => {
       </div>
 
       <div className="flex justify-end pt-4 gap-2">
-        <button
+        <Button
+          variant="secondary"
+          size="md"
           type="button"
           onClick={onClose}
-          className="px-4 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200"
         >
           Cancel
-        </button>
-        <button 
+        </Button>
+        <Button 
           type="submit" 
+          variant="primary"
+          size="md"
           disabled={loading}
-          className="flex items-center px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+          loading={loading}
+          leftIcon={<Save size={18} />}
         >
-          <Save size={18} className="mr-2" /> Create Task
-        </button>
+          Create Task
+        </Button>
       </div>
     </form>
   );

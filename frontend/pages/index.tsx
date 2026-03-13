@@ -16,6 +16,7 @@ import { RefreshCw, Download, Upload, Trash2, Info } from "lucide-react";
 import { Modal } from "../components/Modal";
 import { TaskForm } from "../components/TaskForm";
 import { TaskDetail } from "../components/TaskDetail";
+import { Button } from "@/components/ui";
 
 export default function Dashboard() {
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -270,72 +271,80 @@ export default function Dashboard() {
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-gray-900">Task Management</h2>
         <div className="flex gap-4">
-          <button
+          <Button
+            variant="danger"
+            size="md"
             onClick={handleReset}
-            className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
             title="Reset Database"
-          >
-            <Trash2 size={18} />
-          </button>
-          <Link
-            href="/import"
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-          >
-            <Upload size={18} /> Import
+            leftIcon={<Trash2 size={18} />}
+          />
+          <Link href="/import">
+            <Button variant="primary" size="md" leftIcon={<Upload size={18} />}>Import</Button>
           </Link>
-          <button
+          <Button
+            variant="success"
+            size="md"
             onClick={() => setIsCreateModalOpen(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
+            leftIcon={<Upload size={18} className="rotate-90" />}
           >
-            <Upload size={18} className="rotate-90" /> New Task
-          </button>
+            New Task
+          </Button>
           <div className="relative">
-            <button
+            <Button
+              variant="secondary"
+              size="md"
               onClick={() => setIsExportOpen(!isExportOpen)}
-              className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+              leftIcon={<Download size={18} />}
             >
-              <Download size={18} /> Export
-            </button>
+              Export
+            </Button>
 
             {isExportOpen && (
               <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-50 border border-gray-100">
                 <div className="py-1">
-                  <button
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     onClick={() => {
                       handleExport("raw");
                       setIsExportOpen(false);
                     }}
-                    className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    className="block w-full text-left justify-start"
                   >
                     Raw Data
-                  </button>
-                  <button
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     onClick={() => {
                       handleExport("stats");
                       setIsExportOpen(false);
                     }}
-                    className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    className="block w-full text-left justify-start"
                   >
                     Statistics
-                  </button>
+                  </Button>
                 </div>
               </div>
             )}
           </div>
           <div className="flex gap-2">
-            <button
+            <Button
+              variant="warning"
+              size="md"
               onClick={handlePrioritize}
-              className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700"
+              leftIcon={<RefreshCw size={18} />}
             >
-              <RefreshCw size={18} /> AI Prioritize
-            </button>
-            <button
+              AI Prioritize
+            </Button>
+            <Button
+              variant="outline"
+              size="md"
               onClick={() => setIsInfoModalOpen(true)}
-              className="flex items-center justify-center w-10 h-10 bg-gray-200 text-gray-600 rounded-full hover:bg-gray-300"
+              className="w-10 h-10 p-0"
               title="How it works?"
-            >
-              <Info size={20} />
-            </button>
+              leftIcon={<Info size={18} />}
+            />
           </div>
         </div>
       </div>

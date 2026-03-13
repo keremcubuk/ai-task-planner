@@ -3,6 +3,7 @@ import { fetchTask, updateTask, deleteTask, Task } from '../lib/api';
 import { PriorityBadge } from './PriorityBadge';
 import { SeverityBadge } from './SeverityBadge';
 import { Save, Trash2 } from 'lucide-react';
+import { Button } from './ui';
 
 const formatDate = (dateString: string) => {
   if (!dateString) return '-';
@@ -82,12 +83,12 @@ export const TaskDetail: React.FC<TaskDetailProps> = ({ taskId, onClose, onUpdat
     <div>
       <div className="flex items-center justify-end mb-6">
         <div className="flex gap-2">
-          <button onClick={handleDelete} className="flex items-center px-3 py-2 bg-red-100 text-red-700 rounded hover:bg-red-200">
-            <Trash2 size={18} className="mr-2" /> Delete
-          </button>
-          <button onClick={handleSave} className="flex items-center px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
-            <Save size={18} className="mr-2" /> Save Changes
-          </button>
+          <Button variant="danger" size="md" onClick={handleDelete} leftIcon={<Trash2 size={18} />}>
+            Delete
+          </Button>
+          <Button variant="primary" size="md" onClick={handleSave} leftIcon={<Save size={18} />}>
+            Save Changes
+          </Button>
         </div>
       </div>
 
