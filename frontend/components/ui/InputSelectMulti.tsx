@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { cn } from '@lib/utils';
 
@@ -37,6 +37,20 @@ export const InputSelectMulti: React.FC<InputSelectMultiProps> = ({
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState('');
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   const getDisplayText = () => {
     if (selectedValues.length === availableValues.length && availableValues.length > 0) {
@@ -61,11 +75,11 @@ export const InputSelectMulti: React.FC<InputSelectMultiProps> = ({
   return (
     <div className={cn(label ? "space-y-2" : "relative", className)}>
       {label && (
-        <label className={cn("text-xs font-semibold text-gray-500 uppercase", labelClassName)}>
+        <label className={cn("text-sm font-medium text-gray-700", labelClassName)}>
           {label}
         </label>
       )}
-      <div className="relative">
+      <div className="relative" ref={dropdownRef}>
         <button 
           onClick={handleToggle}
           disabled={disabled}

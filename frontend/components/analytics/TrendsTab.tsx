@@ -13,8 +13,10 @@ import {
   ComposedChart,
   Area,
 } from 'recharts';
-import { TrendingUp, TrendingDown, Minus, Calendar, Users, Info, ChevronDown, ChevronUp } from 'lucide-react';
+import { TrendingUp, TrendingDown, Minus, Calendar, Users, Info, Download } from 'lucide-react';
+import { InfoBox, TabNavigation, DataTable, DataTableColumn, Button } from '../ui';
 import { getTrendAnalytics, TrendAnalyticsResponse } from '../../lib/api';
+import { exportTrendsToPdf } from '../../lib/pdfExport';
 
 type ViewType = 'weekly' | 'monthly' | 'quarterly' | 'yearly' | 'yoy';
 
@@ -25,7 +27,7 @@ export function TrendsTab() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeView, setActiveView] = useState<ViewType>('monthly');
-  const [showExplanation, setShowExplanation] = useState(false);
+  const [exporting, setExporting] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -118,55 +120,117 @@ export function TrendsTab() {
 
   const years = data.yearly.map((y) => y.year);
 
+  type WeeklyRow = typeof data.weekly[number];
+  type MonthlyRow = typeof data.monthly[number];
+  type YearlyRow = typeof data.yearly[number];
+
+  const weeklyColumns: DataTableColumn<WeeklyRow>[] = [
+    { key: 'current.period', header: 'Hafta', render: (_, row) => row.current.period },
+    { key: 'current.count', header: 'Task Sayısı', render: (_, row) => row.current.count },
+    { key: 'current.dailyAverage', header: 'Günlük Ort.', render: (_, row) => row.current.dailyAverage },
+    { key: 'current.uniqueProjects', header: 'Proje Sayısı', render: (_, row) => row.current.uniqueProjects },
+    {
+      key: 'changePercent',
+      header: 'Değişim',
+      render: (_, row) => (
+        row.changePercent !== null ? (
+          <span className={`flex items-center gap-1 ${getChangeColor(row.changePercent)}`}>
+            {renderChangeIndicator(row.changePercent)}
+            {Math.abs(row.changePercent)}%
+          </span>
+        ) : '-'
+      ),
+    },
+  ];
+
+  const monthlyColumns: DataTableColumn<MonthlyRow>[] = [
+    { key: 'current.period', header: 'Dönem', render: (_, row) => <span className="font-medium">{row.current.period}</span> },
+    { key: 'current.count', header: 'Task Sayısı', render: (_, row) => row.current.count },
+    { key: 'current.dailyAverage', header: 'Günlük Ort.', render: (_, row) => row.current.dailyAverage },
+    { key: 'current.uniqueProjects', header: 'Proje Sayısı', render: (_, row) => row.current.uniqueProjects },
+    { key: 'previous.count', header: 'Önceki Ay', render: (_, row) => row.previous?.count || '-' },
+    {
+      key: 'changePercent',
+      header: 'Değişim',
+      render: (_, row) => (
+        row.changePercent !== null ? (
+          <span className={`flex items-center gap-1 ${getChangeColor(row.changePercent)}`}>
+            {renderChangeIndicator(row.changePercent)}
+            {row.changePercent > 0 ? '+' : ''}{row.changePercent}%
+          </span>
+        ) : '-'
+      ),
+    },
+    {
+      key: 'projectChangePercent',
+      header: 'Proje Değişimi',
+      render: (_, row) => (
+        row.projectChangePercent !== null ? (
+          <span className={`flex items-center gap-1 ${getChangeColor(row.projectChangePercent)}`}>
+            {renderChangeIndicator(row.projectChangePercent)}
+            {row.projectChangePercent > 0 ? '+' : ''}{row.projectChangePercent}%
+          </span>
+        ) : '-'
+      ),
+    },
+  ];
+
+  const yearlyColumns: DataTableColumn<YearlyRow>[] = [
+    { key: 'year', header: 'Yıl', render: (_, row) => <span className="font-medium">{row.year}</span> },
+    { key: 'total', header: 'Toplam Task', render: (_, row) => row.total },
+    { key: 'uniqueProjects', header: 'Proje Sayısı', render: (_, row) => row.uniqueProjects },
+  ];
+
   return (
     <div className="space-y-6">
       {/* Explanation Section */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <button
-          onClick={() => setShowExplanation(!showExplanation)}
-          className="flex items-center gap-2 w-full text-left"
+      <InfoBox
+        title="Trend Analizi Açıklaması"
+        icon={<Info size={20} />}
+        defaultExpanded={false}
+        variant="info"
+      >
+        <div>
+          <strong>📈 Aylık Karşılaştırma:</strong> Her ayın günlük ortalama task sayısını ve bir önceki aya göre değişimi gösterir. Artış kırmızı, azalış yeşil renkte gösterilir.
+        </div>
+        <div>
+          <strong>📊 Çeyreklik Dağılım:</strong> Her çeyrekte gelen toplam task ve aylara göre dağılımı gösterir. Çeyrek sonlarında yoğunlaşma olup olmadığını analiz edebilirsiniz.
+        </div>
+        <div>
+          <strong>🔄 Yıl Karşılaştırma:</strong> Farklı yılların aynı dönemlerini karşılaştırır. Örneğin 2025 Ocak ile 2026 Ocak arasındaki farkı görebilirsiniz.
+        </div>
+        <div>
+          <strong>👥 Proje Çeşitliliği:</strong> Her dönemde kaç farklı projeden task geldiğini gösterir. Artış, daha fazla ekibin task açtığı anlamına gelir.
+        </div>
+      </InfoBox>
+
+      {/* Header with PDF Export */}
+      <div className="flex justify-between items-center">
+        <TabNavigation
+          tabs={views.map(view => ({
+            id: view.id,
+            label: view.label,
+            icon: <Calendar size={16} />
+          }))}
+          activeTab={activeView}
+          onTabChange={(id) => setActiveView(id as ViewType)}
+        />
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={async () => {
+            setExporting(true);
+            try {
+              await exportTrendsToPdf(data);
+            } finally {
+              setExporting(false);
+            }
+          }}
+          disabled={exporting}
+          leftIcon={<Download size={16} />}
         >
-          <Info size={20} className="text-blue-600" />
-          <span className="font-medium text-blue-900">Trend Analizi Açıklaması</span>
-          {showExplanation ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-        </button>
-
-        {showExplanation && (
-          <div className="mt-4 space-y-3 text-sm text-blue-900">
-            <div>
-              <strong>📈 Aylık Karşılaştırma:</strong> Her ayın günlük ortalama task sayısını ve bir önceki aya göre değişimi gösterir. Artış kırmızı, azalış yeşil renkte gösterilir.
-            </div>
-            <div>
-              <strong>📊 Çeyreklik Dağılım:</strong> Her çeyrekte gelen toplam task ve aylara göre dağılımı gösterir. Çeyrek sonlarında yoğunlaşma olup olmadığını analiz edebilirsiniz.
-            </div>
-            <div>
-              <strong>🔄 Yıl Karşılaştırma:</strong> Farklı yılların aynı dönemlerini karşılaştırır. Örneğin 2025 Ocak ile 2026 Ocak arasındaki farkı görebilirsiniz.
-            </div>
-            <div>
-              <strong>👥 Proje Çeşitliliği:</strong> Her dönemde kaç farklı projeden task geldiğini gösterir. Artış, daha fazla ekibin task açtığı anlamına gelir.
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* View Tabs */}
-      <div className="border-b border-gray-200">
-        <nav className="-mb-px flex space-x-4 overflow-x-auto">
-          {views.map((view) => (
-            <button
-              key={view.id}
-              onClick={() => setActiveView(view.id)}
-              className={`flex items-center gap-2 py-3 px-4 border-b-2 font-medium text-sm whitespace-nowrap ${
-                activeView === view.id
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
-            >
-              <Calendar size={16} />
-              {view.label}
-            </button>
-          ))}
-        </nav>
+          {exporting ? 'İndiriliyor...' : 'PDF İndir'}
+        </Button>
       </div>
 
       {/* Summary Cards */}
@@ -213,39 +277,12 @@ export function TrendsTab() {
 
           <div className="bg-white p-6 rounded-lg shadow">
             <h3 className="text-lg font-medium text-gray-900 mb-4">Haftalık Detay</h3>
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Hafta</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Task Sayısı</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Günlük Ort.</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Proje Sayısı</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Değişim</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {data.weekly.map((item, idx) => (
-                    <tr key={idx} className="hover:bg-gray-50">
-                      <td className="px-4 py-3 text-sm text-gray-900">{item.current.period}</td>
-                      <td className="px-4 py-3 text-sm text-gray-700">{item.current.count}</td>
-                      <td className="px-4 py-3 text-sm text-gray-700">{item.current.dailyAverage}</td>
-                      <td className="px-4 py-3 text-sm text-gray-700">{item.current.uniqueProjects}</td>
-                      <td className="px-4 py-3 text-sm">
-                        {item.changePercent !== null ? (
-                          <span className={`flex items-center gap-1 ${getChangeColor(item.changePercent)}`}>
-                            {renderChangeIndicator(item.changePercent)}
-                            {Math.abs(item.changePercent)}%
-                          </span>
-                        ) : (
-                          '-'
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <DataTable
+              data={data.weekly}
+              columns={weeklyColumns}
+              keyExtractor={(row, idx) => `week-${idx}`}
+              emptyMessage="Veri bulunamadı"
+            />
           </div>
         </div>
       )}
@@ -272,52 +309,12 @@ export function TrendsTab() {
 
           <div className="bg-white p-6 rounded-lg shadow">
             <h3 className="text-lg font-medium text-gray-900 mb-4">Aylık Karşılaştırma Detay</h3>
-            <div className="overflow-x-auto max-h-[400px] overflow-y-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50 sticky top-0">
-                  <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Dönem</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Task Sayısı</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Günlük Ort.</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Proje Sayısı</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Önceki Ay</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Değişim</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Proje Değişimi</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {data.monthly.map((item, idx) => (
-                    <tr key={idx} className="hover:bg-gray-50">
-                      <td className="px-4 py-3 text-sm font-medium text-gray-900">{item.current.period}</td>
-                      <td className="px-4 py-3 text-sm text-gray-700">{item.current.count}</td>
-                      <td className="px-4 py-3 text-sm text-gray-700">{item.current.dailyAverage}</td>
-                      <td className="px-4 py-3 text-sm text-gray-700">{item.current.uniqueProjects}</td>
-                      <td className="px-4 py-3 text-sm text-gray-500">{item.previous?.count || '-'}</td>
-                      <td className="px-4 py-3 text-sm">
-                        {item.changePercent !== null ? (
-                          <span className={`flex items-center gap-1 ${getChangeColor(item.changePercent)}`}>
-                            {renderChangeIndicator(item.changePercent)}
-                            {item.changePercent > 0 ? '+' : ''}{item.changePercent}%
-                          </span>
-                        ) : (
-                          '-'
-                        )}
-                      </td>
-                      <td className="px-4 py-3 text-sm">
-                        {item.projectChangePercent !== null ? (
-                          <span className={`flex items-center gap-1 ${getChangeColor(item.projectChangePercent)}`}>
-                            {renderChangeIndicator(item.projectChangePercent)}
-                            {item.projectChangePercent > 0 ? '+' : ''}{item.projectChangePercent}%
-                          </span>
-                        ) : (
-                          '-'
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <DataTable
+              data={data.monthly}
+              columns={monthlyColumns}
+              keyExtractor={(row, idx) => `month-${idx}`}
+              emptyMessage="Veri bulunamadı"
+            />
           </div>
         </div>
       )}
@@ -392,6 +389,16 @@ export function TrendsTab() {
       {/* Yearly View */}
       {activeView === 'yearly' && (
         <div className="space-y-6">
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h3 className="text-lg font-medium text-gray-900 mb-4">Yıllık Özet</h3>
+            <DataTable
+              data={data.yearly}
+              columns={yearlyColumns}
+              keyExtractor={(row) => String(row.year)}
+              emptyMessage="Veri bulunamadı"
+            />
+          </div>
+
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {data.yearly.map((year, idx) => (
               <div key={idx} className="bg-white p-5 rounded-lg shadow">
@@ -495,9 +502,9 @@ export function TrendsTab() {
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ay</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Ay</th>
                     {years.map((year) => (
-                      <th key={year} className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase" colSpan={2}>
+                      <th key={year} className="px-4 py-3 text-left text-sm font-medium text-gray-500" colSpan={2}>
                         {year}
                       </th>
                     ))}

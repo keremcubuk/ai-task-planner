@@ -4,6 +4,7 @@ import { fetchTask, updateTask, deleteTask, Task } from '../../lib/api';
 import { PriorityBadge } from '../../components/PriorityBadge';
 import { SeverityBadge } from '../../components/SeverityBadge';
 import { Save, Trash2, ArrowLeft } from 'lucide-react';
+import { Button } from '@components/ui';
 
 export default function TaskDetail() {
   const router = useRouter();
@@ -65,16 +66,31 @@ export default function TaskDetail() {
   return (
       <div className="max-w-3xl mx-auto bg-white rounded-lg shadow-lg p-6">
         <div className="flex items-center justify-between mb-6">
-          <button onClick={() => router.back()} className="flex items-center text-gray-600 hover:text-gray-900">
-            <ArrowLeft className="mr-2" size={20} /> Back
-          </button>
+          <Button 
+            onClick={() => router.back()} 
+            variant="ghost"
+            size="md"
+            leftIcon={<ArrowLeft size={20} />}
+          >
+            Back
+          </Button>
           <div className="flex gap-2">
-            <button onClick={handleDelete} className="flex items-center px-3 py-2 bg-red-100 text-red-700 rounded hover:bg-red-200">
-              <Trash2 size={18} className="mr-2" /> Delete
-            </button>
-            <button onClick={handleSave} className="flex items-center px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
-              <Save size={18} className="mr-2" /> Save Changes
-            </button>
+            <Button 
+              onClick={handleDelete} 
+              variant="danger"
+              size="md"
+              leftIcon={<Trash2 size={18} />}
+            >
+              Delete
+            </Button>
+            <Button 
+              onClick={handleSave} 
+              variant="primary"
+              size="md"
+              leftIcon={<Save size={18} />}
+            >
+              Save Changes
+            </Button>
           </div>
         </div>
 

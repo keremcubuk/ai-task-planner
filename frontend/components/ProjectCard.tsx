@@ -1,6 +1,7 @@
 import React from 'react';
 import { CheckCircle, AlertCircle } from 'lucide-react';
 import { ProjectStats } from '../lib/api';
+import { Badge } from './ui';
 
 interface ProjectCardProps {
   project: ProjectStats;
@@ -36,9 +37,9 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project, onClick }) =>
             {project.name}
           </h3>
           {isDone && (
-            <span className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded bg-green-100 text-green-800 border border-green-200">
-              <CheckCircle size={14} className="text-green-600" /> Done
-            </span>
+            <Badge color="green" size="sm" icon={<CheckCircle size={14} className="text-green-600" />}>
+              Done
+            </Badge>
           )}
         </div>
 

@@ -2,9 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { fetchTasks, Task } from '../../lib/api';
 import { TasksTable } from '../../components/TasksTable';
-import { StatsCards } from '../../components/StatsCards';
 import { ProjectFilters, ProjectFiltersState } from '../../components/ProjectFilters';
-import { Modal } from '../../components/Modal';
+import { Modal, StatCard, StatCardGrid, PageHeader } from '@components/ui';
 import { TaskDetail } from '../../components/TaskDetail';
 
 export default function ProjectDetail() {
@@ -129,11 +128,16 @@ export default function ProjectDetail() {
 
   return (
     <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-bold text-gray-900">Project: {name}</h2>
-        </div>
+      <PageHeader 
+        title={`Project: ${name}`}
+        description="View and manage project tasks and progress"
+      />
 
-        <StatsCards total={total} completed={completed} critical={critical} />
+        <StatCardGrid columns={3}>
+          <StatCard label="Total Tasks" value={total} />
+          <StatCard label="Completed" value={completed} valueColor="green" />
+          <StatCard label="Critical Issues" value={critical} valueColor="red" />
+        </StatCardGrid>
 
         <ProjectFilters
           filters={filters}

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/router';
 import { FileSpreadsheet, ArrowLeft } from 'lucide-react';
 import { importCsv, importXlsx } from '../../lib/api';
+import { Button } from '../ui';
 
 interface FileImportProps {
   onBack: () => void;
@@ -50,12 +51,15 @@ export default function FileImport({ onBack }: FileImportProps) {
   return (
     <div className="min-h-screen bg-gray-100 p-8 flex items-center justify-center">
       <div className="bg-white p-8 rounded-lg shadow-lg max-w-md w-full">
-        <button
+        <Button
           onClick={onBack}
-          className="flex items-center gap-1 text-gray-500 hover:text-gray-700 mb-4"
+          variant="ghost"
+          size="md"
+          className="mb-4"
+          leftIcon={<ArrowLeft size={16} />}
         >
-          <ArrowLeft className="w-4 h-4" /> Back
-        </button>
+          Back to Import Options
+        </Button>
 
         <h1 className="text-2xl font-bold mb-6 flex items-center gap-2 text-gray-900">
           <FileSpreadsheet className="w-6 h-6" /> File Import
@@ -77,20 +81,26 @@ export default function FileImport({ onBack }: FileImportProps) {
         {message && <div className="mb-4 text-sm text-center font-medium text-green-600">{message}</div>}
 
         <div className="flex gap-4">
-          <button
+          <Button
             onClick={() => handleImport('csv')}
             disabled={!file || loading}
-            className="flex-1 bg-blue-600 text-white py-2 rounded hover:bg-blue-700 disabled:opacity-50"
+            variant="primary"
+            size="md"
+            className="flex-1"
+            loading={loading}
           >
             Import CSV
-          </button>
-          <button
+          </Button>
+          <Button
             onClick={() => handleImport('xlsx')}
             disabled={!file || loading}
-            className="flex-1 bg-green-600 text-white py-2 rounded hover:bg-green-700 disabled:opacity-50"
+            variant="success"
+            size="md"
+            className="flex-1"
+            loading={loading}
           >
             Import XLSX
-          </button>
+          </Button>
         </div>
       </div>
     </div>

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { getOpenerTickets, Task } from '../../lib/api';
-import { Modal } from '../Modal';
+import { Modal } from '../ui';
 
 interface TicketsModalContentProps {
   isOpen: boolean;

@@ -146,14 +146,24 @@ export class TasksController {
     }
 
     if (minAiScore || maxAiScore || aiScores) {
-      const aiScoreFilter: { gte?: number; lte?: number; in?: number[] } = {};
-      if (minAiScore) aiScoreFilter.gte = parseFloat(minAiScore);
-      if (maxAiScore) aiScoreFilter.lte = parseFloat(maxAiScore);
-      if (aiScores) {
-        const scores = aiScores.split(',').map((s) => parseFloat(s.trim()));
-        aiScoreFilter.in = scores;
+      if (aiScores && aiScores.trim() !== '') {
+        const priorities = aiScores
+          .split(',')
+          .map((s) => parseFloat(s.trim()))
+          .filter((priority) => !isNaN(priority)); // Filter out NaN values
+        if (priorities.length > 0) {
+          // Use aiPriority instead of aiScore for filtering
+          where.aiPriority = { in: priorities };
+        }
+      } else {
+        // Only apply aiScore filter if no aiPriority filter
+        const aiScoreFilter: { gte?: number; lte?: number } = {};
+        if (minAiScore) aiScoreFilter.gte = parseFloat(minAiScore);
+        if (maxAiScore) aiScoreFilter.lte = parseFloat(maxAiScore);
+        if (Object.keys(aiScoreFilter).length > 0) {
+          where.aiScore = aiScoreFilter;
+        }
       }
-      where.aiScore = aiScoreFilter;
     }
 
     if (dueStartDate || dueEndDate) {

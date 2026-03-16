@@ -1,6 +1,7 @@
 import React from 'react';
 import { ChevronDown, ChevronUp, Cpu, Layers } from 'lucide-react';
 import { ComponentAnalysisResult, OllamaStatus } from '../lib/api';
+import { Badge } from './ui';
 
 interface ComponentAnalysisSectionProps {
   ollamaStatus: OllamaStatus | null;
@@ -110,28 +111,28 @@ export function ComponentAnalysisSection({
 
                         {/* Active Tasks Badge */}
                         {component.activeTasks > 0 && (
-                          <span className="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded">
+                          <Badge color="red" size="sm" rounded="md">
                             {component.activeTasks} aktif
-                          </span>
+                          </Badge>
                         )}
 
                         {/* Completed Tasks Badge */}
                         {component.completedTasks > 0 && (
-                          <span className="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded">
+                          <Badge color="green" size="sm" rounded="md">
                             {component.completedTasks} tamamlandı
-                          </span>
+                          </Badge>
                         )}
 
                         {/* Total Badge */}
-                        <span className="bg-gray-100 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded">
+                        <Badge color="gray" size="sm" rounded="md">
                           Toplam: {component.count}
-                        </span>
+                        </Badge>
 
                         {/* Critical Warning */}
                         {isCritical && (
-                          <span className="bg-red-600 text-white text-xs font-bold px-2.5 py-0.5 rounded flex items-center gap-1">
+                          <Badge color="red" variant="solid" size="sm" rounded="md">
                             ⚠️ KRİTİK
-                          </span>
+                          </Badge>
                         )}
                       </div>
                       {expandedComponents.has(component.name) ? (

@@ -18,6 +18,7 @@ import {
   ArrowUpCircle,
   ArrowDownCircle,
 } from 'lucide-react';
+import { Button, Badge } from '@/components/ui';
 import {
   getReviewScoreDetail,
   getReviewScoreHistory,
@@ -143,21 +144,21 @@ export default function ProjectReviewScoreDetailPage() {
     switch (status) {
       case 'good':
         return (
-          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
-            <TrendingUp size={14} /> Good
-          </span>
+          <Badge color="green" size="md" icon={<TrendingUp size={14} />}>
+            Good
+          </Badge>
         );
       case 'warning':
         return (
-          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">
-            <AlertTriangle size={14} /> Warning
-          </span>
+          <Badge color="yellow" size="md" icon={<AlertTriangle size={14} />}>
+            Warning
+          </Badge>
         );
       case 'critical':
         return (
-          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
-            <TrendingDown size={14} /> Critical
-          </span>
+          <Badge color="red" size="md" icon={<TrendingDown size={14} />}>
+            Critical
+          </Badge>
         );
       default:
         return null;
@@ -623,22 +624,22 @@ export default function ProjectReviewScoreDetailPage() {
                     {/* Action buttons */}
                     <div className="flex items-center gap-2">
                       {prevItem && (
-                        <button
+                        <Button
                           onClick={(e) => { e.stopPropagation(); openCompareModal(h); }}
-                          className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded"
+                          variant="outline"
+                          size="sm"
                           title="Önceki ile karşılaştır"
-                        >
-                          <GitCompare size={16} />
-                        </button>
+                          leftIcon={<GitCompare size={16} />}
+                        />
                       )}
-                      <button
+                      <Button
                         onClick={(e) => { e.stopPropagation(); handleDelete(h.id); }}
                         disabled={deleting === h.id}
-                        className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded disabled:opacity-50"
+                        variant="danger"
+                        size="sm"
                         title="Raporu sil"
-                      >
-                        <Trash2 size={16} />
-                      </button>
+                        leftIcon={<Trash2 size={16} />}
+                      />
                     </div>
                   </div>
                 );
@@ -675,12 +676,13 @@ export default function ProjectReviewScoreDetailPage() {
               <h3 className="text-lg font-semibold text-gray-900">
                 Versiyon Karşılaştırma
               </h3>
-              <button
+              <Button
                 onClick={() => setShowCompareModal(false)}
-                className="p-1 hover:bg-gray-100 rounded"
-              >
-                <X size={20} />
-              </button>
+                variant="ghost"
+                size="md"
+                className="p-1 w-8 h-8"
+                leftIcon={<X size={20} />}
+              />
             </div>
 
             {(() => {
@@ -738,15 +740,6 @@ export default function ProjectReviewScoreDetailPage() {
                         );
                       })}
                     </div>
-                  </div>
-
-                  <div className="flex justify-end pt-4">
-                    <button
-                      onClick={() => setShowCompareModal(false)}
-                      className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200"
-                    >
-                      Kapat
-                    </button>
                   </div>
                 </div>
               );

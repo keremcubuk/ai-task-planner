@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
-import { Search, Filter, X, ChevronDown } from 'lucide-react';
-import { InputSelectMulti } from './ui';
+import React from 'react';
+import { Search, Filter, X } from 'lucide-react';
+import { InputSelectMulti, InputDate, Button } from './ui';
 import { StatusFilter } from './StatusFilter';
 import { SeveritySelect } from './SeveritySelect';
+import { AiScoreSelect } from './AiScoreSelect';
 
 interface TaskFiltersProps {
   filters: {
@@ -11,7 +12,7 @@ interface TaskFiltersProps {
     severity: string;
     minAiScore: string;
     maxAiScore: string;
-    aiScores: string;
+    aiScores: string[];
     dueStartDate: string;
     dueEndDate: string;
     project: string[];
@@ -25,8 +26,11 @@ interface TaskFiltersProps {
   onFilterChange: (key: string, value: string | string[]) => void;
   onToggleStatus: (status: string) => void;
   onToggleProject: (project: string) => void;
+  onToggleAllProjects: () => void;
   onToggleAssignee: (assignee: string) => void;
   onToggleAllAssignees: () => void;
+  onToggleAiScore: (score: string) => void;
+  onSelectAllAiScores: (values: string[]) => void;
   onClearFilters: () => void;
 }
 
@@ -41,12 +45,13 @@ export const TaskFilters: React.FC<TaskFiltersProps> = ({
   onFilterChange,
   onToggleStatus,
   onToggleProject,
+  onToggleAllProjects,
   onToggleAssignee,
   onToggleAllAssignees,
+  onToggleAiScore,
+  onSelectAllAiScores,
   onClearFilters
 }) => {
-  const [isProjectDropdownOpen, setIsProjectDropdownOpen] = useState(false);
-  const [projectSearch, setProjectSearch] = useState('');
 
   return (
     <div className="bg-white rounded-lg shadow p-4 mb-6 border border-gray-200">
@@ -80,6 +85,7 @@ export const TaskFilters: React.FC<TaskFiltersProps> = ({
                     onChange={(value) => onFilterChange('severity', value)} 
                 />
 
+                {/* Assigned To Filter */}
                 <InputSelectMulti
                     label="Assigned To"
                     selectedValues={filters.assignedTo}
@@ -91,92 +97,35 @@ export const TaskFilters: React.FC<TaskFiltersProps> = ({
                 />
 
                 {/* Project Filter */}
-                <div className="space-y-2">
-                    <label className="text-xs font-semibold text-gray-500 uppercase">Project</label>
-                    <div className="relative">
-                        <button 
-                            onClick={() => setIsProjectDropdownOpen(!isProjectDropdownOpen)}
-                            className="w-full text-left text-sm border border-gray-300 rounded-md px-3 py-2 flex justify-between items-center bg-white h-10 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                        >
-                            <span className="truncate text-gray-900 block">
-                                {filters.project.length > 0 
-                                    ? `${filters.project.length} Selected` 
-                                    : 'Select Projects'}
-                            </span>
-                            <ChevronDown size={16} className="text-gray-500" />
-                        </button>
-
-                        {isProjectDropdownOpen && (
-                            <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 flex flex-col">
-                                <div className="p-2 border-b border-gray-100">
-                                    <input 
-                                        type="text" 
-                                        placeholder="Search projects..." 
-                                        value={projectSearch}
-                                        onChange={(e) => setProjectSearch(e.target.value)}
-                                        className="w-full text-sm border-gray-300 rounded px-2 py-1 text-gray-900 focus:ring-blue-500 focus:border-blue-500"
-                                        autoFocus
-                                        onClick={(e) => e.stopPropagation()}
-                                    />
-                                </div>
-                                <div className="overflow-y-auto p-1 flex-1">
-                                    {availableProjects
-                                        .filter(p => p.toLowerCase().includes(projectSearch.toLowerCase()))
-                                        .map(project => (
-                                        <div 
-                                            key={project} 
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                onToggleProject(project);
-                                            }}
-                                            className="flex items-center gap-2 px-2 py-1.5 hover:bg-gray-50 cursor-pointer rounded group"
-                                        >
-                                            <input 
-                                                type="checkbox" 
-                                                checked={filters.project.includes(project)}
-                                                onChange={() => {}} 
-                                                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
-                                            />
-                                            <span className="text-sm text-gray-700 truncate group-hover:text-gray-900">{project}</span>
-                                        </div>
-                                    ))}
-                                    {availableProjects.length === 0 && (
-                                        <div className="p-2 text-xs text-gray-500 text-center">No projects found</div>
-                                    )}
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                </div>
+                <InputSelectMulti
+                    label="Project"
+                    selectedValues={filters.project}
+                    availableValues={availableProjects}
+                    onToggleValue={onToggleProject}
+                    onToggleAll={onToggleAllProjects}
+                    searchPlaceholder="Search projects..."
+                    selectedCountText="projects"
+                />
 
                 {/* AI Score Filter */}
-                <div className="space-y-2">
-                    <label className="text-xs font-semibold text-gray-500 uppercase">AI Scores</label>
-                    <input 
-                        type="text" 
-                        placeholder="e.g. 10, 15, 20 (comma separated)" 
-                        value={filters.aiScores}
-                        onChange={(e) => onFilterChange('aiScores', e.target.value)}
-                        className="w-full text-sm border border-gray-300 rounded-md px-3 py-2 bg-white h-10 focus:outline-none focus:ring-1 focus:ring-blue-500 text-gray-900 placeholder-gray-400"
-                    />
-                </div>
+                <AiScoreSelect
+                    selectedValues={filters.aiScores}
+                    onToggleValue={onToggleAiScore}
+                    onSelectAll={onSelectAllAiScores}
+                />
 
                 {/* Due Date Range */}
                 <div className="space-y-2">
-                    <label className="text-xs font-semibold text-gray-500 uppercase">Due Date Range</label>
+                    <label className="text-sm font-medium text-gray-700">Due Date Range</label>
                     <div className="flex gap-2 items-center">
-                        <input 
-                            type="date" 
+                        <InputDate
                             value={filters.dueStartDate}
-                            onChange={(e) => onFilterChange('dueStartDate', e.target.value)}
-                            className="w-full text-sm border border-gray-300 rounded-md px-3 py-2 bg-white h-10 focus:outline-none focus:ring-1 focus:ring-blue-500 text-gray-900"
+                            onChange={(value) => onFilterChange('dueStartDate', value)}
                         />
                         <span className="text-gray-400 flex-shrink-0">-</span>
-                        <input 
-                            type="date" 
+                        <InputDate
                             value={filters.dueEndDate}
-                            onChange={(e) => onFilterChange('dueEndDate', e.target.value)}
-                            className="w-full text-sm border border-gray-300 rounded-md px-3 py-2 bg-white h-10 focus:outline-none focus:ring-1 focus:ring-blue-500 text-gray-900"
+                            onChange={(value) => onFilterChange('dueEndDate', value)}
                         />
                     </div>
                 </div>
@@ -185,12 +134,14 @@ export const TaskFilters: React.FC<TaskFiltersProps> = ({
         
         {showFilters && (
             <div className="flex justify-end mt-4 pt-2 border-t border-gray-100">
-                <button 
+                <Button 
+                    variant="danger"
+                    size="sm"
                     onClick={onClearFilters}
-                    className="flex items-center gap-1 text-sm text-red-600 hover:text-red-700 font-medium"
+                    leftIcon={<X size={14} />}
                 >
-                    <X size={14} /> Clear Filters
-                </button>
+                    Clear Filters
+                </Button>
             </div>
         )}
     </div>

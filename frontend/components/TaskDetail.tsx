@@ -3,7 +3,7 @@ import { fetchTask, updateTask, deleteTask, Task } from '../lib/api';
 import { PriorityBadge } from './PriorityBadge';
 import { SeverityBadge } from './SeverityBadge';
 import { Save, Trash2 } from 'lucide-react';
-import { Button } from './ui';
+import { Button, Badge } from './ui';
 
 const formatDate = (dateString: string) => {
   if (!dateString) return '-';
@@ -97,14 +97,16 @@ export const TaskDetail: React.FC<TaskDetailProps> = ({ taskId, onClose, onUpdat
         <span className="font-mono bg-gray-100 px-2 py-1 rounded text-gray-700">ID: {task.externalId || '-'}</span>
         <PriorityBadge score={task.aiScore} priority={task.aiPriority} />
         <span>Source: {task.source}</span>
-        <span className={
-          Math.floor((new Date().getTime() - new Date(task.createdAt).getTime()) / (1000 * 3600 * 24)) > 21 ? 'bg-red-100 text-red-800 px-2 py-1 rounded font-bold' :
-          Math.floor((new Date().getTime() - new Date(task.createdAt).getTime()) / (1000 * 3600 * 24)) > 15 ? 'bg-orange-100 text-orange-800 px-2 py-1 rounded font-bold' :
-          Math.floor((new Date().getTime() - new Date(task.createdAt).getTime()) / (1000 * 3600 * 24)) > 7 ? 'bg-yellow-100 text-yellow-800 px-2 py-1 rounded font-bold' :
-          ''
-        }>
-          Created: {formatDate(task.createdAt)} ({Math.floor((new Date().getTime() - new Date(task.createdAt).getTime()) / (1000 * 3600 * 24))} days ago)
-        </span>
+        {(() => {
+          const daysAgo = Math.floor((new Date().getTime() - new Date(task.createdAt).getTime()) / (1000 * 3600 * 24));
+          const color = daysAgo > 21 ? 'red' : daysAgo > 15 ? 'orange' : daysAgo > 7 ? 'yellow' : undefined;
+          const content = `Created: ${formatDate(task.createdAt)} (${daysAgo} days ago)`;
+          return color ? (
+            <Badge color={color} rounded="md">{content}</Badge>
+          ) : (
+            <span>{content}</span>
+          );
+        })()}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Search, Filter, X } from 'lucide-react';
 import { StatusFilter } from './StatusFilter';
 import { SeveritySelect } from './SeveritySelect';
-import { InputSelectMulti } from './ui';
+import { InputSelectMulti, Button } from './ui';
 
 export interface ProjectFiltersState {
   status: string[];
@@ -80,12 +80,14 @@ export const ProjectFilters: React.FC<ProjectFiltersProps> = ({
 
       {showFilters && hasActiveFilters && (
         <div className="flex justify-end mt-4 pt-2 border-t border-gray-100">
-          <button 
+          <Button
+            variant="danger"
+            size="sm"
             onClick={onClearFilters}
-            className="flex items-center gap-1 text-sm text-red-600 hover:text-red-700 font-medium"
+            leftIcon={<X size={14} />}
           >
-            <X size={14} /> Clear Filters
-          </button>
+            Clear Filters
+          </Button>
         </div>
       )}
     </div>

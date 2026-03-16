@@ -1,6 +1,7 @@
 import React from 'react';
 import { ComponentAnalysisSection } from '../ComponentAnalysisSection';
 import { ComponentAnalysisResult, OllamaStatus } from '../../lib/api';
+import { StatCard, StatCardGrid, DataTable, DataTableColumn, ProgressBar } from '../ui';
 
 interface BucketBreakdown {
   solvedInComponent: number;
@@ -120,71 +121,158 @@ export function ComponentsTab({
     .filter((x) => x.reasons.length > 0)
     .sort((a, b) => b.strongestSignal - a.strongestSignal);
 
+  interface BucketRow {
+    component: string;
+    stats: ComponentBucketStats;
+  }
+
+  const bucketColumns: DataTableColumn<BucketRow>[] = [
+    {
+      key: 'component',
+      header: 'Component',
+      render: (_, row) => (
+        <span className="font-medium text-gray-900">{row.component}</span>
+      ),
+    },
+    {
+      key: 'stats.total',
+      header: 'Toplam',
+      render: (_, row) => row.stats.total,
+    },
+    {
+      key: 'solvedInProject',
+      header: 'Projede Çözülen',
+      render: (_, row) => (
+        <div className="flex items-center gap-2">
+          <span className="text-green-600 font-bold">{row.stats.bucketBreakdown.solvedInProject}</span>
+          <ProgressBar
+            value={row.stats.solvedInProjectPercent}
+            color="green"
+            size="md"
+            showLabel
+            labelPosition="right"
+            labelClassName="text-xs"
+            width="w-16"
+          />
+        </div>
+      ),
+    },
+    {
+      key: 'solvedInComponent',
+      header: 'Componentte Çözülen',
+      render: (_, row) => (
+        <div className="flex items-center gap-2">
+          <span className="text-blue-600 font-bold">{row.stats.bucketBreakdown.solvedInComponent}</span>
+          <ProgressBar
+            value={row.stats.solvedInComponentPercent}
+            color="blue"
+            size="md"
+            showLabel
+            labelPosition="right"
+            labelClassName="text-xs"
+            width="w-16"
+          />
+        </div>
+      ),
+    },
+    {
+      key: 'design',
+      header: 'Tasarım',
+      render: (_, row) => (
+        <span className="text-purple-600">{row.stats.bucketBreakdown.design}</span>
+      ),
+    },
+    {
+      key: 'declined',
+      header: 'Declined',
+      render: (_, row) => row.stats.bucketBreakdown.declined,
+    },
+    {
+      key: 'other',
+      header: 'Diğer',
+      render: (_, row) => row.stats.bucketBreakdown.other + row.stats.bucketBreakdown.none,
+    },
+  ];
+
+  type SupportFinding = typeof componentSupportFindings[number];
+
+  const supportColumns: DataTableColumn<SupportFinding>[] = [
+    {
+      key: 'component',
+      header: 'Component',
+      render: (_, row) => (
+        <span className="font-medium text-gray-900">{row.component}</span>
+      ),
+    },
+    {
+      key: 'total',
+      header: 'Toplam',
+    },
+    {
+      key: 'solvedInProjectPercent',
+      header: 'Projede %',
+      render: (_, row) => (
+        <span className="text-green-700 font-medium">{row.solvedInProjectPercent}%</span>
+      ),
+    },
+    {
+      key: 'solvedInComponentPercent',
+      header: 'Componentte %',
+      render: (_, row) => (
+        <span className="text-blue-700 font-medium">{row.solvedInComponentPercent}%</span>
+      ),
+    },
+    {
+      key: 'declinedPlusDesignPercent',
+      header: 'Declined+Tasarım %',
+      render: (_, row) => (
+        <span className="text-purple-700 font-medium">{row.declinedPlusDesignPercent}%</span>
+      ),
+    },
+    {
+      key: 'reasons',
+      header: 'Aksiyon',
+      render: (_, row) => (
+        <div className="flex flex-wrap gap-2">
+          {row.reasons.includes('docs') && (
+            <span className="inline-flex items-center rounded-full bg-green-50 px-2.5 py-0.5 text-xs font-semibold text-green-700 border border-green-200">
+              Doküman/Demo
+            </span>
+          )}
+          {row.reasons.includes('refactor') && (
+            <span className="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-semibold text-blue-700 border border-blue-200">
+              Refactor
+            </span>
+          )}
+          {row.reasons.includes('stakeholder') && (
+            <span className="inline-flex items-center rounded-full bg-purple-50 px-2.5 py-0.5 text-xs font-semibold text-purple-700 border border-purple-200">
+              İlgili Birim
+            </span>
+          )}
+        </div>
+      ),
+    },
+  ];
+
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div className="bg-white p-5 rounded-lg shadow">
-          <div className="text-gray-500 text-xs font-medium uppercase">Projede Çözülen</div>
-          <div className="text-3xl font-bold text-green-600 mt-2">{totalSolvedInProject}</div>
-        </div>
-        <div className="bg-white p-5 rounded-lg shadow">
-          <div className="text-gray-500 text-xs font-medium uppercase">Componentte Çözülen</div>
-          <div className="text-3xl font-bold text-blue-600 mt-2">{totalSolvedInComponent}</div>
-        </div>
-      </div>
+      <StatCardGrid columns={2}>
+        <StatCard label="Projede Çözülen" value={totalSolvedInProject} valueColor="green" />
+        <StatCard label="Componentte Çözülen" value={totalSolvedInComponent} valueColor="blue" />
+      </StatCardGrid>
       <div className="bg-white p-6 rounded-lg shadow">
         <h3 className="text-lg font-medium text-gray-900 mb-4">Component Bucket Analizi</h3>
         <p className="text-sm text-gray-500 mb-4">
           Her component için ticketların % kaçı projede çözüldü, % kaçı componentte çözüldü.
         </p>
-        <div className="overflow-x-auto max-h-[400px] overflow-y-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase sticky top-0 bg-gray-50 z-10">Component</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase sticky top-0 bg-gray-50 z-10">Toplam</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase sticky top-0 bg-gray-50 z-10">Projede Çözülen</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase sticky top-0 bg-gray-50 z-10">Componentte Çözülen</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase sticky top-0 bg-gray-50 z-10">Tasarım</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase sticky top-0 bg-gray-50 z-10">Declined</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase sticky top-0 bg-gray-50 z-10">Diğer</th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {Object.entries(byComponentBucket)
-                .sort((a, b) => b[1].total - a[1].total)
-                .map(([component, stats]) => (
-                  <tr key={component}>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">{component}</td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">{stats.total}</td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm">
-                      <div className="flex items-center gap-2">
-                        <span className="text-green-600 font-bold">{stats.bucketBreakdown.solvedInProject}</span>
-                        <div className="w-16 bg-gray-200 rounded-full h-2">
-                          <div className="bg-green-600 h-2 rounded-full" style={{ width: `${stats.solvedInProjectPercent}%` }} />
-                        </div>
-                        <span className="text-gray-500 text-xs">{stats.solvedInProjectPercent}%</span>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm">
-                      <div className="flex items-center gap-2">
-                        <span className="text-blue-600 font-bold">{stats.bucketBreakdown.solvedInComponent}</span>
-                        <div className="w-16 bg-gray-200 rounded-full h-2">
-                          <div className="bg-blue-600 h-2 rounded-full" style={{ width: `${stats.solvedInComponentPercent}%` }} />
-                        </div>
-                        <span className="text-gray-500 text-xs">{stats.solvedInComponentPercent}%</span>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-purple-600">{stats.bucketBreakdown.design}</td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">{stats.bucketBreakdown.declined}</td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                      {stats.bucketBreakdown.other + stats.bucketBreakdown.none}
-                    </td>
-                  </tr>
-                ))}
-            </tbody>
-          </table>
-        </div>
+        <DataTable
+          data={Object.entries(byComponentBucket)
+            .sort((a, b) => b[1].total - a[1].total)
+            .map(([component, stats]) => ({ component, stats }))}
+          columns={bucketColumns}
+          keyExtractor={(row) => row.component}
+          emptyMessage="Component bulunamadı"
+        />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -199,15 +287,14 @@ export function ComponentsTab({
                     <span className="text-gray-900 font-medium text-sm">{item.component}</span>
                     <span className="text-green-600 font-bold text-sm">{item.count}</span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <div className="flex-1 bg-gray-200 rounded-full h-2">
-                      <div
-                        className="bg-green-600 h-2 rounded-full"
-                        style={{ width: `${item.percent}%` }}
-                      />
-                    </div>
-                    <span className="text-gray-500 text-xs w-12 text-right">{item.percent}%</span>
-                  </div>
+                  <ProgressBar
+                    value={item.percent}
+                    color="green"
+                    size="md"
+                    showLabel
+                    labelPosition="right"
+                    labelClassName="text-xs"
+                  />
                 </div>
               </div>
             ))}
@@ -228,15 +315,14 @@ export function ComponentsTab({
                     <span className="text-gray-900 font-medium text-sm">{item.component}</span>
                     <span className="text-blue-600 font-bold text-sm">{item.count}</span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <div className="flex-1 bg-gray-200 rounded-full h-2">
-                      <div
-                        className="bg-blue-600 h-2 rounded-full"
-                        style={{ width: `${item.percent}%` }}
-                      />
-                    </div>
-                    <span className="text-gray-500 text-xs w-12 text-right">{item.percent}%</span>
-                  </div>
+                  <ProgressBar
+                    value={item.percent}
+                    color="blue"
+                    size="md"
+                    showLabel
+                    labelPosition="right"
+                    labelClassName="text-xs"
+                  />
                 </div>
               </div>
             ))}
@@ -262,58 +348,12 @@ export function ComponentsTab({
         {componentSupportFindings.length === 0 ? (
           <div className="text-sm text-gray-600">Bu kriterlerle uyarı üreten component bulunamadı.</div>
         ) : (
-          <div className="overflow-x-auto max-h-[400px] overflow-y-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase sticky top-0 bg-gray-50 z-10">Component</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase sticky top-0 bg-gray-50 z-10">Toplam</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase sticky top-0 bg-gray-50 z-10">Projede %</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase sticky top-0 bg-gray-50 z-10">Componentte %</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase sticky top-0 bg-gray-50 z-10">Declined+Tasarım %</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase sticky top-0 bg-gray-50 z-10">Aksiyon</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {componentSupportFindings.map((row) => (
-                  <tr key={row.component}>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {row.component}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">{row.total}</td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-green-700 font-medium">
-                      {row.solvedInProjectPercent}%
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-blue-700 font-medium">
-                      {row.solvedInComponentPercent}%
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-purple-700 font-medium">
-                      {row.declinedPlusDesignPercent}%
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm">
-                      <div className="flex flex-wrap gap-2">
-                        {row.reasons.includes('docs') && (
-                          <span className="inline-flex items-center rounded-full bg-green-50 px-2.5 py-0.5 text-xs font-semibold text-green-700 border border-green-200">
-                            Doküman/Demo
-                          </span>
-                        )}
-                        {row.reasons.includes('refactor') && (
-                          <span className="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-semibold text-blue-700 border border-blue-200">
-                            Refactor
-                          </span>
-                        )}
-                        {row.reasons.includes('stakeholder') && (
-                          <span className="inline-flex items-center rounded-full bg-purple-50 px-2.5 py-0.5 text-xs font-semibold text-purple-700 border border-purple-200">
-                            İlgili Birim
-                          </span>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <DataTable
+            data={componentSupportFindings}
+            columns={supportColumns}
+            keyExtractor={(row) => row.component}
+            emptyMessage="Uyarı üreten component bulunamadı"
+          />
         )}
       </div>
 

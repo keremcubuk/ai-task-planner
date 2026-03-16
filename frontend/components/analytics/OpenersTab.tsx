@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Search, Info, ChevronDown, ChevronUp } from 'lucide-react';
+import { Search, Info } from 'lucide-react';
+import { InfoBox, InputField, InputSelect, StatCard, StatCardGrid, DataTable, DataTableColumn, ProgressBar } from '../ui';
 import { TicketsModalContent } from './TicketsModalContent';
 
 interface BucketBreakdown {
@@ -43,6 +44,13 @@ interface OpenersTabProps {
   onTaskClick: (taskId: number) => void;
 }
 
+const sortOptions = [
+  { value: 'total', label: 'Toplam Ticket' },
+  { value: 'completion', label: 'Tamamlanma %' },
+  { value: 'quality', label: 'Kalite Skoru' },
+  { value: 'diversity', label: 'Çeşitlilik' }
+];
+
 export function OpenersTab({
   byOpenedBy,
   byBucketCategory,
@@ -51,7 +59,6 @@ export function OpenersTab({
   onTaskClick,
 }: OpenersTabProps) {
   const [searchTerm, setSearchTerm] = useState('');
-  const [showExplanation, setShowExplanation] = useState(false);
   const [sortBy, setSortBy] = useState<'total' | 'completion' | 'quality' | 'diversity'>('total');
   const [selectedOpener, setSelectedOpener] = useState<string | null>(null);
   const [selectedComponent, setSelectedComponent] = useState<string | null>(null);
@@ -86,196 +93,187 @@ export function OpenersTab({
     setModalOpen(true);
   };
 
+  interface OpenerRow {
+    openedBy: string;
+    stats: OpenedByStats;
+  }
+
+  const detailColumns: DataTableColumn<OpenerRow>[] = [
+    {
+      key: 'openedBy',
+      header: 'Açan Kişi',
+      className: 'max-w-[180px]',
+      render: (_, row) => (
+        <span 
+          className="font-medium text-blue-600 truncate cursor-pointer hover:underline block"
+          title={row.openedBy}
+          onClick={(e) => { e.stopPropagation(); handleOpenerClick(row.openedBy); }}
+        >
+          {row.openedBy}
+        </span>
+      ),
+    },
+    { key: 'stats.total', header: 'Toplam', render: (_, row) => row.stats.total },
+    { key: 'issuesPerWeek', header: 'Haftalık', render: (_, row) => row.stats.issuesPerWeek.toFixed(1) },
+    { key: 'last30Days', header: 'Son 30 Gün', render: (_, row) => row.stats.last30Days },
+    { 
+      key: 'solvedInProject', 
+      header: 'Projede Çözülen', 
+      render: (_, row) => <span className="text-green-600">{row.stats.bucketBreakdown.solvedInProject}</span> 
+    },
+    { 
+      key: 'solvedInComponent', 
+      header: 'Componentte Çözülen', 
+      render: (_, row) => <span className="text-blue-600">{row.stats.bucketBreakdown.solvedInComponent}</span> 
+    },
+    { key: 'declined', header: 'Declined', render: (_, row) => row.stats.bucketBreakdown.declined },
+    { key: 'design', header: 'Tasarım', render: (_, row) => row.stats.bucketBreakdown.design },
+    {
+      key: 'comment',
+      header: 'Not',
+      className: 'min-w-[200px]',
+      render: (_, row) => (
+        <input
+          className="w-full border-gray-300 rounded-md shadow-sm p-1.5 border text-gray-900 text-sm"
+          value={openerComments[row.openedBy] || ''}
+          onChange={(e) => onCommentChange(row.openedBy, e.target.value)}
+          onClick={(e) => e.stopPropagation()}
+          placeholder="Not ekle..."
+        />
+      ),
+    },
+  ];
+
+  const qualityColumns: DataTableColumn<OpenerRow>[] = [
+    {
+      key: 'openedBy',
+      header: 'Açan Kişi',
+      className: 'max-w-[180px]',
+      render: (_, row) => (
+        <span 
+          className="font-medium text-blue-600 truncate cursor-pointer hover:underline block"
+          title={row.openedBy}
+          onClick={(e) => { e.stopPropagation(); handleOpenerClick(row.openedBy); }}
+        >
+          {row.openedBy}
+        </span>
+      ),
+    },
+    { key: 'stats.total', header: 'Toplam', render: (_, row) => row.stats.total },
+    {
+      key: 'completionRate',
+      header: 'Tamamlanma %',
+      render: (_, row) => (
+        <ProgressBar
+          value={row.stats.completionRate}
+          color="green"
+          size="md"
+          showLabel
+          labelPosition="right"
+          labelClassName="font-medium"
+          width="w-16"
+        />
+      ),
+    },
+    {
+      key: 'qualityScore',
+      header: 'Kalite',
+      render: (_, row) => (
+        <ProgressBar
+          value={row.stats.qualityScore}
+          color={row.stats.qualityScore >= 70 ? 'green' : row.stats.qualityScore >= 40 ? 'yellow' : 'red'}
+          size="md"
+          showLabel
+          labelPosition="right"
+          labelClassName="font-medium"
+          width="w-16"
+        />
+      ),
+    },
+    { key: 'componentDiversity', header: 'Çeşitlilik', render: (_, row) => `${row.stats.componentDiversity}%` },
+  ];
+
   return (
     <div className="space-y-6">
       {/* Explanation Section */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <button
-          onClick={() => setShowExplanation(!showExplanation)}
-          className="flex items-center gap-2 w-full text-left"
-        >
-          <Info size={20} className="text-blue-600" />
-          <span className="font-medium text-blue-900">Metriklerin Anlamı</span>
-          {showExplanation ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-        </button>
-        
-        {showExplanation && (
-          <div className="mt-4 space-y-3 text-sm text-blue-900">
-            <div>
-              <strong>📊 Tamamlanma Oranı:</strong> Kişinin açtığı ticketların ne kadarının çözüldüğü (Projede + Componentte çözülen / Toplam). Yüksek oran = Çözülebilir issueler açıyor.
-            </div>
-            <div>
-              <strong>💎 Kalite Skoru:</strong> Açılan ticketların niteliğini gösterir. Componentte çözülenler yüksek puan, projede çözülenler düşük puan getirir. 
-              <ul>
-                <li>🟢 70 ve üzeri: Yüksek kalite</li>
-                <li>🟡 40-69: Orta kalite</li>
-                <li>🔴 39 ve altı: Düşük kalite (Özel Destek İhtiyacı)</li>
-              </ul>
-              Yüksek skor = Componentte çözülen, nitelikli issue.
-            </div>
-            <div>
-              <strong>🎯 Çeşitlilik:</strong> Kaç farklı componentte issue açıldığı (Unique component / Toplam × 100). Düşük = Belirli alana odaklı, Yüksek = Geniş yelpaze.
-            </div>
-            <div>
-              <strong>⚠️ Takıldığı Componentler:</strong> Aynı componentte sıkça (3 veya daha fazla) &quot;Projede Çözüldü&quot; veya &quot;Open&quot; statüsünde ticket açılması durumudur. Bu componentlerde sıkça problem yaşanıyor.
-            </div>
-            <div>
-              <strong>✅ Projede Çözülen Componentler:</strong> Projede çözülme oranı yüksek componentler. Bu componentlerde açılan issueler genelde projede çözülüyor.
-            </div>
-          </div>
-        )}
-      </div>
+      <InfoBox
+        title="Metriklerin Anlamı"
+        icon={<Info size={20} />}
+        defaultExpanded={false}
+        variant="info"
+      >
+        <div>
+          <strong>📊 Tamamlanma Oranı:</strong> Kişinin açtığı ticketların ne kadarının çözüldüğü (Projede + Componentte çözülen / Toplam). Yüksek oran = Çözülebilir issueler açıyor.
+        </div>
+        <div>
+          <strong>💎 Kalite Skoru:</strong> Açılan ticketların niteliğini gösterir. Componentte çözülenler yüksek puan, projede çözülenler düşük puan getirir. 
+          <ul>
+            <li>🟢 70 ve üzeri: Yüksek kalite</li>
+            <li>🟡 40-69: Orta kalite</li>
+            <li>🔴 39 ve altı: Düşük kalite (Özel Destek İhtiyacı)</li>
+          </ul>
+          Yüksek skor = Componentte çözülen, nitelikli issue.
+        </div>
+        <div>
+          <strong>🎯 Çeşitlilik:</strong> Kaç farklı componentte issue açıldığı (Unique component / Toplam × 100). Düşük = Belirli alana odaklı, Yüksek = Geniş yelpaze.
+        </div>
+        <div>
+          <strong>⚠️ Takıldığı Componentler:</strong> Aynı componentte sıkça (3 veya daha fazla) &quot;Projede Çözüldü&quot; veya &quot;Open&quot; statüsünde ticket açılması durumudur. Bu componentlerde sıkça problem yaşanıyor.
+        </div>
+        <div>
+          <strong>✅ Projede Çözülen Componentler:</strong> Projede çözülme oranı yüksek componentler. Bu componentlerde açılan issueler genelde projede çözülüyor.
+        </div>
+      </InfoBox>
 
       {/* Search and Filter Controls */}
       <div className="bg-white p-4 rounded-lg shadow">
         <div className="flex flex-col sm:flex-row gap-4">
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-            <input
-              type="text"
-              placeholder="Kişi ara..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md bg-white text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-          </div>
-          <div className="flex gap-2">
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as 'total' | 'completion' | 'quality' | 'diversity')}
-              className="px-4 py-2 border border-gray-300 rounded-md bg-white text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="total">Toplam Ticket</option>
-              <option value="completion">Tamamlanma %</option>
-              <option value="quality">Kalite Skoru</option>
-              <option value="diversity">Çeşitlilik</option>
-            </select>
-          </div>
+          <InputField
+            type="search"
+            placeholder="Kişi ara..."
+            value={searchTerm}
+            onChange={setSearchTerm}
+            icon={<Search size={20} />}
+            iconPosition="left"
+            className="flex-1"
+          />
+          <InputSelect
+            value={sortBy}
+            onChange={(value) => setSortBy(value as 'total' | 'completion' | 'quality' | 'diversity')}
+            options={sortOptions}
+            className="min-w-[150px]"
+          />
         </div>
         <div className="mt-2 text-sm text-gray-700">
           {openedByEntries.length} kişi gösteriliyor
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white p-5 rounded-lg shadow">
-          <div className="text-gray-500 text-xs font-medium uppercase">Issue Açan Kişi</div>
-          <div className="text-3xl font-bold text-gray-900 mt-2">{openerCount}</div>
-        </div>
-        <div className="bg-white p-5 rounded-lg shadow">
-          <div className="text-gray-500 text-xs font-medium uppercase">Projede Çözülen</div>
-          <div className="text-3xl font-bold text-green-600 mt-2">{byBucketCategory.solvedInProject}</div>
-        </div>
-        <div className="bg-white p-5 rounded-lg shadow">
-          <div className="text-gray-500 text-xs font-medium uppercase">Componentte Çözülen</div>
-          <div className="text-3xl font-bold text-blue-600 mt-2">{byBucketCategory.solvedInComponent}</div>
-        </div>
-        <div className="bg-white p-5 rounded-lg shadow">
-          <div className="text-gray-500 text-xs font-medium uppercase">Declined</div>
-          <div className="text-3xl font-bold text-gray-600 mt-2">{byBucketCategory.declined}</div>
-        </div>
-      </div>
+      <StatCardGrid columns={4}>
+        <StatCard label="Issue Açan Kişi" value={openerCount} />
+        <StatCard label="Projede Çözülen" value={byBucketCategory.solvedInProject} valueColor="green" />
+        <StatCard label="Componentte Çözülen" value={byBucketCategory.solvedInComponent} valueColor="blue" />
+        <StatCard label="Declined" value={byBucketCategory.declined} />
+      </StatCardGrid>
 
       <div className="bg-white p-6 rounded-lg shadow">
         <h3 className="text-lg font-medium text-gray-900 mb-4">Issue Açanlar Detay</h3>
-        <div className="overflow-x-auto max-h-[400px] overflow-y-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase sticky top-0 bg-gray-50 z-10">Açan Kişi</th>
-                <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase sticky top-0 bg-gray-50 z-10">Toplam</th>
-                <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase sticky top-0 bg-gray-50 z-10">Haftalık</th>
-                <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase sticky top-0 bg-gray-50 z-10">Son 30 Gün</th>
-                <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase sticky top-0 bg-gray-50 z-10">Projede Çözülen</th>
-                <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase sticky top-0 bg-gray-50 z-10">Componentte Çözülen</th>
-                <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase sticky top-0 bg-gray-50 z-10">Declined</th>
-                <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase sticky top-0 bg-gray-50 z-10">Tasarım</th>
-                <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase sticky top-0 bg-gray-50 z-10">Not</th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {openedByEntries.map(([openedBy, stats]) => (
-                <tr key={openedBy} className="hover:bg-gray-50">
-                  <td 
-                    className="px-3 py-3 whitespace-nowrap text-sm font-medium text-blue-600 max-w-[180px] truncate cursor-pointer hover:underline" 
-                    title={openedBy}
-                    onClick={() => handleOpenerClick(openedBy)}
-                  >
-                    {openedBy}
-                  </td>
-                  <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-700">{stats.total}</td>
-                  <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-700">{stats.issuesPerWeek.toFixed(1)}</td>
-                  <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-700">{stats.last30Days}</td>
-                  <td className="px-3 py-3 whitespace-nowrap text-sm text-green-600">{stats.bucketBreakdown.solvedInProject}</td>
-                  <td className="px-3 py-3 whitespace-nowrap text-sm text-blue-600">{stats.bucketBreakdown.solvedInComponent}</td>
-                  <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-600">{stats.bucketBreakdown.declined}</td>
-                  <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-600">{stats.bucketBreakdown.design}</td>
-                  <td className="px-3 py-3 text-sm text-gray-700 min-w-[200px]">
-                    <input
-                      className="w-full border-gray-300 rounded-md shadow-sm p-1.5 border text-gray-900 text-sm"
-                      value={openerComments[openedBy] || ''}
-                      onChange={(e) => onCommentChange(openedBy, e.target.value)}
-                      placeholder="Not ekle..."
-                    />
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <DataTable
+          data={openedByEntries.map(([openedBy, stats]) => ({ openedBy, stats }))}
+          columns={detailColumns}
+          keyExtractor={(row) => row.openedBy}
+          emptyMessage="Veri bulunamadı"
+        />
       </div>
 
       <div className="bg-white p-6 rounded-lg shadow">
         <h3 className="text-lg font-medium text-gray-900 mb-4">Kalite ve Çeşitlilik Analizi</h3>
-        <div className="overflow-x-auto max-h-[400px] overflow-y-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase sticky top-0 bg-gray-50 z-10">Açan Kişi</th>
-                <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase sticky top-0 bg-gray-50 z-10">Toplam</th>
-                <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase sticky top-0 bg-gray-50 z-10">Tamamlanma %</th>
-                <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase sticky top-0 bg-gray-50 z-10">Kalite</th>
-                <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase sticky top-0 bg-gray-50 z-10">Çeşitlilik</th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {openedByEntries.map(([openedBy, stats]) => (
-                <tr key={openedBy} className="hover:bg-gray-50">
-                  <td 
-                    className="px-3 py-3 whitespace-nowrap text-sm font-medium text-blue-600 max-w-[180px] truncate cursor-pointer hover:underline" 
-                    title={openedBy}
-                    onClick={() => handleOpenerClick(openedBy)}
-                  >
-                    {openedBy}
-                  </td>
-                  <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-700">{stats.total}</td>
-                  <td className="px-3 py-3 whitespace-nowrap text-sm">
-                    <div className="flex items-center gap-2">
-                      <div className="w-16 bg-gray-200 rounded-full h-2">
-                        <div className="bg-green-600 h-2 rounded-full" style={{ width: `${stats.completionRate}%` }} />
-                      </div>
-                      <span className="text-green-600 font-medium">{stats.completionRate}%</span>
-                    </div>
-                  </td>
-                  <td className="px-3 py-3 whitespace-nowrap text-sm">
-                    <div className="flex items-center gap-2">
-                      <div className="w-16 bg-gray-200 rounded-full h-2">
-                        <div 
-                          className={`h-2 rounded-full ${stats.qualityScore >= 70 ? 'bg-green-600' : stats.qualityScore >= 40 ? 'bg-yellow-500' : 'bg-red-600'}`} 
-                          style={{ width: `${stats.qualityScore}%` }} 
-                        />
-                      </div>
-                      <span className={`font-medium ${stats.qualityScore >= 70 ? 'text-green-600' : stats.qualityScore >= 40 ? 'text-yellow-600' : 'text-red-600'}`}>
-                        {stats.qualityScore}%
-                      </span>
-                    </div>
-                  </td>
-                  <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-700">{stats.componentDiversity}%</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <DataTable
+          data={openedByEntries.map(([openedBy, stats]) => ({ openedBy, stats }))}
+          columns={qualityColumns}
+          keyExtractor={(row) => row.openedBy}
+          emptyMessage="Veri bulunamadı"
+        />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

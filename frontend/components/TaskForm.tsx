@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { createTask } from '../lib/api';
 import { Save } from 'lucide-react';
-import { Button } from './ui';
+import { Button, InputField, InputSelect, InputDate, InputTextarea } from './ui';
 
 interface TaskFormProps {
   onClose: () => void;
@@ -20,8 +20,7 @@ export const TaskForm: React.FC<TaskFormProps> = ({ onClose, onSuccess }) => {
     source: 'manual'
   });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
+  const handleFieldChange = (name: string) => (value: string) => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
@@ -46,79 +45,59 @@ export const TaskForm: React.FC<TaskFormProps> = ({ onClose, onSuccess }) => {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Title *</label>
-        <input 
-          required
-          name="title"
-          value={formData.title}
-          onChange={handleChange}
-          className="w-full border-gray-300 rounded-md shadow-sm p-2 border text-gray-900"
-          placeholder="Task title"
-        />
-      </div>
+      <InputField
+        label="Title"
+        name="title"
+        value={formData.title}
+        onChange={handleFieldChange('title')}
+        placeholder="Task title"
+        required
+      />
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-        <textarea 
-          name="description"
-          rows={4}
-          value={formData.description}
-          onChange={handleChange}
-          className="w-full border-gray-300 rounded-md shadow-sm p-2 border text-gray-900"
-          placeholder="Task details..."
+      <InputTextarea
+        label="Description"
+        name="description"
+        value={formData.description}
+        onChange={handleFieldChange('description')}
+        placeholder="Task details..."
+        rows={4}
+      />
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <InputSelect
+          label="Severity"
+          value={formData.severity}
+          onChange={handleFieldChange('severity')}
+          options={[
+            { value: 'minor', label: 'Minor' },
+            { value: 'major', label: 'Major' },
+            { value: 'critical', label: 'Critical' }
+          ]}
+        />
+        <InputField
+          label="Manual Priority (0-5)"
+          name="manualPriority"
+          type="number"
+          value={formData.manualPriority}
+          onChange={handleFieldChange('manualPriority')}
+          min="0"
+          max="5"
         />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Severity</label>
-          <select 
-            name="severity"
-            value={formData.severity}
-            onChange={handleChange}
-            className="w-full border-gray-300 rounded-md shadow-sm p-2 border text-gray-900"
-          >
-            <option value="minor">Minor</option>
-            <option value="major">Major</option>
-            <option value="critical">Critical</option>
-          </select>
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Manual Priority (0-5)</label>
-          <input 
-            type="number"
-            min="0"
-            max="5"
-            name="manualPriority"
-            value={formData.manualPriority}
-            onChange={handleChange}
-            className="w-full border-gray-300 rounded-md shadow-sm p-2 border text-gray-900"
-          />
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Due Date</label>
-          <input 
-            type="date"
-            name="dueDate"
-            value={formData.dueDate}
-            onChange={handleChange}
-            className="w-full border-gray-300 rounded-md shadow-sm p-2 border text-gray-900"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Project</label>
-          <input 
-            name="project"
-            value={formData.project}
-            onChange={handleChange}
-            className="w-full border-gray-300 rounded-md shadow-sm p-2 border text-gray-900"
-            placeholder="Project name"
-          />
-        </div>
+        <InputDate
+          label="Due Date"
+          value={formData.dueDate}
+          onChange={handleFieldChange('dueDate')}
+        />
+        <InputField
+          label="Project"
+          name="project"
+          value={formData.project}
+          onChange={handleFieldChange('project')}
+          placeholder="Project name"
+        />
       </div>
 
       <div className="flex justify-end pt-4 gap-2">

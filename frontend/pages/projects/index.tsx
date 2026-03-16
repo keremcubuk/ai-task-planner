@@ -3,6 +3,14 @@ import { getProjectsStats, ProjectStats } from '../../lib/api';
 import { Search } from 'lucide-react';
 import { useRouter } from 'next/router';
 import { ProjectCard } from '../../components/ProjectCard';
+import { InputSelect, InputField, PageHeader, StatCard, StatCardRow } from '@components/ui';
+
+const sortOptions = [
+  { value: 'mostTasks', label: 'Most Tasks' },
+  { value: 'leastTasks', label: 'Least Tasks' },
+  { value: 'a-z', label: 'A-Z' },
+  { value: 'z-a', label: 'Z-A' }
+];
 
 export default function ProjectsList() {
   const [projects, setProjects] = useState<ProjectStats[]>([]);
@@ -63,63 +71,40 @@ export default function ProjectsList() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-gray-900">Projects</h2>
-      </div>
+      <PageHeader 
+        title="Projects"
+        description="Browse and manage all projects"
+      />
 
       {/* Search, Sort, and Stats summary in a single grid */}
       <div className="flex flex-col md:flex-row gap-4 items-center mb-8">
         {/* Search and Sort - 65% */}
         <div className="w-full md:w-8/12">
-          <div className="bg-white p-4 rounded-lg shadow h-full flex items-center">
-            <div className="relative w-full flex gap-2">
-              <div className="relative flex-1">
-                <Search
-                  className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-                  size={20}
-                />
-                <input
-                  type="text"
-                  placeholder="Search projects..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-gray-700 placeholder-gray-400"
-                />
-              </div>
-              <select
+          <div className="bg-white p-4 rounded-lg shadow h-20 flex items-center">
+            <div className="relative w-full flex gap-4">
+              <InputField
+                type="search"
+                placeholder="Search projects..."
+                value={search}
+                onChange={setSearch}
+                icon={<Search size={20} />}
+                iconPosition="left"
+                className="flex-1"
+              />
+              <InputSelect
                 value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                className="px-5 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="mostTasks">Most Tasks</option>
-                <option value="leastTasks">Least Tasks</option>
-                <option value="a-z">A-Z</option>
-                <option value="z-a">Z-A</option>
-              </select>
+                onChange={(value) => setSortBy(value)}
+                options={sortOptions}
+              />
             </div>
           </div>
         </div>
         {/* Stats - 35% */}
-        <div className="w-full md:w-4/12 flex gap-4 justify-end">
-          <div className="bg-white rounded-lg shadow p-4 flex flex-col items-center min-w-[120px]">
-            <span className="text-xs text-gray-500">Total</span>
-            <span className="text-2xl font-bold text-blue-700">
-              {totalCount}
-            </span>
-          </div>
-          <div className="bg-white rounded-lg shadow p-4 flex flex-col items-center min-w-[120px]">
-            <span className="text-xs text-gray-500">Completed</span>
-            <span className="text-2xl font-bold text-green-700">
-              {completedCount}
-            </span>
-          </div>
-          <div className="bg-white rounded-lg shadow p-4 flex flex-col items-center min-w-[120px]">
-            <span className="text-xs text-gray-500">In Progress</span>
-            <span className="text-2xl font-bold text-yellow-600">
-              {inProgressCount}
-            </span>
-          </div>
-        </div>
+        <StatCardRow className="w-full md:w-4/12">
+          <StatCard label="Total" value={totalCount} valueColor="blue" size="md" />
+          <StatCard label="Completed" value={completedCount} valueColor="green" size="md" />
+          <StatCard label="In Progress" value={inProgressCount} valueColor="yellow" size="md" />
+        </StatCardRow>
       </div>
 
       {sortedInProgressProjects.length > 0 && (

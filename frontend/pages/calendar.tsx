@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { fetchTasks, Task } from '../lib/api';
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from 'lucide-react';
-import { Modal } from '../components/Modal';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { Modal, PageHeader, StatCard, StatCardGrid } from '@components/ui';
 import { TaskDetail } from '../components/TaskDetail';
 
 interface DayData {
@@ -124,27 +124,17 @@ export default function CalendarPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-          <CalendarIcon size={28} /> Calendar
-        </h2>
-      </div>
+      <PageHeader 
+        title="Calendar"
+        description="Task due dates and opening dates overview"
+      />
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white p-6 rounded-lg shadow">
-          <p className="text-gray-500 text-sm font-medium uppercase">Due This Month</p>
-          <p className="text-3xl font-bold text-blue-600">{thisMonthTasks.length}</p>
-        </div>
-        <div className="bg-white p-6 rounded-lg shadow">
-          <p className="text-gray-500 text-sm font-medium uppercase">Overdue</p>
-          <p className="text-3xl font-bold text-red-600">{overdueTasks.length}</p>
-        </div>
-        <div className="bg-white p-6 rounded-lg shadow">
-          <p className="text-gray-500 text-sm font-medium uppercase">Total Open Tasks</p>
-          <p className="text-3xl font-bold text-gray-900">{tasks.filter(t => t.status !== 'done').length}</p>
-        </div>
-      </div>
+      <StatCardGrid columns={3}>
+        <StatCard label="Due This Month" value={thisMonthTasks.length} valueColor="blue" />
+        <StatCard label="Overdue" value={overdueTasks.length} valueColor="red" />
+        <StatCard label="Total Open Tasks" value={tasks.filter(t => t.status !== 'done').length} />
+      </StatCardGrid>
 
       {/* Calendar */}
       <div className="bg-white rounded-lg shadow p-6">

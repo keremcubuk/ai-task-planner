@@ -1,6 +1,7 @@
 import React from 'react';
-import { ReviewScoreSummary } from '../lib/api';
 import { TrendingUp, TrendingDown, AlertTriangle } from 'lucide-react';
+import { ProgressBar } from './ui';
+import { ReviewScoreSummary } from '../lib/api';
 
 interface ReviewScoreCardProps {
   score: ReviewScoreSummary;
@@ -78,10 +79,11 @@ export const ReviewScoreCard: React.FC<ReviewScoreCardProps> = ({
         </div>
 
         {/* Overall progress bar */}
-        <div className="w-full bg-gray-200 rounded-full h-2.5 mb-4">
-          <div
-            className={`h-2.5 rounded-full ${config.progressFill} transition-all`}
-            style={{ width: `${score.overallScore}%` }}
+        <div className="mb-4">
+          <ProgressBar
+            value={score.overallScore}
+            color={score.overallScore >= 70 ? 'green' : score.overallScore >= 40 ? 'yellow' : 'red'}
+            size="lg"
           />
         </div>
 

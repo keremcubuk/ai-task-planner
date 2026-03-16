@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
-import { Search, RefreshCw, Upload } from 'lucide-react';
+import { Search, RefreshCw, Upload, X } from 'lucide-react';
 import {
   getReviewScores,
   ReviewScoreSummary,
@@ -9,9 +9,24 @@ import {
   importReviewMarkdown,
 } from '../../lib/api';
 import { ReviewScoreCard } from '../../components/ReviewScoreCard';
+import { Button, InputField, InputSelect, PageHeader, StatCard, StatCardRow } from '@components/ui';
 
 type StatusFilter = 'all' | 'critical' | 'warning' | 'good';
 type SortOption = 'score-asc' | 'score-desc' | 'name' | 'date';
+
+const statusOptions = [
+  { value: 'all', label: 'All Status' },
+  { value: 'critical', label: '🔴 Critical' },
+  { value: 'warning', label: '🟡 Warning' },
+  { value: 'good', label: '🟢 Good' }
+];
+
+const sortOptions = [
+  { value: 'score-asc', label: 'Score ↑' },
+  { value: 'score-desc', label: 'Score ↓' },
+  { value: 'name', label: 'A-Z' },
+  { value: 'date', label: 'Latest' }
+];
 
 export default function ProjectReviewScoresPage() {
   const [scores, setScores] = useState<ReviewScoreSummary[]>([]);
@@ -129,26 +144,29 @@ export default function ProjectReviewScoresPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-gray-900">
-          Project Review Scores
-        </h2>
+      <PageHeader 
+        title="Project Review Scores"
+        description="Track and manage project review scores and quality metrics"
+      >
         <div className="flex gap-2">
-          <button
+          <Button
             onClick={() => setShowCrawlModal(true)}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm"
+            variant="primary"
+            size="md"
+            leftIcon={<RefreshCw size={16} />}
           >
-            <RefreshCw size={16} /> Confluence'tan Çek
-          </button>
-          <button
+            Confluence&apos;tan Çek
+          </Button>
+          <Button
             onClick={() => setShowImportModal(true)}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 text-sm"
+            variant="secondary"
+            size="md"
+            leftIcon={<Upload size={16} />}
           >
-            <Upload size={16} /> Markdown Import
-          </button>
+            Markdown Import
+          </Button>
         </div>
-      </div>
+      </PageHeader>
 
       {/* Action message */}
       {actionMessage && (
@@ -167,78 +185,39 @@ export default function ProjectReviewScoresPage() {
       <div className="flex flex-col md:flex-row gap-4 items-center">
         {/* Search & Filters */}
         <div className="w-full md:w-7/12">
-          <div className="bg-white p-4 rounded-lg shadow h-full flex items-center">
-            <div className="relative w-full flex gap-2">
-              <div className="relative flex-1">
-                <Search
-                  className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-                  size={20}
-                />
-                <input
-                  type="text"
-                  placeholder="Search projects..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm font-medium bg-white text-gray-700 placeholder-gray-500 hover:border-gray-400 transition-colors"
-                />
-              </div>
-              <select
+          <div className="bg-white p-4 rounded-lg shadow flex items-center">
+            <div className="relative w-full flex gap-4">
+              <InputField
+                type="search"
+                placeholder="Search projects..."
+                value={search}
+                onChange={setSearch}
+                icon={<Search size={20} />}
+                iconPosition="left"
+                className="flex-1"
+              />
+              <InputSelect
                 value={statusFilter}
-                onChange={(e) =>
-                  setStatusFilter(e.target.value as StatusFilter)
-                }
-                className="px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm bg-white text-gray-700 font-medium hover:border-gray-400 transition-colors"
-              >
-                <option value="all">All Status</option>
-                <option value="critical">🔴 Critical</option>
-                <option value="warning">🟡 Warning</option>
-                <option value="good">🟢 Good</option>
-              </select>
-              <select
+                onChange={(value) => setStatusFilter(value as StatusFilter)}
+                options={statusOptions}
+              />
+              <InputSelect
                 value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as SortOption)}
-                className="px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm bg-white text-gray-700 font-medium hover:border-gray-400 transition-colors"
-              >
-                <option value="score-asc">Score ↑</option>
-                <option value="score-desc">Score ↓</option>
-                <option value="name">A-Z</option>
-                <option value="date">Latest</option>
-              </select>
+                onChange={(value) => setSortBy(value as SortOption)}
+                options={sortOptions}
+              />
             </div>
           </div>
         </div>
 
         {/* Stats cards */}
-        <div className="w-full md:w-5/12 flex gap-3 justify-end">
-          <div className="bg-white rounded-lg shadow p-3 flex flex-col items-center min-w-[90px]">
-            <span className="text-xs text-gray-500">Avg Score</span>
-            <span className="text-2xl font-bold text-blue-700">{avgScore}</span>
-          </div>
-          <div className="bg-white rounded-lg shadow p-3 flex flex-col items-center min-w-[80px]">
-            <span className="text-xs text-gray-500">Total</span>
-            <span className="text-2xl font-bold text-gray-700">
-              {totalCount}
-            </span>
-          </div>
-          <div className="bg-green-50 rounded-lg shadow p-3 flex flex-col items-center min-w-[80px]">
-            <span className="text-xs text-green-600">Good</span>
-            <span className="text-2xl font-bold text-green-700">
-              {goodCount}
-            </span>
-          </div>
-          <div className="bg-yellow-50 rounded-lg shadow p-3 flex flex-col items-center min-w-[80px]">
-            <span className="text-xs text-yellow-600">Warning</span>
-            <span className="text-2xl font-bold text-yellow-700">
-              {warningCount}
-            </span>
-          </div>
-          <div className="bg-red-50 rounded-lg shadow p-3 flex flex-col items-center min-w-[80px]">
-            <span className="text-xs text-red-600">Critical</span>
-            <span className="text-2xl font-bold text-red-700">
-              {criticalCount}
-            </span>
-          </div>
-        </div>
+        <StatCardRow className="w-full md:w-5/12">
+          <StatCard label="Avg Score" value={avgScore} valueColor="blue" size="sm" />
+          <StatCard label="Total" value={totalCount} size="sm" />
+          <StatCard label="Good" value={goodCount} valueColor="green" bgColor="green" size="sm" />
+          <StatCard label="Warning" value={warningCount} valueColor="yellow" bgColor="yellow" size="sm" />
+          <StatCard label="Critical" value={criticalCount} valueColor="red" bgColor="red" size="sm" />
+        </StatCardRow>
       </div>
 
       {/* Project cards grid */}
@@ -282,17 +261,16 @@ export default function ProjectReviewScoresPage() {
               <h3 className="text-lg font-semibold text-gray-900">
                 Confluence&apos;tan Review Score Çek
               </h3>
-              <button
+              <Button
                 onClick={() => {
                   setShowCrawlModal(false);
                   setCrawlUrl('');
                 }}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
+                variant="ghost"
+                size="md"
+                className="p-1 w-8 h-8"
+                leftIcon={<X size={24} />}
+              />
             </div>
             <p className="text-sm text-gray-600 mb-4">
               AI Reports sayfasının Confluence URL&apos;ini girin. Sayfa içeriği
@@ -306,22 +284,25 @@ export default function ProjectReviewScoresPage() {
               className="w-full px-3 py-2 border border-gray-300 rounded-md mb-4 text-sm"
             />
             <div className="flex gap-2 justify-end">
-              <button
+              <Button
                 onClick={() => {
                   setShowCrawlModal(false);
                   setCrawlUrl('');
                 }}
-                className="px-4 py-2 text-gray-600 hover:text-gray-800 text-sm"
+                variant="ghost"
+                size="sm"
               >
                 İptal
-              </button>
-              <button
+              </Button>
+              <Button
                 onClick={handleCrawl}
                 disabled={actionLoading || !crawlUrl}
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm disabled:opacity-50"
+                variant="primary"
+                size="sm"
+                loading={actionLoading}
               >
                 {actionLoading ? 'Çekiliyor...' : 'Çek ve Kaydet'}
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -341,14 +322,13 @@ export default function ProjectReviewScoresPage() {
               <h3 className="text-lg font-semibold text-gray-900">
                 Markdown Import
               </h3>
-              <button
+              <Button
                 onClick={() => setShowImportModal(false)}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
+                variant="ghost"
+                size="md"
+                className="p-1 w-8 h-8"
+                leftIcon={<X size={24} />}
+              />
             </div>
             <p className="text-sm text-gray-600 mb-4">
               AI Review Score markdown içeriğini buraya yapıştırın.
@@ -361,22 +341,25 @@ export default function ProjectReviewScoresPage() {
               className="w-full px-3 py-2 border border-gray-300 rounded-md mb-4 text-sm font-mono text-gray-900"
             />
             <div className="flex gap-2 justify-end">
-              <button
+              <Button
                 onClick={() => {
                   setShowImportModal(false);
                   setImportMarkdown('');
                 }}
-                className="px-4 py-2 text-gray-600 hover:text-gray-800 text-sm"
+                variant="ghost"
+                size="sm"
               >
                 İptal
-              </button>
-              <button
+              </Button>
+              <Button
                 onClick={handleImport}
                 disabled={actionLoading || !importMarkdown}
-                className="px-4 py-2 bg-gray-700 text-white rounded-md hover:bg-gray-800 text-sm disabled:opacity-50"
+                variant="primary"
+                size="sm"
+                loading={actionLoading}
               >
                 {actionLoading ? 'İmport ediliyor...' : 'Import Et'}
-              </button>
+              </Button>
             </div>
           </div>
         </div>

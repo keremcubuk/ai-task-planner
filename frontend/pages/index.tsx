@@ -13,10 +13,9 @@ import { TaskFilters } from "../components/TaskFilters";
 import { AiPriorityInfo } from "../components/AiPriorityInfo";
 import Link from "next/link";
 import { RefreshCw, Download, Upload, Trash2, Info } from "lucide-react";
-import { Modal } from "../components/Modal";
 import { TaskForm } from "../components/TaskForm";
 import { TaskDetail } from "../components/TaskDetail";
-import { Button } from "@/components/ui";
+import { Button, Modal, PageHeader } from "@/components/ui";
 
 export default function Dashboard() {
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -45,7 +44,7 @@ export default function Dashboard() {
     severity: '',
     minAiScore: '',
     maxAiScore: '',
-    aiScores: '',
+    aiScores: [] as string[],
     dueStartDate: '',
     dueEndDate: '',
     project: [] as string[]
@@ -90,7 +89,7 @@ export default function Dashboard() {
             maxAiScore: filters.maxAiScore
               ? Number(filters.maxAiScore)
               : undefined,
-            aiScores: filters.aiScores || undefined,
+            aiScores: filters.aiScores.length > 0 ? filters.aiScores.join(',') : undefined,
             dueStartDate: filters.dueStartDate || undefined,
             dueEndDate: filters.dueEndDate || undefined,
             project:
@@ -126,7 +125,7 @@ export default function Dashboard() {
         severity: filters.severity || undefined,
         minAiScore: filters.minAiScore ? Number(filters.minAiScore) : undefined,
         maxAiScore: filters.maxAiScore ? Number(filters.maxAiScore) : undefined,
-        aiScores: filters.aiScores || undefined,
+        aiScores: filters.aiScores.length > 0 ? filters.aiScores.join(',') : undefined,
         dueStartDate: filters.dueStartDate || undefined,
         dueEndDate: filters.dueEndDate || undefined,
         project: filters.project.length > 0 ? filters.project.join(',') : undefined
@@ -163,6 +162,16 @@ export default function Dashboard() {
     });
   };
 
+  const toggleAllProjects = () => {
+    if (filters.project.length === availableProjects.length) {
+      // Deselect all
+      setFilters((prev) => ({ ...prev, project: [] }));
+    } else {
+      // Select all
+      setFilters((prev) => ({ ...prev, project: availableProjects }));
+    }
+  };
+
   const toggleAssigneeFilter = (assignee: string) => {
     setFilters((prev) => ({
       ...prev,
@@ -180,6 +189,20 @@ export default function Dashboard() {
     }
   };
 
+  const toggleAiScoreFilter = (score: string) => {
+    setFilters((prev) => {
+      const current = prev.aiScores;
+      const updated = current.includes(score)
+        ? current.filter((s) => s !== score)
+        : [...current, score];
+      return { ...prev, aiScores: updated };
+    });
+  };
+
+  const selectAllAiScores = (values: string[]) => {
+    setFilters((prev) => ({ ...prev, aiScores: values }));
+  };
+
   const clearFilters = () => {
     setFilters({
         status: [],
@@ -187,7 +210,7 @@ export default function Dashboard() {
         severity: '',
         minAiScore: '',
         maxAiScore: '',
-        aiScores: '',
+        aiScores: [], // Fix aiScores type in clearFilters
         dueStartDate: '',
         dueEndDate: '',
         project: []
@@ -268,8 +291,10 @@ export default function Dashboard() {
 
   return (
     <>
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">Task Management</h2>
+      <PageHeader 
+        title="Task Management"
+        description="Manage, prioritize, and track all tasks"
+      >
         <div className="flex gap-4">
           <Button
             variant="danger"
@@ -347,7 +372,7 @@ export default function Dashboard() {
             />
           </div>
         </div>
-      </div>
+      </PageHeader>
 
       <TaskFilters
         filters={filters}
@@ -360,8 +385,11 @@ export default function Dashboard() {
         onFilterChange={handleFilterChange}
         onToggleStatus={toggleStatusFilter}
         onToggleProject={toggleProjectFilter}
+        onToggleAllProjects={toggleAllProjects}
         onToggleAssignee={toggleAssigneeFilter}
         onToggleAllAssignees={toggleAllAssignees}
+        onToggleAiScore={toggleAiScoreFilter}
+        onSelectAllAiScores={selectAllAiScores}
         onClearFilters={clearFilters}
       />
 
