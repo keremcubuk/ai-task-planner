@@ -1,9 +1,11 @@
+'use client';
+
 import { useState } from 'react';
-import { useRouter } from 'next/router';
+import { useRouter } from 'next/navigation';
 import { Upload, Globe, FileSpreadsheet } from 'lucide-react';
-import FileImport from '../components/import/FileImport';
-import ConfluenceCrawler from '../components/import/ConfluenceCrawler';
-import { Button } from '../components/ui';
+import FileImport from '@components/import/FileImport';
+import ConfluenceCrawler from '@components/import/ConfluenceCrawler';
+import { Button } from '@components/ui';
 
 type ImportMode = 'select' | 'file' | 'confluence';
 
@@ -19,7 +21,6 @@ export default function ImportPage() {
     return <ConfluenceCrawler onBack={() => setMode('select')} />;
   }
 
-  // Mode Selection Screen
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-100 p-8">
       <div className="w-full max-w-lg rounded-lg bg-white p-8 shadow-lg">

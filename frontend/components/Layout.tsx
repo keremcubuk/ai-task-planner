@@ -1,13 +1,15 @@
+'use client';
+
 import React from 'react';
 import Link from 'next/link';
 import { Home, PieChart, Folder, Calendar, ClipboardCheck } from 'lucide-react';
-import { useRouter } from 'next/router';
+import { usePathname } from 'next/navigation';
 
 export const Layout = ({ children }: { children: React.ReactNode }) => {
-  const router = useRouter();
+  const pathname = usePathname();
 
   const isActive = (path: string) =>
-    router.pathname === path
+    pathname === path
       ? 'text-blue-600 border-blue-500'
       : 'text-gray-500 border-transparent hover:text-blue-600 hover:border-blue-300';
 

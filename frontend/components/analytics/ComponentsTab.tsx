@@ -1,7 +1,7 @@
 import React from 'react';
-import { ComponentAnalysisSection } from '../ComponentAnalysisSection';
-import { ComponentAnalysisResult, OllamaStatus } from '../../lib/api';
-import { StatCard, StatCardGrid, DataTable, DataTableColumn, ProgressBar } from '../ui';
+import { ComponentAnalysisSection } from '@components/ComponentAnalysisSection';
+import { ComponentAnalysisResult, OllamaStatus } from '@lib/api';
+import { StatCard, StatCardGrid, DataTable, DataTableColumn, ProgressBar } from '@components/ui';
 
 interface BucketBreakdown {
   solvedInComponent: number;

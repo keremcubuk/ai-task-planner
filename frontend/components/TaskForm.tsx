@@ -31,7 +31,7 @@ export const TaskForm: React.FC<TaskFormProps> = ({ onClose, onSuccess }) => {
       await createTask({
         ...formData,
         manualPriority: Number(formData.manualPriority),
-        dueDate: formData.dueDate ? new Date(formData.dueDate) : undefined,
+        dueDate: formData.dueDate ? new Date(formData.dueDate).toISOString() : undefined,
       });
       onSuccess();
       onClose();

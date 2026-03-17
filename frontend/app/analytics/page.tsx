@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useEffect, useState, useCallback } from 'react';
 import {
   getAnalytics,
@@ -5,14 +7,14 @@ import {
   getOllamaStatus,
   ComponentAnalysisResult,
   OllamaStatus,
-} from '../lib/api';
+} from '@lib/api';
 import { Folder, Users, UserCheck, Layers, TrendingUp } from 'lucide-react';
-import { TaskDetail } from '../components/TaskDetail';
-import { ProjectsTab } from '../components/analytics/ProjectsTab';
-import { DevelopersTab } from '../components/analytics/DevelopersTab';
-import { OpenersTab } from '../components/analytics/OpenersTab';
-import { ComponentsTab } from '../components/analytics/ComponentsTab';
-import { TrendsTab } from '../components/analytics/TrendsTab';
+import { TaskDetail } from '@components/TaskDetail';
+import { ProjectsTab } from '@components/analytics/ProjectsTab';
+import { DevelopersTab } from '@components/analytics/DevelopersTab';
+import { OpenersTab } from '@components/analytics/OpenersTab';
+import { ComponentsTab } from '@components/analytics/ComponentsTab';
+import { TrendsTab } from '@components/analytics/TrendsTab';
 import { TabNavigation, Modal, PageHeader } from '@components/ui';
 
 type TabType = 'projects' | 'developers' | 'openers' | 'components' | 'trends';

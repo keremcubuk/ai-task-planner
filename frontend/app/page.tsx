@@ -1,3 +1,5 @@
+'use client';
+
 import { useEffect, useState, useCallback } from 'react';
 import {
   fetchTasks,
@@ -7,15 +9,15 @@ import {
   resetDb,
   getProjectsStats,
   Task,
-} from '../lib/api';
-import { TasksTable } from '../components/TasksTable';
-import { TaskFilters } from '../components/TaskFilters';
-import { AiPriorityInfo } from '../components/AiPriorityInfo';
+} from '@lib/api';
+import { TasksTable } from '@components/TasksTable';
+import { TaskFilters } from '@components/TaskFilters';
+import { AiPriorityInfo } from '@components/AiPriorityInfo';
 import Link from 'next/link';
 import { RefreshCw, Download, Upload, Trash2, Info } from 'lucide-react';
-import { TaskForm } from '../components/TaskForm';
-import { TaskDetail } from '../components/TaskDetail';
-import { Button, Modal, PageHeader } from '@/components/ui';
+import { TaskForm } from '@components/TaskForm';
+import { TaskDetail } from '@components/TaskDetail';
+import { Button, Modal, PageHeader } from '@components/ui';
 
 export default function Dashboard() {
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -62,7 +64,7 @@ export default function Dashboard() {
       }
     };
     loadAssignees();
-  }, [isInitialized]); // Load assignees only once on mount
+  }, [isInitialized]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -94,7 +96,7 @@ export default function Dashboard() {
       loadTasksOnly();
     }, 500);
     return () => clearTimeout(timer);
-  }, [search, filters, availableAssignees]); // Reload tasks when search, filters, or availableAssignees change
+  }, [search, filters, availableAssignees]);
 
   const loadTasks = useCallback(async () => {
     setLoading(true);
@@ -148,10 +150,8 @@ export default function Dashboard() {
 
   const toggleAllProjects = () => {
     if (filters.project.length === availableProjects.length) {
-      // Deselect all
       setFilters(prev => ({ ...prev, project: [] }));
     } else {
-      // Select all
       setFilters(prev => ({ ...prev, project: availableProjects }));
     }
   };
@@ -194,7 +194,7 @@ export default function Dashboard() {
       severity: '',
       minAiScore: '',
       maxAiScore: '',
-      aiScores: [], // Fix aiScores type in clearFilters
+      aiScores: [],
       dueStartDate: '',
       dueEndDate: '',
       project: [],

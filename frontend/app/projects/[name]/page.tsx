@@ -1,14 +1,16 @@
+'use client';
+
 import React, { useEffect, useState } from 'react';
-import { useRouter } from 'next/router';
-import { fetchTasks, Task } from '../../lib/api';
-import { TasksTable } from '../../components/TasksTable';
-import { ProjectFilters, ProjectFiltersState } from '../../components/ProjectFilters';
+import { useParams } from 'next/navigation';
+import { fetchTasks, Task } from '@lib/api';
+import { TasksTable } from '@components/TasksTable';
+import { ProjectFilters, ProjectFiltersState } from '@components/ProjectFilters';
 import { Modal, StatCard, StatCardGrid, PageHeader } from '@components/ui';
-import { TaskDetail } from '../../components/TaskDetail';
+import { TaskDetail } from '@components/TaskDetail';
 
 export default function ProjectDetail() {
-  const router = useRouter();
-  const { name } = router.query;
+  const params = useParams();
+  const name = params?.name as string;
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedTaskId, setSelectedTaskId] = useState<number | null>(null);
@@ -23,7 +25,7 @@ export default function ProjectDetail() {
 
   useEffect(() => {
     if (name) {
-      loadProjectTasks(name as string);
+      loadProjectTasks(decodeURIComponent(name));
     }
   }, [name]);
 
@@ -31,7 +33,6 @@ export default function ProjectDetail() {
     try {
       const data = await fetchTasks({ project: projectName });
       setTasks(data);
-      // Initialize assignedTo filter with all unique assignees (Select All by default)
       const uniqueAssignees = [...new Set(data.map((t: Task) => t.assignedTo || 'Unassigned'))];
       setFilters(prev => ({ ...prev, assignedTo: uniqueAssignees }));
     } catch (error) {
@@ -41,27 +42,21 @@ export default function ProjectDetail() {
     }
   };
 
-  // Get unique assignees from tasks
   const availableAssignees = [...new Set(tasks.map(t => t.assignedTo || 'Unassigned'))];
 
-  // Apply client-side filters
   const filteredTasks = tasks.filter(task => {
-    // Search filter
     if (search && !task.title.toLowerCase().includes(search.toLowerCase())) {
       return false;
     }
-    // Status filter
     if (filters.status.length > 0 && !filters.status.includes(task.status)) {
       return false;
     }
-    // Assigned To filter (multi-select)
     if (filters.assignedTo.length > 0 && filters.assignedTo.length < availableAssignees.length) {
       const taskAssignee = task.assignedTo || 'Unassigned';
       if (!filters.assignedTo.includes(taskAssignee)) {
         return false;
       }
     }
-    // Severity filter
     if (filters.severity && task.severity !== filters.severity) {
       return false;
     }
@@ -135,7 +130,7 @@ export default function ProjectDetail() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title={`Project: ${name}`}
+        title={`Project: ${decodeURIComponent(name || '')}`}
         description="View and manage project tasks and progress"
       />
 
@@ -180,7 +175,7 @@ export default function ProjectDetail() {
             taskId={selectedTaskId}
             onClose={() => setSelectedTaskId(null)}
             onUpdate={() => {
-              if (name) loadProjectTasks(name as string);
+              if (name) loadProjectTasks(decodeURIComponent(name));
             }}
           />
         )}

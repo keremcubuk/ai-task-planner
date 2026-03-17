@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useRouter } from 'next/router';
+import { useRouter } from 'next/navigation';
 import { FileSpreadsheet, ArrowLeft } from 'lucide-react';
 import { importCsv, importXlsx } from '../../lib/api';
 import { Button } from '../ui';

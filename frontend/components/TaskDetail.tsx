@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { fetchTask, updateTask, deleteTask, Task } from '../lib/api';
-import { PriorityBadge } from './PriorityBadge';
-import { SeverityBadge } from './SeverityBadge';
+import { fetchTask, updateTask, deleteTask, Task } from '@lib/api';
+import { PriorityBadge } from '@components/PriorityBadge';
+import { SeverityBadge } from '@components/SeverityBadge';
 import { Save, Trash2 } from 'lucide-react';
-import { Button, Badge } from './ui';
+import { Button, Badge } from '@components/ui';
 
 const formatDate = (dateString: string) => {
   if (!dateString) return '-';

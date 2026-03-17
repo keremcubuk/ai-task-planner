@@ -1,14 +1,17 @@
+'use client';
+
 import React, { useEffect, useState } from 'react';
-import { useRouter } from 'next/router';
-import { fetchTask, updateTask, deleteTask, Task } from '../../lib/api';
-import { PriorityBadge } from '../../components/PriorityBadge';
-import { SeverityBadge } from '../../components/SeverityBadge';
+import { useParams, useRouter } from 'next/navigation';
+import { fetchTask, updateTask, deleteTask, Task } from '@lib/api';
+import { PriorityBadge } from '@components/PriorityBadge';
+import { SeverityBadge } from '@components/SeverityBadge';
 import { Save, Trash2, ArrowLeft } from 'lucide-react';
 import { Button } from '@components/ui';
 
 export default function TaskDetail() {
   const router = useRouter();
-  const { id } = router.query;
+  const params = useParams();
+  const id = params?.id as string;
   const [task, setTask] = useState<Task | null>(null);
   const [loading, setLoading] = useState(true);
   const [manualPriority, setManualPriority] = useState<number>(0);

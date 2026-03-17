@@ -1,5 +1,7 @@
+'use client';
+
 import React, { useEffect, useState } from 'react';
-import { useRouter } from 'next/router';
+import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import {
   ArrowLeft,
@@ -30,13 +32,14 @@ import {
   ReviewScoreStrength,
   ReviewScoreClosedIssue,
   ReviewScoreRemainingIssue,
-} from '../../lib/api';
+} from '../../../lib/api';
 
 type Tab = 'overview' | 'closed' | 'remaining' | 'history' | 'raw';
 
 export default function ProjectReviewScoreDetailPage() {
   const router = useRouter();
-  const { projectName } = router.query;
+  const params = useParams();
+  const projectName = params?.projectName as string;
   const [detail, setDetail] = useState<ReviewScoreDetail | null>(null);
   const [history, setHistory] = useState<ReviewScoreSummary[]>([]);
   const [loading, setLoading] = useState(true);

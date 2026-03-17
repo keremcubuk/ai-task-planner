@@ -1,8 +1,10 @@
+'use client';
+
 import React, { useEffect, useState } from 'react';
-import { fetchTasks, Task } from '../lib/api';
+import { fetchTasks, Task } from '@lib/api';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Modal, PageHeader, StatCard, StatCardGrid } from '@components/ui';
-import { TaskDetail } from '../components/TaskDetail';
+import { TaskDetail } from '@components/TaskDetail';
 
 interface DayData {
   date: Date;

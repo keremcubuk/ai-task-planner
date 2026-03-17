@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useRouter } from 'next/router';
+import { useRouter } from 'next/navigation';
 import { Globe, ArrowLeft, Check, Loader2, Key } from 'lucide-react';
 import {
   crawlConfluence,
