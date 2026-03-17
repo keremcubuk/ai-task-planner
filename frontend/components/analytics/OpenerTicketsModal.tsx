@@ -56,84 +56,82 @@ export function OpenerTicketsModal({
   };
 
   return (
-    <div 
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+    <div
+      className="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black p-4"
       onClick={onClose}
     >
-      <div 
-        className="bg-white rounded-lg shadow-xl max-w-6xl w-full max-h-[90vh] flex flex-col"
-        onClick={(e) => e.stopPropagation()}
+      <div
+        className="flex max-h-[90vh] w-full max-w-6xl flex-col rounded-lg bg-white shadow-xl"
+        onClick={e => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between p-6 border-b sticky top-0 bg-white z-10">
+        <div className="sticky top-0 z-10 flex items-center justify-between border-b bg-white p-6">
           <div>
             <h2 className="text-xl font-bold text-gray-900">Ticketlar</h2>
-            <div className="text-sm text-gray-500 mt-1">
+            <div className="mt-1 text-sm text-gray-500">
               {openedBy && <span className="font-medium">{openedBy}</span>}
               {openedBy && component && <span className="mx-2">•</span>}
               {component && <span className="font-medium">{component}</span>}
               <span className="ml-2">({tickets.length} ticket)</span>
             </div>
           </div>
-          <Button
-            variant="ghost"
-            size="md"
-            onClick={onClose}
-          >
+          <Button variant="ghost" size="md" onClick={onClose}>
             <X size={24} />
           </Button>
         </div>
 
         <div className="flex-1 overflow-y-auto p-6">
           {loading ? (
-            <div className="text-center py-8 text-gray-500">Yükleniyor...</div>
+            <div className="py-8 text-center text-gray-500">Yükleniyor...</div>
           ) : tickets.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">Ticket bulunamadı</div>
+            <div className="py-8 text-center text-gray-500">Ticket bulunamadı</div>
           ) : (
             <div className="space-y-3">
-              {tickets.map((ticket) => (
+              {tickets.map(ticket => (
                 <div
                   key={ticket.id}
                   onClick={() => {
                     onTaskClick(ticket.id);
                     onClose();
                   }}
-                  className="border rounded-lg p-4 hover:bg-gray-50 cursor-pointer transition-colors"
+                  className="cursor-pointer rounded-lg border p-4 transition-colors hover:bg-gray-50"
                 >
                   <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-medium text-gray-900 mb-2">{ticket.title}</h3>
+                    <div className="min-w-0 flex-1">
+                      <h3 className="mb-2 font-medium text-gray-900">{ticket.title}</h3>
                       {ticket.description && (
-                        <p className="text-sm text-gray-600 line-clamp-2 mb-2">
+                        <p className="mb-2 line-clamp-2 text-sm text-gray-600">
                           {ticket.description}
                         </p>
                       )}
                       <div className="flex flex-wrap gap-2 text-xs">
-                        <span className={`px-2 py-1 rounded-full ${getStatusColor(ticket.status)}`}>
+                        <span className={`rounded-full px-2 py-1 ${getStatusColor(ticket.status)}`}>
                           {ticket.status}
                         </span>
                         {ticket.severity && (
-                          <span className={`px-2 py-1 rounded-full ${getSeverityColor(ticket.severity)}`}>
+                          <span
+                            className={`rounded-full px-2 py-1 ${getSeverityColor(ticket.severity)}`}
+                          >
                             {ticket.severity}
                           </span>
                         )}
                         {ticket.project && (
-                          <span className="px-2 py-1 rounded-full text-indigo-600 bg-indigo-50">
+                          <span className="rounded-full bg-indigo-50 px-2 py-1 text-indigo-600">
                             {ticket.project}
                           </span>
                         )}
                         {ticket.componentName && (
-                          <span className="px-2 py-1 rounded-full text-purple-600 bg-purple-50">
+                          <span className="rounded-full bg-purple-50 px-2 py-1 text-purple-600">
                             {ticket.componentName}
                           </span>
                         )}
                         {ticket.bucketName && (
-                          <span className="px-2 py-1 rounded-full text-gray-600 bg-gray-100">
+                          <span className="rounded-full bg-gray-100 px-2 py-1 text-gray-600">
                             {ticket.bucketName}
                           </span>
                         )}
                       </div>
                     </div>
-                    <div className="text-right text-xs text-gray-500 whitespace-nowrap">
+                    <div className="text-right text-xs whitespace-nowrap text-gray-500">
                       <div>{new Date(ticket.createdAt).toLocaleDateString('tr-TR')}</div>
                       {ticket.assignedTo && (
                         <div className="mt-1 text-gray-700">→ {ticket.assignedTo}</div>
@@ -146,12 +144,8 @@ export function OpenerTicketsModal({
           )}
         </div>
 
-        <div className="border-t p-4 bg-gray-50">
-          <Button
-            variant="secondary"
-            size="md"
-            onClick={onClose}
-          >
+        <div className="border-t bg-gray-50 p-4">
+          <Button variant="secondary" size="md" onClick={onClose}>
             Kapat
           </Button>
         </div>

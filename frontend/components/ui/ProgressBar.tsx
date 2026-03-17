@@ -1,14 +1,7 @@
 import React from 'react';
 import { cn } from '@lib/utils';
 
-export type ProgressBarColor =
-  | 'gray'
-  | 'red'
-  | 'yellow'
-  | 'green'
-  | 'blue'
-  | 'indigo'
-  | 'purple';
+export type ProgressBarColor = 'gray' | 'red' | 'yellow' | 'green' | 'blue' | 'indigo' | 'purple';
 
 export type ProgressBarSize = 'sm' | 'md' | 'lg';
 
@@ -73,13 +66,7 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
     const content = label || `${Math.round(percentage)}%`;
 
     return (
-      <span
-        className={cn(
-          'text-sm font-medium',
-          labelColorStyles[color],
-          labelClassName
-        )}
-      >
+      <span className={cn('text-sm font-medium', labelColorStyles[color], labelClassName)}>
         {content}
       </span>
     );
@@ -88,21 +75,17 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
   return (
     <div className={cn('flex items-center gap-2', containerClassName)}>
       {labelPosition === 'left' && renderLabel()}
-      
+
       <div
         className={cn(
-          'bg-gray-200 rounded-full',
+          'rounded-full bg-gray-200',
           sizeStyles[size],
           width || 'flex-1',
           barClassName
         )}
       >
         <div
-          className={cn(
-            'rounded-full transition-all',
-            sizeStyles[size],
-            colorStyles[color]
-          )}
+          className={cn('rounded-full transition-all', sizeStyles[size], colorStyles[color])}
           style={{ width: `${percentage}%` }}
         />
       </div>

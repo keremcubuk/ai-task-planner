@@ -51,10 +51,10 @@ export const TaskDetail: React.FC<TaskDetailProps> = ({ taskId, onClose, onUpdat
 
   const handleSave = async () => {
     try {
-      await updateTask(taskId, { 
+      await updateTask(taskId, {
         manualPriority: Number(manualPriority),
         status,
-        project
+        project,
       });
       alert('Task updated!');
       onUpdate();
@@ -81,7 +81,7 @@ export const TaskDetail: React.FC<TaskDetailProps> = ({ taskId, onClose, onUpdat
 
   return (
     <div>
-      <div className="flex items-center justify-end mb-6">
+      <div className="mb-6 flex items-center justify-end">
         <div className="flex gap-2">
           <Button variant="danger" size="md" onClick={handleDelete} leftIcon={<Trash2 size={18} />}>
             Delete
@@ -92,40 +92,47 @@ export const TaskDetail: React.FC<TaskDetailProps> = ({ taskId, onClose, onUpdat
         </div>
       </div>
 
-      <h1 className="text-3xl font-bold text-gray-900 mb-2">{task.title}</h1>
-      <div className="flex flex-wrap items-center gap-4 mb-6 text-sm text-gray-500">
-        <span className="font-mono bg-gray-100 px-2 py-1 rounded text-gray-700">ID: {task.externalId || '-'}</span>
+      <h1 className="mb-2 text-3xl font-bold text-gray-900">{task.title}</h1>
+      <div className="mb-6 flex flex-wrap items-center gap-4 text-sm text-gray-500">
+        <span className="rounded bg-gray-100 px-2 py-1 font-mono text-gray-700">
+          ID: {task.externalId || '-'}
+        </span>
         <PriorityBadge score={task.aiScore} priority={task.aiPriority} />
         <span>Source: {task.source}</span>
         {(() => {
-          const daysAgo = Math.floor((new Date().getTime() - new Date(task.createdAt).getTime()) / (1000 * 3600 * 24));
-          const color = daysAgo > 21 ? 'red' : daysAgo > 15 ? 'orange' : daysAgo > 7 ? 'yellow' : undefined;
+          const daysAgo = Math.floor(
+            (new Date().getTime() - new Date(task.createdAt).getTime()) / (1000 * 3600 * 24)
+          );
+          const color =
+            daysAgo > 21 ? 'red' : daysAgo > 15 ? 'orange' : daysAgo > 7 ? 'yellow' : undefined;
           const content = `Created: ${formatDate(task.createdAt)} (${daysAgo} days ago)`;
           return color ? (
-            <Badge color={color} rounded="md">{content}</Badge>
+            <Badge color={color} rounded="md">
+              {content}
+            </Badge>
           ) : (
             <span>{content}</span>
           );
         })()}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+      <div className="mb-6 grid grid-cols-1 gap-6 md:grid-cols-2">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Project</label>
-          <input 
-            type="text" 
+          <label className="mb-1 block text-sm font-medium text-gray-700">Project</label>
+          <input
+            type="text"
             value={project}
-            onChange={(e) => setProject(e.target.value)}
-            className="w-full border-gray-300 rounded-md shadow-sm p-2 border text-gray-900"
+            onChange={e => setProject(e.target.value)}
+            className="w-full rounded-md border border-gray-300 p-2 text-gray-900 shadow-sm"
             placeholder="Enter project name"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-          <select 
-            value={status} 
-            onChange={(e) => setStatus(e.target.value)}
-            className="w-full border-gray-300 rounded-md shadow-sm p-2 border text-gray-900"
+          <label className="mb-1 block text-sm font-medium text-gray-700">Status</label>
+          <select
+            value={status}
+            onChange={e => setStatus(e.target.value)}
+            className="w-full rounded-md border border-gray-300 p-2 text-gray-900 shadow-sm"
           >
             <option value="open">Open</option>
             <option value="in_progress">In Progress</option>
@@ -133,47 +140,53 @@ export const TaskDetail: React.FC<TaskDetailProps> = ({ taskId, onClose, onUpdat
           </select>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Manual Priority (0-5)</label>
-          <select 
+          <label className="mb-1 block text-sm font-medium text-gray-700">
+            Manual Priority (0-5)
+          </label>
+          <select
             value={manualPriority}
-            onChange={(e) => setManualPriority(Number(e.target.value))}
-            className="w-full border-gray-300 rounded-md shadow-sm p-2 border text-gray-900"
+            onChange={e => setManualPriority(Number(e.target.value))}
+            className="w-full rounded-md border border-gray-300 p-2 text-gray-900 shadow-sm"
           >
             {[0, 1, 2, 3, 4, 5].map(p => (
-              <option key={p} value={p}>{p} {p === 0 ? '(None)' : p === 5 ? '(Highest)' : ''}</option>
+              <option key={p} value={p}>
+                {p} {p === 0 ? '(None)' : p === 5 ? '(Highest)' : ''}
+              </option>
             ))}
           </select>
-          <p className="text-xs text-gray-500 mt-1">Higher value increases AI score.</p>
+          <p className="mt-1 text-xs text-gray-500">Higher value increases AI score.</p>
         </div>
       </div>
 
       <div className="mb-6">
-        <h3 className="text-lg font-medium text-gray-900 mb-2">Description</h3>
-        <div className="bg-gray-50 p-4 rounded-md text-gray-700 whitespace-pre-wrap">
+        <h3 className="mb-2 text-lg font-medium text-gray-900">Description</h3>
+        <div className="rounded-md bg-gray-50 p-4 whitespace-pre-wrap text-gray-700">
           {task.description || 'No description provided.'}
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         <div>
           <label className="block text-sm font-medium text-gray-700">Severity</label>
-          <div className="mt-1"><SeverityBadge severity={task.severity || 'unknown'} /></div>
+          <div className="mt-1">
+            <SeverityBadge severity={task.severity || 'unknown'} />
+          </div>
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700">Due Date</label>
           <div className="mt-1 text-gray-900">{formatDate(task.dueDate || '')}</div>
         </div>
         <div>
-           <label className="block text-sm font-medium text-gray-700">Opened By</label>
-           <div className="mt-1 text-gray-900 font-medium">{task.openedBy || '-'}</div>
+          <label className="block text-sm font-medium text-gray-700">Opened By</label>
+          <div className="mt-1 font-medium text-gray-900">{task.openedBy || '-'}</div>
         </div>
         <div>
-           <label className="block text-sm font-medium text-gray-700">Assigned To</label>
-           <div className="mt-1 text-gray-900 font-medium">{task.assignedTo || 'Unassigned'}</div>
+          <label className="block text-sm font-medium text-gray-700">Assigned To</label>
+          <div className="mt-1 font-medium text-gray-900">{task.assignedTo || 'Unassigned'}</div>
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700">Component</label>
-          <div className="mt-1 text-gray-900 font-medium bg-indigo-50 px-3 py-1 rounded inline-block">
+          <div className="mt-1 inline-block rounded bg-indigo-50 px-3 py-1 font-medium text-gray-900">
             {task.componentName || 'Unknown'}
           </div>
         </div>

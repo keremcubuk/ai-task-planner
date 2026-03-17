@@ -21,12 +21,12 @@ export const Chip: React.FC<ChipProps> = ({
   disabled = false,
   className,
   size = 'md',
-  variant = 'default'
+  variant = 'default',
 }) => {
   const sizeClasses = {
     sm: 'px-2 py-1 text-xs',
     md: 'px-3 py-1 text-sm',
-    lg: 'px-4 py-2 text-base'
+    lg: 'px-4 py-2 text-base',
   };
 
   const baseClasses = cn(
@@ -46,11 +46,11 @@ export const Chip: React.FC<ChipProps> = ({
         <span>{label}</span>
         {!disabled && (
           <button
-            onClick={(e) => {
+            onClick={e => {
               e.stopPropagation();
               onRemove();
             }}
-            className="p-0.5 hover:bg-blue-200 rounded-full transition-colors"
+            className="rounded-full p-0.5 transition-colors hover:bg-blue-200"
           >
             <X size={12} />
           </button>
@@ -60,11 +60,7 @@ export const Chip: React.FC<ChipProps> = ({
   }
 
   return (
-    <button
-      onClick={onClick}
-      disabled={disabled}
-      className={baseClasses}
-    >
+    <button onClick={onClick} disabled={disabled} className={baseClasses}>
       {label}
     </button>
   );

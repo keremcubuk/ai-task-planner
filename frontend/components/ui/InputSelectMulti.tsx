@@ -25,15 +25,15 @@ export const InputSelectMulti: React.FC<InputSelectMultiProps> = ({
   availableValues,
   onToggleValue,
   onToggleAll,
-  searchPlaceholder = "Search...",
+  searchPlaceholder = 'Search...',
   className,
   disabled = false,
-  emptyMessage = "No options found",
-  selectAllText = "Select All",
-  noneSelectedText = "None Selected",
-  allSelectedText = "All Selected",
-  selectedCountText = "Selected",
-  labelClassName
+  emptyMessage = 'No options found',
+  selectAllText = 'Select All',
+  noneSelectedText = 'None Selected',
+  allSelectedText = 'All Selected',
+  selectedCountText = 'Selected',
+  labelClassName,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState('');
@@ -62,7 +62,7 @@ export const InputSelectMulti: React.FC<InputSelectMultiProps> = ({
     return `${selectedValues.length} ${selectedCountText}`;
   };
 
-  const filteredValues = availableValues.filter(value => 
+  const filteredValues = availableValues.filter(value =>
     value.toLowerCase().includes(search.toLowerCase())
   );
 
@@ -73,94 +73,94 @@ export const InputSelectMulti: React.FC<InputSelectMultiProps> = ({
   };
 
   return (
-    <div className={cn(label ? "space-y-2" : "relative", className)}>
+    <div className={cn(label ? 'space-y-2' : 'relative', className)}>
       {label && (
-        <label className={cn("text-sm font-medium text-gray-700", labelClassName)}>
-          {label}
-        </label>
+        <label className={cn('text-sm font-medium text-gray-700', labelClassName)}>{label}</label>
       )}
       <div className="relative" ref={dropdownRef}>
-        <button 
+        <button
           onClick={handleToggle}
           disabled={disabled}
           className={cn(
-            "w-full text-left text-sm border rounded-md px-3 py-2 flex justify-between items-center h-10 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-colors",
-            disabled 
-              ? "bg-gray-100 border-gray-200 text-gray-500 cursor-not-allowed" 
-              : "bg-white border-gray-300 text-gray-900 hover:border-gray-400 cursor-pointer"
+            'flex h-10 w-full items-center justify-between rounded-md border px-3 py-2 text-left text-sm transition-colors focus:ring-1 focus:ring-blue-500 focus:outline-none',
+            disabled
+              ? 'cursor-not-allowed border-gray-200 bg-gray-100 text-gray-500'
+              : 'cursor-pointer border-gray-300 bg-white text-gray-900 hover:border-gray-400'
           )}
         >
-          <span className="truncate block">
-            {getDisplayText()}
-          </span>
-          <ChevronDown 
-            size={16} 
+          <span className="block truncate">{getDisplayText()}</span>
+          <ChevronDown
+            size={16}
             className={cn(
-              "transition-transform duration-200",
-              isOpen ? "rotate-180" : "",
-              disabled ? "text-gray-400" : "text-gray-500"
-            )} 
+              'transition-transform duration-200',
+              isOpen ? 'rotate-180' : '',
+              disabled ? 'text-gray-400' : 'text-gray-500'
+            )}
           />
         </button>
 
         {isOpen && !disabled && (
-          <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 flex flex-col">
-            <div className="p-2 border-b border-gray-100">
-              <input 
-                type="text" 
-                placeholder={searchPlaceholder} 
+          <div className="absolute z-50 mt-1 flex max-h-60 w-full flex-col rounded-md border border-gray-200 bg-white shadow-lg">
+            <div className="border-b border-gray-100 p-2">
+              <input
+                type="text"
+                placeholder={searchPlaceholder}
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="w-full text-sm border-gray-300 rounded px-2 py-1 text-gray-900 focus:ring-blue-500 focus:border-blue-500"
+                onChange={e => setSearch(e.target.value)}
+                className="w-full rounded border-gray-300 px-2 py-1 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500"
                 autoFocus
-                onClick={(e) => e.stopPropagation()}
+                onClick={e => e.stopPropagation()}
               />
             </div>
-            
+
             {availableValues.length > 0 && (
-              <div className="p-1 border-b border-gray-100">
-                <div 
-                  onClick={(e) => {
+              <div className="border-b border-gray-100 p-1">
+                <div
+                  onClick={e => {
                     e.stopPropagation();
                     onToggleAll();
                   }}
-                  className="flex items-center gap-2 px-2 py-1.5 hover:bg-gray-50 cursor-pointer rounded group"
+                  className="group flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 hover:bg-gray-50"
                 >
-                  <input 
-                    type="checkbox" 
+                  <input
+                    type="checkbox"
                     checked={selectedValues.length === availableValues.length}
-                    onChange={() => {}} 
-                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                    onChange={() => {}}
+                    className="cursor-pointer rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                   />
-                  <span className="text-sm font-medium text-gray-700 group-hover:text-gray-900">{selectAllText}</span>
+                  <span className="text-sm font-medium text-gray-700 group-hover:text-gray-900">
+                    {selectAllText}
+                  </span>
                 </div>
               </div>
             )}
-            
-            <div className="overflow-y-auto p-1 flex-1">
+
+            <div className="flex-1 overflow-y-auto p-1">
               {filteredValues.map(value => (
-                <div 
-                  key={value} 
-                  onClick={(e) => {
+                <div
+                  key={value}
+                  onClick={e => {
                     e.stopPropagation();
                     onToggleValue(value);
                   }}
-                  className="flex items-center gap-2 px-2 py-1.5 hover:bg-gray-50 cursor-pointer rounded group"
+                  className="group flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 hover:bg-gray-50"
                 >
-                  <input 
-                    type="checkbox" 
+                  <input
+                    type="checkbox"
                     checked={selectedValues.includes(value)}
-                    onChange={() => {}} 
-                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                    onChange={() => {}}
+                    className="cursor-pointer rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                   />
-                  <span className="text-sm text-gray-700 truncate group-hover:text-gray-900">{value}</span>
+                  <span className="truncate text-sm text-gray-700 group-hover:text-gray-900">
+                    {value}
+                  </span>
                 </div>
               ))}
               {filteredValues.length === 0 && availableValues.length > 0 && (
-                <div className="p-2 text-xs text-gray-500 text-center">No matches found</div>
+                <div className="p-2 text-center text-xs text-gray-500">No matches found</div>
               )}
               {availableValues.length === 0 && (
-                <div className="p-2 text-xs text-gray-500 text-center">{emptyMessage}</div>
+                <div className="p-2 text-center text-xs text-gray-500">{emptyMessage}</div>
               )}
             </div>
           </div>

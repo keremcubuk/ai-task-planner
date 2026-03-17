@@ -38,7 +38,10 @@ const bgColorClasses: Record<BgColor, { bg: string; label: string }> = {
   blue: { bg: 'bg-blue-50', label: 'text-blue-600' },
 };
 
-const sizeClasses: Record<Size, { container: string; label: string; value: string; minWidth: string }> = {
+const sizeClasses: Record<
+  Size,
+  { container: string; label: string; value: string; minWidth: string }
+> = {
   sm: { container: 'p-3', label: 'text-xs', value: 'text-2xl', minWidth: 'min-w-[80px]' },
   md: { container: 'p-4', label: 'text-xs', value: 'text-2xl', minWidth: 'min-w-[100px]' },
   lg: { container: 'p-5', label: 'text-xs', value: 'text-3xl', minWidth: 'min-w-[120px]' },
@@ -62,23 +65,19 @@ export function StatCard({
   return (
     <div
       className={cn(
-        'rounded-lg shadow flex flex-col items-center',
+        'flex flex-col items-center rounded-lg shadow',
         bgStyles.bg,
         sizeStyles.container,
         sizeStyles.minWidth,
         className
       )}
     >
-      <span className={cn('font-medium uppercase', sizeStyles.label, bgStyles.label)}>
-        {label}
-      </span>
-      <div className="flex items-center gap-2 mt-1">
+      <span className={cn('font-medium uppercase', sizeStyles.label, bgStyles.label)}>{label}</span>
+      <div className="mt-1 flex items-center gap-2">
         <span className={cn('font-bold', sizeStyles.value, valueColorClasses[valueColor])}>
           {value}
         </span>
-        {suffix && (
-          <span className="text-base font-normal text-gray-500">{suffix}</span>
-        )}
+        {suffix && <span className="text-base font-normal text-gray-500">{suffix}</span>}
         {icon && <span className="flex-shrink-0">{icon}</span>}
         {change && (
           <div className="flex items-center gap-1">
@@ -87,9 +86,7 @@ export function StatCard({
           </div>
         )}
       </div>
-      {subtitle && (
-        <div className="mt-1 text-xs text-gray-500">{subtitle}</div>
-      )}
+      {subtitle && <div className="mt-1 text-xs text-gray-500">{subtitle}</div>}
     </div>
   );
 }
@@ -107,11 +104,7 @@ export function StatCardGrid({ children, columns = 4, className }: StatCardGridP
     4: 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4',
   };
 
-  return (
-    <div className={cn('grid gap-4', colClasses[columns], className)}>
-      {children}
-    </div>
-  );
+  return <div className={cn('grid gap-4', colClasses[columns], className)}>{children}</div>;
 }
 
 interface StatCardRowProps {
@@ -120,9 +113,5 @@ interface StatCardRowProps {
 }
 
 export function StatCardRow({ children, className }: StatCardRowProps) {
-  return (
-    <div className={cn('flex gap-3 justify-end flex-wrap', className)}>
-      {children}
-    </div>
-  );
+  return <div className={cn('flex flex-wrap justify-end gap-3', className)}>{children}</div>;
 }

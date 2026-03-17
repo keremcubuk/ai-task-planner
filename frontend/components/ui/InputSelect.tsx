@@ -63,57 +63,57 @@ export const InputSelect: React.FC<InputSelectProps> = ({
   };
 
   return (
-    <div className={cn("space-y-2", className)}>
+    <div className={cn('space-y-2', className)}>
       {label && (
-        <label className={cn("text-sm font-medium text-gray-700", labelClassName)}>
-          {label}
-        </label>
+        <label className={cn('text-sm font-medium text-gray-700', labelClassName)}>{label}</label>
       )}
-      
+
       <div className="relative" ref={dropdownRef}>
-        <button 
+        <button
           onClick={() => !disabled && setIsOpen(!isOpen)}
           disabled={disabled}
           className={cn(
-            "w-full text-left border border-gray-300 rounded-md px-3 py-2 flex justify-between items-center bg-white focus:outline-none focus:ring-1 focus:ring-blue-500 min-w-[120px]",
+            'flex w-full min-w-[120px] items-center justify-between rounded-md border border-gray-300 bg-white px-3 py-2 text-left focus:ring-1 focus:ring-blue-500 focus:outline-none',
             sizeClasses[size],
-            disabled && "bg-gray-50 text-gray-500 cursor-not-allowed",
-            !disabled && "hover:border-gray-400 cursor-pointer",
+            disabled && 'cursor-not-allowed bg-gray-50 text-gray-500',
+            !disabled && 'cursor-pointer hover:border-gray-400',
             buttonClassName
           )}
         >
-          <span className="truncate text-gray-900 block">{selectedLabel}</span>
-          <ChevronDown 
-            size={16} 
+          <span className="block truncate text-gray-900">{selectedLabel}</span>
+          <ChevronDown
+            size={16}
             className={cn(
-              "text-gray-500 transition-transform duration-200",
-              isOpen && "transform rotate-180"
-            )} 
+              'text-gray-500 transition-transform duration-200',
+              isOpen && 'rotate-180 transform'
+            )}
           />
         </button>
 
         {isOpen && !disabled && (
-          <div className={cn(
-            "absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg",
-            dropdownClassName
-          )}>
-            <div className="p-1 max-h-60 overflow-y-auto">
+          <div
+            className={cn(
+              'absolute z-50 mt-1 w-full rounded-md border border-gray-200 bg-white shadow-lg',
+              dropdownClassName
+            )}
+          >
+            <div className="max-h-60 overflow-y-auto p-1">
               {options.map(option => (
-                <div 
+                <div
                   key={option.value}
                   onClick={() => handleSelect(option.value)}
                   className={cn(
-                    "px-3 py-2 text-sm cursor-pointer rounded hover:bg-gray-50 transition-colors",
-                    value === option.value 
-                      ? "bg-blue-50 text-blue-700 font-medium" 
-                      : "text-gray-700"
+                    'cursor-pointer rounded px-3 py-2 text-sm transition-colors hover:bg-gray-50',
+                    value === option.value
+                      ? 'bg-blue-50 font-medium text-blue-700'
+                      : 'text-gray-700'
                   )}
                 >
                   {option.label}
                 </div>
               ))}
               {options.length === 0 && (
-                <div className="px-3 py-2 text-sm text-gray-500 text-center">
+                <div className="px-3 py-2 text-center text-sm text-gray-500">
                   No options available
                 </div>
               )}

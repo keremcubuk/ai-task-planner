@@ -33,9 +33,11 @@ export default function FileImport({ onBack }: FileImportProps) {
       } else {
         result = await importXlsx(file);
       }
-      
+
       if (result.count === 0) {
-        setError('No tasks imported. Please check your file column names (Title, Description, Status, Severity, etc.)');
+        setError(
+          'No tasks imported. Please check your file column names (Title, Description, Status, Severity, etc.)'
+        );
       } else {
         setMessage(`Import successful! ${result.count} task(s) imported.`);
         setTimeout(() => router.push('/'), 1500);
@@ -49,8 +51,8 @@ export default function FileImport({ onBack }: FileImportProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 p-8 flex items-center justify-center">
-      <div className="bg-white p-8 rounded-lg shadow-lg max-w-md w-full">
+    <div className="flex min-h-screen items-center justify-center bg-gray-100 p-8">
+      <div className="w-full max-w-md rounded-lg bg-white p-8 shadow-lg">
         <Button
           onClick={onBack}
           variant="ghost"
@@ -61,24 +63,26 @@ export default function FileImport({ onBack }: FileImportProps) {
           Back to Import Options
         </Button>
 
-        <h1 className="text-2xl font-bold mb-6 flex items-center gap-2 text-gray-900">
-          <FileSpreadsheet className="w-6 h-6" /> File Import
+        <h1 className="mb-6 flex items-center gap-2 text-2xl font-bold text-gray-900">
+          <FileSpreadsheet className="h-6 w-6" /> File Import
         </h1>
 
         <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="mb-2 block text-sm font-medium text-gray-700">
             Select File (CSV / XLSX)
           </label>
           <input
             type="file"
             accept=".csv, .xlsx, .xls"
             onChange={handleFileChange}
-            className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+            className="block w-full text-sm text-gray-500 file:mr-4 file:rounded-full file:border-0 file:bg-blue-50 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-blue-700 hover:file:bg-blue-100"
           />
         </div>
 
-        {error && <div className="mb-4 text-sm text-center font-medium text-red-600">{error}</div>}
-        {message && <div className="mb-4 text-sm text-center font-medium text-green-600">{message}</div>}
+        {error && <div className="mb-4 text-center text-sm font-medium text-red-600">{error}</div>}
+        {message && (
+          <div className="mb-4 text-center text-sm font-medium text-green-600">{message}</div>
+        )}
 
         <div className="flex gap-4">
           <Button

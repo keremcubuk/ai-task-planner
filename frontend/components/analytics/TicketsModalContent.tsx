@@ -64,55 +64,55 @@ export function TicketsModalContent({
       </div>
 
       {loading ? (
-        <div className="text-center py-8 text-gray-500">Yükleniyor...</div>
+        <div className="py-8 text-center text-gray-500">Yükleniyor...</div>
       ) : tickets.length === 0 ? (
-        <div className="text-center py-8 text-gray-500">Ticket bulunamadı</div>
+        <div className="py-8 text-center text-gray-500">Ticket bulunamadı</div>
       ) : (
         <div className="space-y-3">
-          {tickets.map((ticket) => (
+          {tickets.map(ticket => (
             <div
               key={ticket.id}
               onClick={() => {
                 onTaskClick(ticket.id);
                 onClose();
               }}
-              className="border rounded-lg p-4 hover:bg-gray-50 cursor-pointer transition-colors"
+              className="cursor-pointer rounded-lg border p-4 transition-colors hover:bg-gray-50"
             >
               <div className="flex items-start justify-between gap-4">
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-medium text-gray-900 mb-2">{ticket.title}</h3>
+                <div className="min-w-0 flex-1">
+                  <h3 className="mb-2 font-medium text-gray-900">{ticket.title}</h3>
                   {ticket.description && (
-                    <p className="text-sm text-gray-600 line-clamp-2 mb-2">
-                      {ticket.description}
-                    </p>
+                    <p className="mb-2 line-clamp-2 text-sm text-gray-600">{ticket.description}</p>
                   )}
                   <div className="flex flex-wrap gap-2 text-xs">
-                    <span className={`px-2 py-1 rounded-full ${getStatusColor(ticket.status)}`}>
+                    <span className={`rounded-full px-2 py-1 ${getStatusColor(ticket.status)}`}>
                       {ticket.status}
                     </span>
                     {ticket.severity && (
-                      <span className={`px-2 py-1 rounded-full ${getSeverityColor(ticket.severity)}`}>
+                      <span
+                        className={`rounded-full px-2 py-1 ${getSeverityColor(ticket.severity)}`}
+                      >
                         {ticket.severity}
                       </span>
                     )}
                     {ticket.project && (
-                      <span className="px-2 py-1 rounded-full text-indigo-600 bg-indigo-50">
+                      <span className="rounded-full bg-indigo-50 px-2 py-1 text-indigo-600">
                         {ticket.project}
                       </span>
                     )}
                     {ticket.componentName && (
-                      <span className="px-2 py-1 rounded-full text-purple-600 bg-purple-50">
+                      <span className="rounded-full bg-purple-50 px-2 py-1 text-purple-600">
                         {ticket.componentName}
                       </span>
                     )}
                     {ticket.bucketName && (
-                      <span className="px-2 py-1 rounded-full text-gray-600 bg-gray-100">
+                      <span className="rounded-full bg-gray-100 px-2 py-1 text-gray-600">
                         {ticket.bucketName}
                       </span>
                     )}
                   </div>
                 </div>
-                <div className="text-right text-xs text-gray-500 whitespace-nowrap">
+                <div className="text-right text-xs whitespace-nowrap text-gray-500">
                   <div>{new Date(ticket.createdAt).toLocaleDateString('tr-TR')}</div>
                   {ticket.assignedTo && (
                     <div className="mt-1 text-gray-700">→ {ticket.assignedTo}</div>

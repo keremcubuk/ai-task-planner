@@ -38,44 +38,42 @@ export const InputTextarea: React.FC<InputTextareaProps> = ({
   const textareaId = id || name || `textarea-${generatedId}`;
 
   return (
-    <div className={cn("space-y-2", className)}>
+    <div className={cn('space-y-2', className)}>
       {label && (
-        <label 
+        <label
           htmlFor={textareaId}
           className={cn(
-            "text-sm font-medium text-gray-700",
-            required && "after:content-['*'] after:ml-1 after:text-red-500",
+            'text-sm font-medium text-gray-700',
+            required && "after:ml-1 after:text-red-500 after:content-['*']",
             labelClassName
           )}
         >
           {label}
         </label>
       )}
-      
+
       <textarea
         id={textareaId}
         name={name}
         value={value}
-        onChange={(e) => onChange?.(e.target.value)}
+        onChange={e => onChange?.(e.target.value)}
         disabled={disabled}
         required={required}
         placeholder={placeholder}
         autoFocus={autoFocus}
         rows={rows}
         className={cn(
-          "w-full px-3 py-2 border border-gray-300 rounded-md",
-          "focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500",
-          "disabled:bg-gray-50 disabled:text-gray-500 disabled:border-gray-200",
-          "placeholder:text-gray-400 text-gray-900 bg-white",
-          "resize-vertical",
-          error && "border-red-300 focus:ring-red-500 focus:border-red-500",
+          'w-full rounded-md border border-gray-300 px-3 py-2',
+          'focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none',
+          'disabled:border-gray-200 disabled:bg-gray-50 disabled:text-gray-500',
+          'bg-white text-gray-900 placeholder:text-gray-400',
+          'resize-vertical',
+          error && 'border-red-300 focus:border-red-500 focus:ring-red-500',
           textareaClassName
         )}
       />
-      
-      {error && (
-        <p className="text-sm text-red-600">{error}</p>
-      )}
+
+      {error && <p className="text-sm text-red-600">{error}</p>}
     </div>
   );
 };

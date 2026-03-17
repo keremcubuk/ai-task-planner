@@ -53,15 +53,15 @@ export function DataTable<T>({
     if (!column.sortable || !onSort) return null;
 
     const isActive = sortKey === column.key;
-    
+
     if (!isActive) {
-      return <ArrowUpDown size={14} className="inline ml-1 text-gray-400" />;
+      return <ArrowUpDown size={14} className="ml-1 inline text-gray-400" />;
     }
-    
+
     return sortDirection === 'asc' ? (
-      <ArrowUp size={14} className="inline ml-1 text-blue-600" />
+      <ArrowUp size={14} className="ml-1 inline text-blue-600" />
     ) : (
-      <ArrowDown size={14} className="inline ml-1 text-blue-600" />
+      <ArrowDown size={14} className="ml-1 inline text-blue-600" />
     );
   };
 
@@ -72,24 +72,18 @@ export function DataTable<T>({
   };
 
   return (
-    <div 
-      className={cn(
-        "overflow-x-auto overflow-y-auto",
-        className
-      )}
-      style={{ maxHeight }}
-    >
+    <div className={cn('overflow-x-auto overflow-y-auto', className)} style={{ maxHeight }}>
       <table className="min-w-full divide-y divide-gray-200">
-        <thead className={cn("bg-gray-50", stickyHeader && "sticky top-0 z-10")}>
+        <thead className={cn('bg-gray-50', stickyHeader && 'sticky top-0 z-10')}>
           <tr>
-            {columns.map((column) => (
+            {columns.map(column => (
               <th
                 key={String(column.key)}
                 onClick={() => handleHeaderClick(column)}
                 className={cn(
-                  "px-4 py-3 text-left text-sm font-medium text-gray-500",
-                  stickyHeader && "bg-gray-50",
-                  column.sortable && onSort && "cursor-pointer hover:bg-gray-100",
+                  'px-4 py-3 text-left text-sm font-medium text-gray-500',
+                  stickyHeader && 'bg-gray-50',
+                  column.sortable && onSort && 'cursor-pointer hover:bg-gray-100',
                   column.headerClassName
                 )}
               >
@@ -99,13 +93,10 @@ export function DataTable<T>({
             ))}
           </tr>
         </thead>
-        <tbody className="bg-white divide-y divide-gray-200">
+        <tbody className="divide-y divide-gray-200 bg-white">
           {data.length === 0 ? (
             <tr>
-              <td 
-                colSpan={columns.length} 
-                className="px-4 py-8 text-center text-sm text-gray-500"
-              >
+              <td colSpan={columns.length} className="px-4 py-8 text-center text-sm text-gray-500">
                 {emptyMessage}
               </td>
             </tr>
@@ -115,26 +106,23 @@ export function DataTable<T>({
                 key={keyExtractor(row, index)}
                 onClick={() => onRowClick?.(row)}
                 className={cn(
-                  "hover:bg-gray-50",
-                  onRowClick && "cursor-pointer",
+                  'hover:bg-gray-50',
+                  onRowClick && 'cursor-pointer',
                   rowClassName?.(row, index)
                 )}
               >
-                {columns.map((column) => {
+                {columns.map(column => {
                   const value = getNestedValue(row, String(column.key));
-                  
+
                   return (
                     <td
                       key={String(column.key)}
                       className={cn(
-                        "px-4 py-3 whitespace-nowrap text-sm text-gray-700",
+                        'px-4 py-3 text-sm whitespace-nowrap text-gray-700',
                         column.className
                       )}
                     >
-                      {column.render 
-                        ? column.render(value, row, index) 
-                        : String(value ?? '-')
-                      }
+                      {column.render ? column.render(value, row, index) : String(value ?? '-')}
                     </td>
                   );
                 })}

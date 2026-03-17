@@ -11,7 +11,7 @@ const SEVERITY_OPTIONS = [
   { value: 'critical', label: 'Critical' },
   { value: 'major', label: 'Major' },
   { value: 'minor', label: 'Minor' },
-  { value: 'low', label: 'Low' }
+  { value: 'low', label: 'Low' },
 ];
 
 export const SeveritySelect: React.FC<SeveritySelectProps> = ({ value, onChange }) => {

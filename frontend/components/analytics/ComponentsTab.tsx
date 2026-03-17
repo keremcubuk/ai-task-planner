@@ -60,7 +60,7 @@ export function ComponentsTab({
       total: stats.total,
       percent: stats.solvedInProjectPercent,
     }))
-    .filter((item) => item.count > 0)
+    .filter(item => item.count > 0)
     .sort((a, b) => b.count - a.count)
     .slice(0, 10);
 
@@ -71,7 +71,7 @@ export function ComponentsTab({
       total: stats.total,
       percent: stats.solvedInComponentPercent,
     }))
-    .filter((item) => item.count > 0)
+    .filter(item => item.count > 0)
     .sort((a, b) => b.count - a.count)
     .slice(0, 10);
 
@@ -83,17 +83,13 @@ export function ComponentsTab({
       const total = stats.total;
       const solvedInProject = stats.bucketBreakdown.solvedInProject;
       const solvedInComponent = stats.bucketBreakdown.solvedInComponent;
-      const declinedPlusDesign =
-        stats.bucketBreakdown.declined + stats.bucketBreakdown.design;
+      const declinedPlusDesign = stats.bucketBreakdown.declined + stats.bucketBreakdown.design;
 
       const solvedInProjectPercent = total > 0 ? (solvedInProject / total) * 100 : 0;
       const solvedInComponentPercent = total > 0 ? (solvedInComponent / total) * 100 : 0;
-      const declinedPlusDesignPercent =
-        total > 0 ? (declinedPlusDesign / total) * 100 : 0;
+      const declinedPlusDesignPercent = total > 0 ? (declinedPlusDesign / total) * 100 : 0;
 
-      const reasons: Array<
-        'docs' | 'refactor' | 'stakeholder'
-      > = [];
+      const reasons: Array<'docs' | 'refactor' | 'stakeholder'> = [];
       if (solvedInProjectPercent > THRESHOLD_PERCENT) reasons.push('docs');
       if (solvedInComponentPercent > THRESHOLD_PERCENT) reasons.push('refactor');
       if (declinedPlusDesignPercent > THRESHOLD_PERCENT) reasons.push('stakeholder');
@@ -101,7 +97,7 @@ export function ComponentsTab({
       const strongestSignal = Math.max(
         solvedInProjectPercent,
         solvedInComponentPercent,
-        declinedPlusDesignPercent,
+        declinedPlusDesignPercent
       );
 
       return {
@@ -117,8 +113,8 @@ export function ComponentsTab({
         reasons,
       };
     })
-    .filter((x) => x.total >= MIN_TICKETS_FOR_COMPONENT_ANALYSIS)
-    .filter((x) => x.reasons.length > 0)
+    .filter(x => x.total >= MIN_TICKETS_FOR_COMPONENT_ANALYSIS)
+    .filter(x => x.reasons.length > 0)
     .sort((a, b) => b.strongestSignal - a.strongestSignal);
 
   interface BucketRow {
@@ -130,9 +126,7 @@ export function ComponentsTab({
     {
       key: 'component',
       header: 'Component',
-      render: (_, row) => (
-        <span className="font-medium text-gray-900">{row.component}</span>
-      ),
+      render: (_, row) => <span className="font-medium text-gray-900">{row.component}</span>,
     },
     {
       key: 'stats.total',
@@ -144,7 +138,9 @@ export function ComponentsTab({
       header: 'Projede Çözülen',
       render: (_, row) => (
         <div className="flex items-center gap-2">
-          <span className="text-green-600 font-bold">{row.stats.bucketBreakdown.solvedInProject}</span>
+          <span className="font-bold text-green-600">
+            {row.stats.bucketBreakdown.solvedInProject}
+          </span>
           <ProgressBar
             value={row.stats.solvedInProjectPercent}
             color="green"
@@ -162,7 +158,9 @@ export function ComponentsTab({
       header: 'Componentte Çözülen',
       render: (_, row) => (
         <div className="flex items-center gap-2">
-          <span className="text-blue-600 font-bold">{row.stats.bucketBreakdown.solvedInComponent}</span>
+          <span className="font-bold text-blue-600">
+            {row.stats.bucketBreakdown.solvedInComponent}
+          </span>
           <ProgressBar
             value={row.stats.solvedInComponentPercent}
             color="blue"
@@ -194,15 +192,13 @@ export function ComponentsTab({
     },
   ];
 
-  type SupportFinding = typeof componentSupportFindings[number];
+  type SupportFinding = (typeof componentSupportFindings)[number];
 
   const supportColumns: DataTableColumn<SupportFinding>[] = [
     {
       key: 'component',
       header: 'Component',
-      render: (_, row) => (
-        <span className="font-medium text-gray-900">{row.component}</span>
-      ),
+      render: (_, row) => <span className="font-medium text-gray-900">{row.component}</span>,
     },
     {
       key: 'total',
@@ -212,21 +208,21 @@ export function ComponentsTab({
       key: 'solvedInProjectPercent',
       header: 'Projede %',
       render: (_, row) => (
-        <span className="text-green-700 font-medium">{row.solvedInProjectPercent}%</span>
+        <span className="font-medium text-green-700">{row.solvedInProjectPercent}%</span>
       ),
     },
     {
       key: 'solvedInComponentPercent',
       header: 'Componentte %',
       render: (_, row) => (
-        <span className="text-blue-700 font-medium">{row.solvedInComponentPercent}%</span>
+        <span className="font-medium text-blue-700">{row.solvedInComponentPercent}%</span>
       ),
     },
     {
       key: 'declinedPlusDesignPercent',
       header: 'Declined+Tasarım %',
       render: (_, row) => (
-        <span className="text-purple-700 font-medium">{row.declinedPlusDesignPercent}%</span>
+        <span className="font-medium text-purple-700">{row.declinedPlusDesignPercent}%</span>
       ),
     },
     {
@@ -235,17 +231,17 @@ export function ComponentsTab({
       render: (_, row) => (
         <div className="flex flex-wrap gap-2">
           {row.reasons.includes('docs') && (
-            <span className="inline-flex items-center rounded-full bg-green-50 px-2.5 py-0.5 text-xs font-semibold text-green-700 border border-green-200">
+            <span className="inline-flex items-center rounded-full border border-green-200 bg-green-50 px-2.5 py-0.5 text-xs font-semibold text-green-700">
               Doküman/Demo
             </span>
           )}
           {row.reasons.includes('refactor') && (
-            <span className="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-semibold text-blue-700 border border-blue-200">
+            <span className="inline-flex items-center rounded-full border border-blue-200 bg-blue-50 px-2.5 py-0.5 text-xs font-semibold text-blue-700">
               Refactor
             </span>
           )}
           {row.reasons.includes('stakeholder') && (
-            <span className="inline-flex items-center rounded-full bg-purple-50 px-2.5 py-0.5 text-xs font-semibold text-purple-700 border border-purple-200">
+            <span className="inline-flex items-center rounded-full border border-purple-200 bg-purple-50 px-2.5 py-0.5 text-xs font-semibold text-purple-700">
               İlgili Birim
             </span>
           )}
@@ -260,9 +256,9 @@ export function ComponentsTab({
         <StatCard label="Projede Çözülen" value={totalSolvedInProject} valueColor="green" />
         <StatCard label="Componentte Çözülen" value={totalSolvedInComponent} valueColor="blue" />
       </StatCardGrid>
-      <div className="bg-white p-6 rounded-lg shadow">
-        <h3 className="text-lg font-medium text-gray-900 mb-4">Component Bucket Analizi</h3>
-        <p className="text-sm text-gray-500 mb-4">
+      <div className="rounded-lg bg-white p-6 shadow">
+        <h3 className="mb-4 text-lg font-medium text-gray-900">Component Bucket Analizi</h3>
+        <p className="mb-4 text-sm text-gray-500">
           Her component için ticketların % kaçı projede çözüldü, % kaçı componentte çözüldü.
         </p>
         <DataTable
@@ -270,22 +266,22 @@ export function ComponentsTab({
             .sort((a, b) => b[1].total - a[1].total)
             .map(([component, stats]) => ({ component, stats }))}
           columns={bucketColumns}
-          keyExtractor={(row) => row.component}
+          keyExtractor={row => row.component}
           emptyMessage="Component bulunamadı"
         />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Top 10 - Projede Çözülen</h3>
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <div className="rounded-lg bg-white p-6 shadow">
+          <h3 className="mb-4 text-lg font-medium text-gray-900">Top 10 - Projede Çözülen</h3>
           <div className="space-y-3">
             {topSolvedInProject.map((item, idx) => (
               <div key={item.component} className="flex items-center gap-3">
-                <span className="text-gray-400 w-6 text-sm">{idx + 1}.</span>
+                <span className="w-6 text-sm text-gray-400">{idx + 1}.</span>
                 <div className="flex-1">
-                  <div className="flex justify-between items-center mb-1">
-                    <span className="text-gray-900 font-medium text-sm">{item.component}</span>
-                    <span className="text-green-600 font-bold text-sm">{item.count}</span>
+                  <div className="mb-1 flex items-center justify-between">
+                    <span className="text-sm font-medium text-gray-900">{item.component}</span>
+                    <span className="text-sm font-bold text-green-600">{item.count}</span>
                   </div>
                   <ProgressBar
                     value={item.percent}
@@ -299,21 +295,21 @@ export function ComponentsTab({
               </div>
             ))}
             {topSolvedInProject.length === 0 && (
-              <p className="text-gray-500 text-sm text-center py-4">Veri bulunamadı</p>
+              <p className="py-4 text-center text-sm text-gray-500">Veri bulunamadı</p>
             )}
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Top 10 - Componentte Çözülen</h3>
+        <div className="rounded-lg bg-white p-6 shadow">
+          <h3 className="mb-4 text-lg font-medium text-gray-900">Top 10 - Componentte Çözülen</h3>
           <div className="space-y-3">
             {topSolvedInComponent.map((item, idx) => (
               <div key={item.component} className="flex items-center gap-3">
-                <span className="text-gray-400 w-6 text-sm">{idx + 1}.</span>
+                <span className="w-6 text-sm text-gray-400">{idx + 1}.</span>
                 <div className="flex-1">
-                  <div className="flex justify-between items-center mb-1">
-                    <span className="text-gray-900 font-medium text-sm">{item.component}</span>
-                    <span className="text-blue-600 font-bold text-sm">{item.count}</span>
+                  <div className="mb-1 flex items-center justify-between">
+                    <span className="text-sm font-medium text-gray-900">{item.component}</span>
+                    <span className="text-sm font-bold text-blue-600">{item.count}</span>
                   </div>
                   <ProgressBar
                     value={item.percent}
@@ -327,31 +323,40 @@ export function ComponentsTab({
               </div>
             ))}
             {topSolvedInComponent.length === 0 && (
-              <p className="text-gray-500 text-sm text-center py-4">Veri bulunamadı</p>
+              <p className="py-4 text-center text-sm text-gray-500">Veri bulunamadı</p>
             )}
           </div>
         </div>
       </div>
 
-      <div className="bg-white p-6 rounded-lg shadow">
-        <h3 className="text-lg font-medium text-gray-900 mb-1">Component Destek / Refactor Analizi</h3>
-        <p className="text-sm text-gray-600 mb-4">
-          Bu analiz sadece <span className="font-semibold">{MIN_TICKETS_FOR_COMPONENT_ANALYSIS}+</span> ticket olan componentler için yapılır.
+      <div className="rounded-lg bg-white p-6 shadow">
+        <h3 className="mb-1 text-lg font-medium text-gray-900">
+          Component Destek / Refactor Analizi
+        </h3>
+        <p className="mb-4 text-sm text-gray-600">
+          Bu analiz sadece{' '}
+          <span className="font-semibold">{MIN_TICKETS_FOR_COMPONENT_ANALYSIS}+</span> ticket olan
+          componentler için yapılır.
           <br />
-          <span className="font-medium">%{THRESHOLD_PERCENT}+ Projede Çözüldü</span>: Doküman/Demo desteği artır.
+          <span className="font-medium">%{THRESHOLD_PERCENT}+ Projede Çözüldü</span>: Doküman/Demo
+          desteği artır.
           <span className="mx-2">•</span>
-          <span className="font-medium">%{THRESHOLD_PERCENT}+ Componentte Çözüldü</span>: Refactor/ameliyat gerekli.
+          <span className="font-medium">%{THRESHOLD_PERCENT}+ Componentte Çözüldü</span>:
+          Refactor/ameliyat gerekli.
           <span className="mx-2">•</span>
-          <span className="font-medium">%{THRESHOLD_PERCENT}+ (Declined+Tasarım)</span>: İlgili birimle konuş.
+          <span className="font-medium">%{THRESHOLD_PERCENT}+ (Declined+Tasarım)</span>: İlgili
+          birimle konuş.
         </p>
 
         {componentSupportFindings.length === 0 ? (
-          <div className="text-sm text-gray-600">Bu kriterlerle uyarı üreten component bulunamadı.</div>
+          <div className="text-sm text-gray-600">
+            Bu kriterlerle uyarı üreten component bulunamadı.
+          </div>
         ) : (
           <DataTable
             data={componentSupportFindings}
             columns={supportColumns}
-            keyExtractor={(row) => row.component}
+            keyExtractor={row => row.component}
             emptyMessage="Uyarı üreten component bulunamadı"
           />
         )}

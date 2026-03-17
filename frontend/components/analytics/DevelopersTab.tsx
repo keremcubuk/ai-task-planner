@@ -28,7 +28,7 @@ export function DevelopersTab({
   avgCompletionTimeDays,
   activeTasksCount,
 }: DevelopersTabProps) {
-  const developerCount = Object.keys(byAssigneeDetailed).filter((a) => a !== 'unassigned').length;
+  const developerCount = Object.keys(byAssigneeDetailed).filter(a => a !== 'unassigned').length;
 
   const developerData: DeveloperRow[] = Object.entries(byAssigneeDetailed)
     .sort((a, b) => b[1].completed - a[1].completed)
@@ -42,9 +42,7 @@ export function DevelopersTab({
     {
       key: 'assignee',
       header: 'Developer',
-      render: (_, row) => (
-        <span className="font-medium text-gray-900">{row.assignee}</span>
-      ),
+      render: (_, row) => <span className="font-medium text-gray-900">{row.assignee}</span>,
     },
     {
       key: 'stats.total',
@@ -54,9 +52,7 @@ export function DevelopersTab({
     {
       key: 'stats.completed',
       header: 'Çözülen',
-      render: (_, row) => (
-        <span className="text-green-600 font-medium">{row.stats.completed}</span>
-      ),
+      render: (_, row) => <span className="font-medium text-green-600">{row.stats.completed}</span>,
     },
     {
       key: 'stats.open',
@@ -66,9 +62,7 @@ export function DevelopersTab({
     {
       key: 'stats.inProgress',
       header: 'Devam Eden',
-      render: (_, row) => (
-        <span className="text-blue-600">{row.stats.inProgress}</span>
-      ),
+      render: (_, row) => <span className="text-blue-600">{row.stats.inProgress}</span>,
     },
     {
       key: 'stats.avgPerMonth',
@@ -96,16 +90,21 @@ export function DevelopersTab({
       <StatCardGrid columns={4}>
         <StatCard label="Toplam Developer" value={developerCount} />
         <StatCard label="Toplam Çözülen" value={completedTasksCount} valueColor="green" />
-        <StatCard label="Ort. Tamamlanma" value={avgCompletionTimeDays} valueColor="indigo" suffix="gün" />
+        <StatCard
+          label="Ort. Tamamlanma"
+          value={avgCompletionTimeDays}
+          valueColor="indigo"
+          suffix="gün"
+        />
         <StatCard label="Devam Eden" value={activeTasksCount} valueColor="blue" />
       </StatCardGrid>
 
-      <div className="bg-white p-6 rounded-lg shadow">
-        <h3 className="text-lg font-medium text-gray-900 mb-4">Developer Performansı</h3>
+      <div className="rounded-lg bg-white p-6 shadow">
+        <h3 className="mb-4 text-lg font-medium text-gray-900">Developer Performansı</h3>
         <DataTable
           data={developerData}
           columns={columns}
-          keyExtractor={(row) => row.assignee}
+          keyExtractor={row => row.assignee}
           emptyMessage="Developer bulunamadı"
         />
       </div>

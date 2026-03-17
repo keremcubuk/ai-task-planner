@@ -9,7 +9,7 @@ const sortOptions = [
   { value: 'mostTasks', label: 'Most Tasks' },
   { value: 'leastTasks', label: 'Least Tasks' },
   { value: 'a-z', label: 'A-Z' },
-  { value: 'z-a', label: 'Z-A' }
+  { value: 'z-a', label: 'Z-A' },
 ];
 
 export default function ProjectsList() {
@@ -34,25 +34,25 @@ export default function ProjectsList() {
     }
   };
 
-  const filteredProjects = projects.filter((p) =>
+  const filteredProjects = projects.filter(p =>
     p.name.toLowerCase().includes(search.toLowerCase())
   );
 
-  const inProgressProjects = filteredProjects.filter((p) => p.projectStatus !== 'done');
-  const doneProjects = filteredProjects.filter((p) => p.projectStatus === 'done');
+  const inProgressProjects = filteredProjects.filter(p => p.projectStatus !== 'done');
+  const doneProjects = filteredProjects.filter(p => p.projectStatus === 'done');
 
   // Sorting function
   const sortProjects = (projects: ProjectStats[]) => {
     const sorted = [...projects]; // Copy to avoid mutating original
 
     switch (sortBy) {
-      case "a-z":
+      case 'a-z':
         return sorted.sort((a, b) => a.name.localeCompare(b.name));
-      case "z-a":
+      case 'z-a':
         return sorted.sort((a, b) => b.name.localeCompare(a.name));
-      case "mostTasks":
+      case 'mostTasks':
         return sorted.sort((a, b) => b.total - a.total);
-      case "leastTasks":
+      case 'leastTasks':
         return sorted.sort((a, b) => a.total - b.total);
       default:
         return sorted;
@@ -71,17 +71,14 @@ export default function ProjectsList() {
 
   return (
     <div className="space-y-6">
-      <PageHeader 
-        title="Projects"
-        description="Browse and manage all projects"
-      />
+      <PageHeader title="Projects" description="Browse and manage all projects" />
 
       {/* Search, Sort, and Stats summary in a single grid */}
-      <div className="flex flex-col md:flex-row gap-4 items-center mb-8">
+      <div className="mb-8 flex flex-col items-center gap-4 md:flex-row">
         {/* Search and Sort - 65% */}
         <div className="w-full md:w-8/12">
-          <div className="bg-white p-4 rounded-lg shadow h-20 flex items-center">
-            <div className="relative w-full flex gap-4">
+          <div className="flex h-20 items-center rounded-lg bg-white p-4 shadow">
+            <div className="relative flex w-full gap-4">
               <InputField
                 type="search"
                 placeholder="Search projects..."
@@ -93,7 +90,7 @@ export default function ProjectsList() {
               />
               <InputSelect
                 value={sortBy}
-                onChange={(value) => setSortBy(value)}
+                onChange={value => setSortBy(value)}
                 options={sortOptions}
               />
             </div>
@@ -109,17 +106,15 @@ export default function ProjectsList() {
 
       {sortedInProgressProjects.length > 0 && (
         <div className="space-y-3">
-          <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wide">
+          <h3 className="text-sm font-semibold tracking-wide text-gray-600 uppercase">
             In Progress
           </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {sortedInProgressProjects.map((project) => (
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {sortedInProgressProjects.map(project => (
               <ProjectCard
                 key={project.name}
                 project={project}
-                onClick={() =>
-                  router.push(`/projects/${encodeURIComponent(project.name)}`)
-                }
+                onClick={() => router.push(`/projects/${encodeURIComponent(project.name)}`)}
               />
             ))}
           </div>
@@ -128,17 +123,13 @@ export default function ProjectsList() {
 
       {sortedDoneProjects.length > 0 && (
         <div className="space-y-3">
-          <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wide">
-            Completed
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {sortedDoneProjects.map((project) => (
+          <h3 className="text-sm font-semibold tracking-wide text-gray-600 uppercase">Completed</h3>
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {sortedDoneProjects.map(project => (
               <ProjectCard
                 key={project.name}
                 project={project}
-                onClick={() =>
-                  router.push(`/projects/${encodeURIComponent(project.name)}`)
-                }
+                onClick={() => router.push(`/projects/${encodeURIComponent(project.name)}`)}
               />
             ))}
           </div>
@@ -146,7 +137,7 @@ export default function ProjectsList() {
       )}
 
       {filteredProjects.length === 0 && (
-        <div className="text-center py-12 text-gray-500">
+        <div className="py-12 text-center text-gray-500">
           No projects found matching &quot;{search}&quot;
         </div>
       )}

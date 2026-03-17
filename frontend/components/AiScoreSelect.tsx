@@ -8,10 +8,10 @@ interface AiScoreSelectProps {
   onSelectAll: (values: string[]) => void;
 }
 
-export const AiScoreSelect: React.FC<AiScoreSelectProps> = ({ 
-  selectedValues, 
+export const AiScoreSelect: React.FC<AiScoreSelectProps> = ({
+  selectedValues,
   onToggleValue,
-  onSelectAll 
+  onSelectAll,
 }) => {
   const [aiPriorities, setAiPriorities] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);

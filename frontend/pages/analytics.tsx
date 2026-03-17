@@ -153,7 +153,7 @@ export default function Analytics() {
   }, [useOllama]);
 
   const setOpenerComment = (openedBy: string, value: string) => {
-    setOpenerComments((prev) => {
+    setOpenerComments(prev => {
       const next = { ...prev, [openedBy]: value };
       try {
         localStorage.setItem('openedByComments', JSON.stringify(next));
@@ -176,7 +176,7 @@ export default function Analytics() {
   }, []);
 
   const toggleComponentExpand = (componentName: string) => {
-    setExpandedComponents((prev) => {
+    setExpandedComponents(prev => {
       const newSet = new Set(prev);
       if (newSet.has(componentName)) {
         newSet.delete(componentName);
@@ -194,8 +194,7 @@ export default function Analytics() {
     (data.byStatus?.open || 0) +
     (data.byStatus?.in_progress || 0) +
     (data.byStatus?.inprogress || 0);
-  const completedTasksCount =
-    (data.byStatus?.done || 0) + (data.byStatus?.completed || 0);
+  const completedTasksCount = (data.byStatus?.done || 0) + (data.byStatus?.completed || 0);
   const criticalCount = data.bySeverity?.critical || 0;
 
   const tabs: { id: TabType; label: string; icon: React.ReactNode }[] = [
@@ -208,7 +207,7 @@ export default function Analytics() {
 
   return (
     <div className="space-y-6">
-      <PageHeader 
+      <PageHeader
         title="Analytics Dashboard"
         description="Proje, developer, issue açan ve component bazlı analizler."
       />
@@ -216,7 +215,7 @@ export default function Analytics() {
       <TabNavigation
         tabs={tabs}
         activeTab={activeTab}
-        onTabChange={(tabId) => setActiveTab(tabId as TabType)}
+        onTabChange={tabId => setActiveTab(tabId as TabType)}
       />
 
       <div className="mt-6">
@@ -258,17 +257,13 @@ export default function Analytics() {
             componentData={componentData}
             expandedComponents={expandedComponents}
             toggleComponentExpand={toggleComponentExpand}
-            onTaskClick={(taskId) => setSelectedTaskId(taskId)}
+            onTaskClick={taskId => setSelectedTaskId(taskId)}
           />
         )}
         {activeTab === 'trends' && <TrendsTab />}
       </div>
 
-      <Modal
-        isOpen={!!selectedTaskId}
-        onClose={() => setSelectedTaskId(null)}
-        title="Task Details"
-      >
+      <Modal isOpen={!!selectedTaskId} onClose={() => setSelectedTaskId(null)} title="Task Details">
         {selectedTaskId && (
           <TaskDetail
             taskId={selectedTaskId}

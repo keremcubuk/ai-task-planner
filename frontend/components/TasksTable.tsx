@@ -47,8 +47,7 @@ function SortableRow({
   index: number;
   onTaskClick?: (id: number) => void;
 }) {
-  const { attributes, listeners, setNodeRef, transform, transition } =
-    useSortable({ id: task.id });
+  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: task.id });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -56,51 +55,51 @@ function SortableRow({
   };
 
   return (
-    <tr ref={setNodeRef} style={style} className="hover:bg-gray-50 bg-white">
-      <td className="px-2 py-4 w-10 border-b border-gray-200">
+    <tr ref={setNodeRef} style={style} className="bg-white hover:bg-gray-50">
+      <td className="w-10 border-b border-gray-200 px-2 py-4">
         <div
           {...attributes}
           {...listeners}
-          className="cursor-grab text-gray-400 hover:text-gray-600 flex justify-center"
+          className="flex cursor-grab justify-center text-gray-400 hover:text-gray-600"
         >
           <GripVertical size={16} />
         </div>
       </td>
-      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 border-b border-gray-200">
+      <td className="border-b border-gray-200 px-6 py-4 text-sm whitespace-nowrap text-gray-500">
         {index}
       </td>
-      <td className="px-6 py-4 text-sm font-medium text-gray-900 border-b border-gray-200 max-w-xs">
+      <td className="max-w-xs border-b border-gray-200 px-6 py-4 text-sm font-medium text-gray-900">
         <a
           href={`/tasks/${task.id}`}
-          onClick={(e) => {
+          onClick={e => {
             e.preventDefault();
             onTaskClick?.(task.id);
           }}
-          className="text-blue-600 hover:underline cursor-pointer block truncate"
+          className="block cursor-pointer truncate text-blue-600 hover:underline"
           title={task.title}
         >
           {task.title}
         </a>
       </td>
-      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 border-b border-gray-200">
+      <td className="border-b border-gray-200 px-6 py-4 text-sm whitespace-nowrap text-gray-500">
         {task.status}
       </td>
-      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 border-b border-gray-200">
+      <td className="border-b border-gray-200 px-6 py-4 text-sm whitespace-nowrap text-gray-500">
         <SeverityBadge severity={task.severity || 'unknown'} />
       </td>
-      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 border-b border-gray-200">
+      <td className="border-b border-gray-200 px-6 py-4 text-sm whitespace-nowrap text-gray-500">
         <PriorityBadge score={task.aiScore} priority={task.aiPriority} />
       </td>
-      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 border-b border-gray-200">
+      <td className="border-b border-gray-200 px-6 py-4 text-sm whitespace-nowrap text-gray-500">
         {formatDate(task.createdAt)}
       </td>
-      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 border-b border-gray-200">
+      <td className="border-b border-gray-200 px-6 py-4 text-sm whitespace-nowrap text-gray-500">
         {formatDate(task.dueDate || '')}
       </td>
-      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 border-b border-gray-200 max-w-3xs truncate">
+      <td className="max-w-3xs truncate border-b border-gray-200 px-6 py-4 text-sm whitespace-nowrap text-gray-500">
         {task.openedBy || '-'}
       </td>
-      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 border-b border-gray-200 max-w-3xs truncate">
+      <td className="max-w-3xs truncate border-b border-gray-200 px-6 py-4 text-sm whitespace-nowrap text-gray-500">
         {task.assignedTo || '-'}
       </td>
     </tr>
@@ -124,8 +123,8 @@ export const TasksTable: React.FC<TasksTableProps> = ({
     const { active, over } = event;
 
     if (over && active.id !== over.id) {
-      const oldIndex = tasks.findIndex((t) => t.id === active.id);
-      const newIndex = tasks.findIndex((t) => t.id === over.id);
+      const oldIndex = tasks.findIndex(t => t.id === active.id);
+      const newIndex = tasks.findIndex(t => t.id === over.id);
       const newTasks = arrayMove(tasks, oldIndex, newIndex);
 
       onReorder(newTasks);
@@ -133,60 +132,56 @@ export const TasksTable: React.FC<TasksTableProps> = ({
   }
 
   return (
-    <DndContext
-      sensors={sensors}
-      collisionDetection={closestCenter}
-      onDragEnd={handleDragEnd}
-    >
-      <div className="overflow-x-auto max-h-[calc(100vh-200px)]">
-        <table className="min-w-full bg-white border border-gray-200 relative">
-          <thead className="bg-gray-50 sticky top-0 z-10 shadow-sm">
+    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+      <div className="max-h-[calc(100vh-200px)] overflow-x-auto">
+        <table className="relative min-w-full border border-gray-200 bg-white">
+          <thead className="sticky top-0 z-10 bg-gray-50 shadow-sm">
             <tr>
-              <th className="w-10 px-2 border-b border-gray-200 bg-gray-50"></th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200 bg-gray-50">
+              <th className="w-10 border-b border-gray-200 bg-gray-50 px-2"></th>
+              <th className="border-b border-gray-200 bg-gray-50 px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
                 #
               </th>
               <th
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer border-b border-gray-200 bg-gray-50"
+                className="cursor-pointer border-b border-gray-200 bg-gray-50 px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
                 onClick={() => onSort('title')}
               >
                 Title <ArrowUpDown size={14} className="inline" />
               </th>
               <th
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer border-b border-gray-200 bg-gray-50"
+                className="cursor-pointer border-b border-gray-200 bg-gray-50 px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
                 onClick={() => onSort('status')}
               >
                 Status <ArrowUpDown size={14} className="inline" />
               </th>
               <th
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer border-b border-gray-200 bg-gray-50"
+                className="cursor-pointer border-b border-gray-200 bg-gray-50 px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
                 onClick={() => onSort('severity')}
               >
                 Severity <ArrowUpDown size={14} className="inline" />
               </th>
               <th
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer border-b border-gray-200 bg-gray-50"
+                className="cursor-pointer border-b border-gray-200 bg-gray-50 px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
                 onClick={() => onSort('aiPriority')}
               >
                 AI Priority <ArrowUpDown size={14} className="inline" />
               </th>
               <th
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer border-b border-gray-200 bg-gray-50"
+                className="cursor-pointer border-b border-gray-200 bg-gray-50 px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
                 onClick={() => onSort('createdAt')}
               >
                 Created Date <ArrowUpDown size={14} className="inline" />
               </th>
               <th
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer border-b border-gray-200 bg-gray-50"
+                className="cursor-pointer border-b border-gray-200 bg-gray-50 px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
                 onClick={() => onSort('dueDate')}
               >
                 Due Date <ArrowUpDown size={14} className="inline" />
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200 bg-gray-50">
+              <th className="border-b border-gray-200 bg-gray-50 px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
                 Opened By
               </th>
               <th
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer border-b border-gray-200 bg-gray-50"
+                className="cursor-pointer border-b border-gray-200 bg-gray-50 px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
                 onClick={() => onSort('assignedTo')}
               >
                 Assigned To <ArrowUpDown size={14} className="inline" />
@@ -194,10 +189,7 @@ export const TasksTable: React.FC<TasksTableProps> = ({
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
-            <SortableContext
-              items={tasks.map((t) => t.id)}
-              strategy={verticalListSortingStrategy}
-            >
+            <SortableContext items={tasks.map(t => t.id)} strategy={verticalListSortingStrategy}>
               {tasks.map((task, index) => (
                 <SortableRow
                   key={task.id}

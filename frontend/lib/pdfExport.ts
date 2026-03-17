@@ -55,7 +55,7 @@ export async function exportTrendsToPdf(
   pdf.addFont('Roboto-Regular.ttf', 'Roboto', 'normal');
   pdf.addFont('Roboto-Regular.ttf', 'Roboto', 'bold');
   pdf.setFont('Roboto');
-  
+
   const pageWidth = pdf.internal.pageSize.getWidth();
   const pageHeight = pdf.internal.pageSize.getHeight();
   const margin = 15;
@@ -65,16 +65,16 @@ export async function exportTrendsToPdf(
   const addHeader = () => {
     pdf.setFillColor(...COLORS.primary);
     pdf.rect(0, 0, pageWidth, 35, 'F');
-    
+
     pdf.setTextColor(255, 255, 255);
     pdf.setFontSize(22);
     pdf.setFont('Roboto', 'bold');
     pdf.text(title, margin, 20);
-    
+
     pdf.setFontSize(10);
     pdf.setFont('Roboto', 'normal');
     pdf.text(subtitle, margin, 28);
-    
+
     yPos = 45;
   };
 
@@ -83,10 +83,10 @@ export async function exportTrendsToPdf(
       pdf.addPage();
       yPos = margin;
     }
-    
+
     pdf.setFillColor(...COLORS.light);
     pdf.rect(margin, yPos - 5, pageWidth - margin * 2, 10, 'F');
-    
+
     pdf.setTextColor(...COLORS.dark);
     pdf.setFontSize(14);
     pdf.setFont('Roboto', 'bold');
@@ -94,12 +94,7 @@ export async function exportTrendsToPdf(
     yPos += 15;
   };
 
-  const addTable = (
-    headers: string[],
-    rows: (string | number)[][],
-    changeColumnIndex?: number
-  ) => {
-    // @ts-expect-error - jspdf-autotable type issues
+  const addTable = (headers: string[], rows: (string | number)[][], changeColumnIndex?: number) => {
     autoTable(pdf, {
       startY: yPos,
       head: [headers],
@@ -122,11 +117,24 @@ export async function exportTrendsToPdf(
         fillColor: [249, 250, 251],
       },
       margin: { left: margin, right: margin },
-      willDrawCell: (data: any) => {
-        if (changeColumnIndex !== undefined && data.section === 'body' && data.column.index === changeColumnIndex) {
-          const cellText = data.cell.raw;
-          const change = parseFloat(cellText.toString().replace('%', '').replace('+', ''));
-          
+      willDrawCell: (data: unknown) => {
+        const cellData = data as {
+          section: string;
+          column: { index: number };
+          cell: { raw: string | number | null };
+        };
+        if (
+          changeColumnIndex !== undefined &&
+          cellData.section === 'body' &&
+          cellData.column.index === changeColumnIndex
+        ) {
+          const cellText = cellData.cell.raw;
+          const change = parseFloat(
+            String(cellText || '')
+              .replace('%', '')
+              .replace('+', '')
+          );
+
           if (!isNaN(change)) {
             const color = getChangeColor(change);
             pdf.setTextColor(...color);
@@ -134,27 +142,31 @@ export async function exportTrendsToPdf(
         }
       },
     });
-    
+
     // @ts-expect-error - jspdf-autotable adds lastAutoTable property
     yPos = pdf.lastAutoTable.finalY + 10;
   };
 
-  const addStatBox = (label: string, value: string | number, color: [number, number, number] = COLORS.primary) => {
+  const addStatBox = (
+    label: string,
+    value: string | number,
+    color: [number, number, number] = COLORS.primary
+  ) => {
     const boxWidth = 40;
     const boxHeight = 25;
-    
+
     pdf.setFillColor(...color);
-    pdf.roundedRect(margin + (statBoxIndex * (boxWidth + 5)), yPos, boxWidth, boxHeight, 3, 3, 'F');
-    
+    pdf.roundedRect(margin + statBoxIndex * (boxWidth + 5), yPos, boxWidth, boxHeight, 3, 3, 'F');
+
     pdf.setTextColor(255, 255, 255);
     pdf.setFontSize(8);
     pdf.setFont('Roboto', 'normal');
-    pdf.text(label, margin + (statBoxIndex * (boxWidth + 5)) + 3, yPos + 8);
-    
+    pdf.text(label, margin + statBoxIndex * (boxWidth + 5) + 3, yPos + 8);
+
     pdf.setFontSize(14);
     pdf.setFont('Roboto', 'bold');
-    pdf.text(String(value), margin + (statBoxIndex * (boxWidth + 5)) + 3, yPos + 18);
-    
+    pdf.text(String(value), margin + statBoxIndex * (boxWidth + 5) + 3, yPos + 18);
+
     statBoxIndex++;
   };
 
@@ -165,13 +177,14 @@ export async function exportTrendsToPdf(
 
   // Summary Statistics
   addSectionTitle('Özet İstatistikler');
-  
+
   const totalTasks = data.yearly.reduce((sum, y) => sum + y.total, 0);
   const totalProjects = Math.max(...data.yearly.map(y => y.uniqueProjects));
-  const avgMonthly = data.monthly.length > 0 
-    ? Math.round(data.monthly.reduce((sum, m) => sum + m.current.count, 0) / data.monthly.length)
-    : 0;
-  
+  const avgMonthly =
+    data.monthly.length > 0
+      ? Math.round(data.monthly.reduce((sum, m) => sum + m.current.count, 0) / data.monthly.length)
+      : 0;
+
   statBoxIndex = 0;
   addStatBox('Toplam Task', totalTasks, COLORS.primary);
   addStatBox('Proje Sayısı', totalProjects, COLORS.success);
@@ -180,46 +193,50 @@ export async function exportTrendsToPdf(
 
   // Yearly Summary
   addSectionTitle('Yıllık Özet');
-  
+
   const yearlyHeaders = ['Yıl', 'Toplam Task', 'Proje Sayısı'];
   const yearlyRows = data.yearly.map(y => [y.year, y.total, y.uniqueProjects]);
   addTable(yearlyHeaders, yearlyRows);
 
   // Monthly Comparison
   addSectionTitle('Aylık Karşılaştırma (Son 12 Ay)');
-  
+
   const monthlyHeaders = ['Dönem', 'Task', 'Günlük Ort.', 'Proje', 'Değişim'];
-  const monthlyRows = data.monthly.slice(0, 12).map(m => [
-    m.current.period,
-    m.current.count,
-    m.current.dailyAverage,
-    m.current.uniqueProjects,
-    formatChangePercent(m.changePercent)
-  ]);
+  const monthlyRows = data.monthly
+    .slice(0, 12)
+    .map(m => [
+      m.current.period,
+      m.current.count,
+      m.current.dailyAverage,
+      m.current.uniqueProjects,
+      formatChangePercent(m.changePercent),
+    ]);
   addTable(monthlyHeaders, monthlyRows, 4); // Change column is index 4
 
   // Weekly Summary
   addSectionTitle('Haftalık Özet (Son 8 Hafta)');
-  
+
   const weeklyHeaders = ['Hafta', 'Task', 'Günlük Ort.', 'Proje', 'Değişim'];
-  const weeklyRows = data.weekly.slice(0, 8).map(w => [
-    w.current.period,
-    w.current.count,
-    w.current.dailyAverage,
-    w.current.uniqueProjects,
-    formatChangePercent(w.changePercent)
-  ]);
+  const weeklyRows = data.weekly
+    .slice(0, 8)
+    .map(w => [
+      w.current.period,
+      w.current.count,
+      w.current.dailyAverage,
+      w.current.uniqueProjects,
+      formatChangePercent(w.changePercent),
+    ]);
   addTable(weeklyHeaders, weeklyRows, 4); // Change column is index 4
 
   // Quarterly Summary
   if (data.quarterly.length > 0) {
     addSectionTitle('Çeyreklik Özet');
-    
+
     const quarterlyHeaders = ['Dönem', 'Task Sayısı', 'Proje Sayısı'];
     const quarterlyRows = data.quarterly.map(q => [
       `${q.year} ${q.quarter}`,
       q.count,
-      q.uniqueProjects
+      q.uniqueProjects,
     ]);
     addTable(quarterlyHeaders, quarterlyRows);
   }
@@ -227,8 +244,10 @@ export async function exportTrendsToPdf(
   // Year-over-Year Comparison
   if (data.yearOverYear.monthComparisons.length > 0) {
     addSectionTitle('Yıl Bazlı Karşılaştırma');
-    
-    const years = [...new Set(data.yearOverYear.monthComparisons.flatMap(m => m.years.map(y => y.year)))].sort();
+
+    const years = [
+      ...new Set(data.yearOverYear.monthComparisons.flatMap(m => m.years.map(y => y.year))),
+    ].sort();
     const yoyHeaders = ['Ay', ...years.flatMap(y => [`${y} Task`, `${y} Proje`])];
     const yoyRows = data.yearOverYear.monthComparisons.map(m => {
       const row: (string | number)[] = [m.month];
@@ -239,7 +258,7 @@ export async function exportTrendsToPdf(
       });
       return row;
     });
-    
+
     addTable(yoyHeaders, yoyRows);
   }
 
@@ -250,16 +269,8 @@ export async function exportTrendsToPdf(
     pdf.setFontSize(8);
     pdf.setTextColor(...COLORS.gray);
     pdf.setFont('Roboto', 'normal');
-    pdf.text(
-      `Sayfa ${i} / ${totalPages}`,
-      pageWidth - margin - 20,
-      pageHeight - 10
-    );
-    pdf.text(
-      'AI Task Planner - Trend Analizi Raporu',
-      margin,
-      pageHeight - 10
-    );
+    pdf.text(`Sayfa ${i} / ${totalPages}`, pageWidth - margin - 20, pageHeight - 10);
+    pdf.text('AI Task Planner - Trend Analizi Raporu', margin, pageHeight - 10);
   }
 
   // Save PDF
@@ -283,13 +294,13 @@ export async function exportElementToPdf(
 
   const imgData = canvas.toDataURL('image/png');
   const pdf = new jsPDF('p', 'mm', 'a4');
-  
+
   const pageWidth = pdf.internal.pageSize.getWidth();
   const pageHeight = pdf.internal.pageSize.getHeight();
-  
+
   const imgWidth = pageWidth - 20;
   const imgHeight = (canvas.height * imgWidth) / canvas.width;
-  
+
   let heightLeft = imgHeight;
   let position = 10;
 

@@ -18,14 +18,14 @@ const statusOptions = [
   { value: 'all', label: 'All Status' },
   { value: 'critical', label: '🔴 Critical' },
   { value: 'warning', label: '🟡 Warning' },
-  { value: 'good', label: '🟢 Good' }
+  { value: 'good', label: '🟢 Good' },
 ];
 
 const sortOptions = [
   { value: 'score-asc', label: 'Score ↑' },
   { value: 'score-desc', label: 'Score ↓' },
   { value: 'name', label: 'A-Z' },
-  { value: 'date', label: 'Latest' }
+  { value: 'date', label: 'Latest' },
 ];
 
 export default function ProjectReviewScoresPage() {
@@ -91,22 +91,17 @@ export default function ProjectReviewScoresPage() {
       setImportMarkdown('');
       await loadScores();
     } catch (error: unknown) {
-      const err = error as any;
-      setActionMessage(
-        err?.response?.data?.message || err?.message || 'Import failed',
-      );
+      const err = error as { response?: { data?: { message?: string } }; message?: string };
+      setActionMessage(err?.response?.data?.message || err?.message || 'Import failed');
     } finally {
       setActionLoading(false);
     }
   };
 
   // Filter
-  const filtered = scores.filter((s) => {
-    const matchesSearch = s.projectName
-      .toLowerCase()
-      .includes(search.toLowerCase());
-    const matchesStatus =
-      statusFilter === 'all' || s.status === statusFilter;
+  const filtered = scores.filter(s => {
+    const matchesSearch = s.projectName.toLowerCase().includes(search.toLowerCase());
+    const matchesStatus = statusFilter === 'all' || s.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
@@ -120,9 +115,7 @@ export default function ProjectReviewScoresPage() {
       case 'name':
         return a.projectName.localeCompare(b.projectName);
       case 'date':
-        return (
-          new Date(b.reportDate).getTime() - new Date(a.reportDate).getTime()
-        );
+        return new Date(b.reportDate).getTime() - new Date(a.reportDate).getTime();
       default:
         return 0;
     }
@@ -130,21 +123,19 @@ export default function ProjectReviewScoresPage() {
 
   // Stats
   const totalCount = scores.length;
-  const criticalCount = scores.filter((s) => s.status === 'critical').length;
-  const warningCount = scores.filter((s) => s.status === 'warning').length;
-  const goodCount = scores.filter((s) => s.status === 'good').length;
+  const criticalCount = scores.filter(s => s.status === 'critical').length;
+  const warningCount = scores.filter(s => s.status === 'warning').length;
+  const goodCount = scores.filter(s => s.status === 'good').length;
   const avgScore =
     totalCount > 0
-      ? Math.round(
-          scores.reduce((sum, s) => sum + s.overallScore, 0) / totalCount,
-        )
+      ? Math.round(scores.reduce((sum, s) => sum + s.overallScore, 0) / totalCount)
       : 0;
 
   if (loading) return <div className="p-8">Loading...</div>;
 
   return (
     <div className="space-y-6">
-      <PageHeader 
+      <PageHeader
         title="Project Review Scores"
         description="Track and manage project review scores and quality metrics"
       >
@@ -170,23 +161,20 @@ export default function ProjectReviewScoresPage() {
 
       {/* Action message */}
       {actionMessage && (
-        <div className="p-3 rounded-md bg-blue-50 text-blue-800 text-sm">
+        <div className="rounded-md bg-blue-50 p-3 text-sm text-blue-800">
           {actionMessage}
-          <button
-            onClick={() => setActionMessage('')}
-            className="ml-2 text-blue-600 underline"
-          >
+          <button onClick={() => setActionMessage('')} className="ml-2 text-blue-600 underline">
             Kapat
           </button>
         </div>
       )}
 
       {/* Stats */}
-      <div className="flex flex-col md:flex-row gap-4 items-center">
+      <div className="flex flex-col items-center gap-4 md:flex-row">
         {/* Search & Filters */}
         <div className="w-full md:w-7/12">
-          <div className="bg-white p-4 rounded-lg shadow flex items-center">
-            <div className="relative w-full flex gap-4">
+          <div className="flex items-center rounded-lg bg-white p-4 shadow">
+            <div className="relative flex w-full gap-4">
               <InputField
                 type="search"
                 placeholder="Search projects..."
@@ -198,12 +186,12 @@ export default function ProjectReviewScoresPage() {
               />
               <InputSelect
                 value={statusFilter}
-                onChange={(value) => setStatusFilter(value as StatusFilter)}
+                onChange={value => setStatusFilter(value as StatusFilter)}
                 options={statusOptions}
               />
               <InputSelect
                 value={sortBy}
-                onChange={(value) => setSortBy(value as SortOption)}
+                onChange={value => setSortBy(value as SortOption)}
                 options={sortOptions}
               />
             </div>
@@ -215,49 +203,58 @@ export default function ProjectReviewScoresPage() {
           <StatCard label="Avg Score" value={avgScore} valueColor="blue" size="sm" />
           <StatCard label="Total" value={totalCount} size="sm" />
           <StatCard label="Good" value={goodCount} valueColor="green" bgColor="green" size="sm" />
-          <StatCard label="Warning" value={warningCount} valueColor="yellow" bgColor="yellow" size="sm" />
-          <StatCard label="Critical" value={criticalCount} valueColor="red" bgColor="red" size="sm" />
+          <StatCard
+            label="Warning"
+            value={warningCount}
+            valueColor="yellow"
+            bgColor="yellow"
+            size="sm"
+          />
+          <StatCard
+            label="Critical"
+            value={criticalCount}
+            valueColor="red"
+            bgColor="red"
+            size="sm"
+          />
         </StatCardRow>
       </div>
 
       {/* Project cards grid */}
       {sorted.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {sorted.map((score) => (
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {sorted.map(score => (
             <ReviewScoreCard
               key={score.id}
               score={score}
               onClick={() =>
-                router.push(
-                  `/project-review-scores/${encodeURIComponent(score.projectName)}`,
-                )
+                router.push(`/project-review-scores/${encodeURIComponent(score.projectName)}`)
               }
             />
           ))}
         </div>
       ) : (
-        <div className="text-center py-12 text-gray-500">
+        <div className="py-12 text-center text-gray-500">
           {scores.length === 0
             ? 'No review scores yet. Import from Confluence or upload a markdown file.'
             : `No projects found matching "${search}"`}
-
         </div>
       )}
 
       {/* Crawl Modal */}
       {showCrawlModal && (
-        <div 
-          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
           onClick={() => {
             setShowCrawlModal(false);
             setCrawlUrl('');
           }}
         >
-          <div 
-            className="bg-white rounded-lg shadow-xl p-6 w-full max-w-lg mx-4"
-            onClick={(e) => e.stopPropagation()}
+          <div
+            className="mx-4 w-full max-w-lg rounded-lg bg-white p-6 shadow-xl"
+            onClick={e => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between mb-4 sticky top-0 bg-white pb-2">
+            <div className="sticky top-0 mb-4 flex items-center justify-between bg-white pb-2">
               <h3 className="text-lg font-semibold text-gray-900">
                 Confluence&apos;tan Review Score Çek
               </h3>
@@ -268,22 +265,22 @@ export default function ProjectReviewScoresPage() {
                 }}
                 variant="ghost"
                 size="md"
-                className="p-1 w-8 h-8"
+                className="h-8 w-8 p-1"
                 leftIcon={<X size={24} />}
               />
             </div>
-            <p className="text-sm text-gray-600 mb-4">
-              AI Reports sayfasının Confluence URL&apos;ini girin. Sayfa içeriği
-              parse edilerek skor bilgileri çıkarılacaktır.
+            <p className="mb-4 text-sm text-gray-600">
+              AI Reports sayfasının Confluence URL&apos;ini girin. Sayfa içeriği parse edilerek skor
+              bilgileri çıkarılacaktır.
             </p>
             <input
               type="text"
               placeholder="https://your-confluence.atlassian.net/wiki/spaces/.../pages/..."
               value={crawlUrl}
-              onChange={(e) => setCrawlUrl(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md mb-4 text-sm"
+              onChange={e => setCrawlUrl(e.target.value)}
+              className="mb-4 w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
             />
-            <div className="flex gap-2 justify-end">
+            <div className="flex justify-end gap-2">
               <Button
                 onClick={() => {
                   setShowCrawlModal(false);
@@ -310,37 +307,35 @@ export default function ProjectReviewScoresPage() {
 
       {/* Import Modal */}
       {showImportModal && (
-        <div 
-          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
           onClick={() => setShowImportModal(false)}
         >
-          <div 
-            className="bg-white rounded-lg shadow-xl p-6 w-full max-w-2xl mx-4"
-            onClick={(e) => e.stopPropagation()}
+          <div
+            className="mx-4 w-full max-w-2xl rounded-lg bg-white p-6 shadow-xl"
+            onClick={e => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between mb-4 sticky top-0 bg-white pb-2">
-              <h3 className="text-lg font-semibold text-gray-900">
-                Markdown Import
-              </h3>
+            <div className="sticky top-0 mb-4 flex items-center justify-between bg-white pb-2">
+              <h3 className="text-lg font-semibold text-gray-900">Markdown Import</h3>
               <Button
                 onClick={() => setShowImportModal(false)}
                 variant="ghost"
                 size="md"
-                className="p-1 w-8 h-8"
+                className="h-8 w-8 p-1"
                 leftIcon={<X size={24} />}
               />
             </div>
-            <p className="text-sm text-gray-600 mb-4">
+            <p className="mb-4 text-sm text-gray-600">
               AI Review Score markdown içeriğini buraya yapıştırın.
             </p>
             <textarea
               placeholder="# 📊 Proje Code Review Raporu..."
               value={importMarkdown}
-              onChange={(e) => setImportMarkdown(e.target.value)}
+              onChange={e => setImportMarkdown(e.target.value)}
               rows={12}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md mb-4 text-sm font-mono text-gray-900"
+              className="mb-4 w-full rounded-md border border-gray-300 px-3 py-2 font-mono text-sm text-gray-900"
             />
-            <div className="flex gap-2 justify-end">
+            <div className="flex justify-end gap-2">
               <Button
                 onClick={() => {
                   setShowImportModal(false);

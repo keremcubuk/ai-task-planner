@@ -37,10 +37,10 @@ export default function TaskDetail() {
 
   const handleSave = async () => {
     try {
-      await updateTask(Number(id), { 
+      await updateTask(Number(id), {
         manualPriority: Number(manualPriority),
         status,
-        project
+        project,
       });
       alert('Task updated!');
       router.push('/');
@@ -64,109 +64,123 @@ export default function TaskDetail() {
   if (!task) return <div className="p-8">Task not found</div>;
 
   return (
-      <div className="max-w-3xl mx-auto bg-white rounded-lg shadow-lg p-6">
-        <div className="flex items-center justify-between mb-6">
-          <Button 
-            onClick={() => router.back()} 
-            variant="ghost"
-            size="md"
-            leftIcon={<ArrowLeft size={20} />}
-          >
-            Back
+    <div className="mx-auto max-w-3xl rounded-lg bg-white p-6 shadow-lg">
+      <div className="mb-6 flex items-center justify-between">
+        <Button
+          onClick={() => router.back()}
+          variant="ghost"
+          size="md"
+          leftIcon={<ArrowLeft size={20} />}
+        >
+          Back
+        </Button>
+        <div className="flex gap-2">
+          <Button onClick={handleDelete} variant="danger" size="md" leftIcon={<Trash2 size={18} />}>
+            Delete
           </Button>
-          <div className="flex gap-2">
-            <Button 
-              onClick={handleDelete} 
-              variant="danger"
-              size="md"
-              leftIcon={<Trash2 size={18} />}
-            >
-              Delete
-            </Button>
-            <Button 
-              onClick={handleSave} 
-              variant="primary"
-              size="md"
-              leftIcon={<Save size={18} />}
-            >
-              Save Changes
-            </Button>
-          </div>
-        </div>
-
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">{task.title}</h1>
-        <div className="flex flex-wrap items-center gap-4 mb-6 text-sm text-gray-500">
-          <span className="font-mono bg-gray-100 px-2 py-1 rounded text-gray-700">ID: {task.externalId || '-'}</span>
-          <PriorityBadge score={task.aiScore} priority={task.aiPriority} />
-          <span>Source: {task.source}</span>
-          <span className={
-            Math.floor((new Date().getTime() - new Date(task.createdAt).getTime()) / (1000 * 3600 * 24)) > 21 ? 'bg-red-100 text-red-800 px-2 py-1 rounded font-bold' :
-            Math.floor((new Date().getTime() - new Date(task.createdAt).getTime()) / (1000 * 3600 * 24)) > 15 ? 'bg-orange-100 text-orange-800 px-2 py-1 rounded font-bold' :
-            Math.floor((new Date().getTime() - new Date(task.createdAt).getTime()) / (1000 * 3600 * 24)) > 7 ? 'bg-yellow-100 text-yellow-800 px-2 py-1 rounded font-bold' :
-            ''
-          }>
-            Created: {new Date(task.createdAt).toLocaleDateString()} ({Math.floor((new Date().getTime() - new Date(task.createdAt).getTime()) / (1000 * 3600 * 24))} days ago)
-          </span>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Project</label>
-            <input 
-              type="text" 
-              value={project}
-              onChange={(e) => setProject(e.target.value)}
-              className="w-full border-gray-300 rounded-md shadow-sm p-2 border text-gray-900"
-              placeholder="Enter project name"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-            <select 
-              value={status} 
-              onChange={(e) => setStatus(e.target.value)}
-              className="w-full border-gray-300 rounded-md shadow-sm p-2 border text-gray-900"
-            >
-              <option value="open">Open</option>
-              <option value="in_progress">In Progress</option>
-              <option value="done">Done</option>
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Manual Priority (0-5)</label>
-            <input 
-              type="number" 
-              min="0" 
-              max="5" 
-              value={manualPriority}
-              onChange={(e) => setManualPriority(Number(e.target.value))}
-              className="w-full border-gray-300 rounded-md shadow-sm p-2 border text-gray-900"
-            />
-            <p className="text-xs text-gray-500 mt-1">Higher value increases AI score.</p>
-          </div>
-        </div>
-
-        <div className="mb-6">
-          <h3 className="text-lg font-medium text-gray-900 mb-2">Description</h3>
-          <div className="bg-gray-50 p-4 rounded-md text-gray-700 whitespace-pre-wrap">
-            {task.description || 'No description provided.'}
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Severity</label>
-            <div className="mt-1"><SeverityBadge severity={task.severity || 'unknown'} /></div>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Due Date</label>
-            <div className="mt-1 text-gray-900">{task.dueDate ? new Date(task.dueDate).toLocaleDateString() : '-'}</div>
-          </div>
-          <div>
-             <label className="block text-sm font-medium text-gray-700">Assigned To</label>
-             <div className="mt-1 text-gray-900 font-medium">{task.assignedTo || 'Unassigned'}</div>
-          </div>
+          <Button onClick={handleSave} variant="primary" size="md" leftIcon={<Save size={18} />}>
+            Save Changes
+          </Button>
         </div>
       </div>
+
+      <h1 className="mb-2 text-3xl font-bold text-gray-900">{task.title}</h1>
+      <div className="mb-6 flex flex-wrap items-center gap-4 text-sm text-gray-500">
+        <span className="rounded bg-gray-100 px-2 py-1 font-mono text-gray-700">
+          ID: {task.externalId || '-'}
+        </span>
+        <PriorityBadge score={task.aiScore} priority={task.aiPriority} />
+        <span>Source: {task.source}</span>
+        <span
+          className={
+            Math.floor(
+              (new Date().getTime() - new Date(task.createdAt).getTime()) / (1000 * 3600 * 24)
+            ) > 21
+              ? 'rounded bg-red-100 px-2 py-1 font-bold text-red-800'
+              : Math.floor(
+                    (new Date().getTime() - new Date(task.createdAt).getTime()) / (1000 * 3600 * 24)
+                  ) > 15
+                ? 'rounded bg-orange-100 px-2 py-1 font-bold text-orange-800'
+                : Math.floor(
+                      (new Date().getTime() - new Date(task.createdAt).getTime()) /
+                        (1000 * 3600 * 24)
+                    ) > 7
+                  ? 'rounded bg-yellow-100 px-2 py-1 font-bold text-yellow-800'
+                  : ''
+          }
+        >
+          Created: {new Date(task.createdAt).toLocaleDateString()} (
+          {Math.floor(
+            (new Date().getTime() - new Date(task.createdAt).getTime()) / (1000 * 3600 * 24)
+          )}{' '}
+          days ago)
+        </span>
+      </div>
+
+      <div className="mb-6 grid grid-cols-1 gap-6 md:grid-cols-2">
+        <div>
+          <label className="mb-1 block text-sm font-medium text-gray-700">Project</label>
+          <input
+            type="text"
+            value={project}
+            onChange={e => setProject(e.target.value)}
+            className="w-full rounded-md border border-gray-300 p-2 text-gray-900 shadow-sm"
+            placeholder="Enter project name"
+          />
+        </div>
+        <div>
+          <label className="mb-1 block text-sm font-medium text-gray-700">Status</label>
+          <select
+            value={status}
+            onChange={e => setStatus(e.target.value)}
+            className="w-full rounded-md border border-gray-300 p-2 text-gray-900 shadow-sm"
+          >
+            <option value="open">Open</option>
+            <option value="in_progress">In Progress</option>
+            <option value="done">Done</option>
+          </select>
+        </div>
+        <div>
+          <label className="mb-1 block text-sm font-medium text-gray-700">
+            Manual Priority (0-5)
+          </label>
+          <input
+            type="number"
+            min="0"
+            max="5"
+            value={manualPriority}
+            onChange={e => setManualPriority(Number(e.target.value))}
+            className="w-full rounded-md border border-gray-300 p-2 text-gray-900 shadow-sm"
+          />
+          <p className="mt-1 text-xs text-gray-500">Higher value increases AI score.</p>
+        </div>
+      </div>
+
+      <div className="mb-6">
+        <h3 className="mb-2 text-lg font-medium text-gray-900">Description</h3>
+        <div className="rounded-md bg-gray-50 p-4 whitespace-pre-wrap text-gray-700">
+          {task.description || 'No description provided.'}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Severity</label>
+          <div className="mt-1">
+            <SeverityBadge severity={task.severity || 'unknown'} />
+          </div>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Due Date</label>
+          <div className="mt-1 text-gray-900">
+            {task.dueDate ? new Date(task.dueDate).toLocaleDateString() : '-'}
+          </div>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Assigned To</label>
+          <div className="mt-1 font-medium text-gray-900">{task.assignedTo || 'Unassigned'}</div>
+        </div>
+      </div>
+    </div>
   );
 }

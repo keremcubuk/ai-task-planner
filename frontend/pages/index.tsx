@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback } from 'react';
 import {
   fetchTasks,
   prioritizeTasks,
@@ -7,15 +7,15 @@ import {
   resetDb,
   getProjectsStats,
   Task,
-} from "../lib/api";
-import { TasksTable } from "../components/TasksTable";
-import { TaskFilters } from "../components/TaskFilters";
-import { AiPriorityInfo } from "../components/AiPriorityInfo";
-import Link from "next/link";
-import { RefreshCw, Download, Upload, Trash2, Info } from "lucide-react";
-import { TaskForm } from "../components/TaskForm";
-import { TaskDetail } from "../components/TaskDetail";
-import { Button, Modal, PageHeader } from "@/components/ui";
+} from '../lib/api';
+import { TasksTable } from '../components/TasksTable';
+import { TaskFilters } from '../components/TaskFilters';
+import { AiPriorityInfo } from '../components/AiPriorityInfo';
+import Link from 'next/link';
+import { RefreshCw, Download, Upload, Trash2, Info } from 'lucide-react';
+import { TaskForm } from '../components/TaskForm';
+import { TaskDetail } from '../components/TaskDetail';
+import { Button, Modal, PageHeader } from '@/components/ui';
 
 export default function Dashboard() {
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -47,24 +47,22 @@ export default function Dashboard() {
     aiScores: [] as string[],
     dueStartDate: '',
     dueEndDate: '',
-    project: [] as string[]
+    project: [] as string[],
   });
 
   useEffect(() => {
     const loadAssignees = async () => {
       const allData = await fetchTasks({});
-      const uniqueAssignees = [
-        ...new Set(allData.map((t: Task) => t.assignedTo || "Unassigned")),
-      ];
+      const uniqueAssignees = [...new Set(allData.map((t: Task) => t.assignedTo || 'Unassigned'))];
       setAvailableAssignees(uniqueAssignees);
 
       if (!isInitialized) {
-        setFilters((prev) => ({ ...prev, assignedTo: uniqueAssignees }));
+        setFilters(prev => ({ ...prev, assignedTo: uniqueAssignees }));
         setIsInitialized(true);
       }
     };
     loadAssignees();
-  }, []); // Load assignees only once on mount
+  }, [isInitialized]); // Load assignees only once on mount
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -72,34 +70,23 @@ export default function Dashboard() {
         setLoading(true);
         try {
           const shouldFilterAssignee =
-            filters.assignedTo.length > 0 &&
-            filters.assignedTo.length < availableAssignees.length;
+            filters.assignedTo.length > 0 && filters.assignedTo.length < availableAssignees.length;
 
           const data = await fetchTasks({
             search,
-            status:
-              filters.status.length > 0 ? filters.status.join(",") : undefined,
-            assignedTo: shouldFilterAssignee
-              ? filters.assignedTo.join(",")
-              : undefined,
+            status: filters.status.length > 0 ? filters.status.join(',') : undefined,
+            assignedTo: shouldFilterAssignee ? filters.assignedTo.join(',') : undefined,
             severity: filters.severity || undefined,
-            minAiScore: filters.minAiScore
-              ? Number(filters.minAiScore)
-              : undefined,
-            maxAiScore: filters.maxAiScore
-              ? Number(filters.maxAiScore)
-              : undefined,
+            minAiScore: filters.minAiScore ? Number(filters.minAiScore) : undefined,
+            maxAiScore: filters.maxAiScore ? Number(filters.maxAiScore) : undefined,
             aiScores: filters.aiScores.length > 0 ? filters.aiScores.join(',') : undefined,
             dueStartDate: filters.dueStartDate || undefined,
             dueEndDate: filters.dueEndDate || undefined,
-            project:
-              filters.project.length > 0
-                ? filters.project.join(",")
-                : undefined,
+            project: filters.project.length > 0 ? filters.project.join(',') : undefined,
           });
           setTasks(data);
         } catch (error) {
-          console.error("Failed to load tasks", error);
+          console.error('Failed to load tasks', error);
         } finally {
           setLoading(false);
         }
@@ -113,22 +100,19 @@ export default function Dashboard() {
     setLoading(true);
     try {
       const shouldFilterAssignee =
-        filters.assignedTo.length > 0 &&
-        filters.assignedTo.length < availableAssignees.length;
+        filters.assignedTo.length > 0 && filters.assignedTo.length < availableAssignees.length;
 
       const data = await fetchTasks({
         search,
         status: filters.status.length > 0 ? filters.status.join(',') : undefined,
-        assignedTo: shouldFilterAssignee
-          ? filters.assignedTo.join(',')
-          : undefined,
+        assignedTo: shouldFilterAssignee ? filters.assignedTo.join(',') : undefined,
         severity: filters.severity || undefined,
         minAiScore: filters.minAiScore ? Number(filters.minAiScore) : undefined,
         maxAiScore: filters.maxAiScore ? Number(filters.maxAiScore) : undefined,
         aiScores: filters.aiScores.length > 0 ? filters.aiScores.join(',') : undefined,
         dueStartDate: filters.dueStartDate || undefined,
         dueEndDate: filters.dueEndDate || undefined,
-        project: filters.project.length > 0 ? filters.project.join(',') : undefined
+        project: filters.project.length > 0 ? filters.project.join(',') : undefined,
       });
       setTasks(data);
     } catch (error) {
@@ -139,24 +123,24 @@ export default function Dashboard() {
   }, [search, filters, availableAssignees]);
 
   const handleFilterChange = (key: string, value: string | string[]) => {
-    setFilters((prev) => ({ ...prev, [key]: value }));
+    setFilters(prev => ({ ...prev, [key]: value }));
   };
 
   const toggleStatusFilter = (status: string) => {
-    setFilters((prev) => {
+    setFilters(prev => {
       const current = prev.status;
       const updated = current.includes(status)
-        ? current.filter((s) => s !== status)
+        ? current.filter(s => s !== status)
         : [...current, status];
       return { ...prev, status: updated };
     });
   };
 
   const toggleProjectFilter = (project: string) => {
-    setFilters((prev) => {
+    setFilters(prev => {
       const current = prev.project;
       const updated = current.includes(project)
-        ? current.filter((p) => p !== project)
+        ? current.filter(p => p !== project)
         : [...current, project];
       return { ...prev, project: updated };
     });
@@ -165,55 +149,55 @@ export default function Dashboard() {
   const toggleAllProjects = () => {
     if (filters.project.length === availableProjects.length) {
       // Deselect all
-      setFilters((prev) => ({ ...prev, project: [] }));
+      setFilters(prev => ({ ...prev, project: [] }));
     } else {
       // Select all
-      setFilters((prev) => ({ ...prev, project: availableProjects }));
+      setFilters(prev => ({ ...prev, project: availableProjects }));
     }
   };
 
   const toggleAssigneeFilter = (assignee: string) => {
-    setFilters((prev) => ({
+    setFilters(prev => ({
       ...prev,
       assignedTo: prev.assignedTo.includes(assignee)
-        ? prev.assignedTo.filter((a) => a !== assignee)
+        ? prev.assignedTo.filter(a => a !== assignee)
         : [...prev.assignedTo, assignee],
     }));
   };
 
   const toggleAllAssignees = () => {
     if (filters.assignedTo.length === availableAssignees.length) {
-      setFilters((prev) => ({ ...prev, assignedTo: [] }));
+      setFilters(prev => ({ ...prev, assignedTo: [] }));
     } else {
-      setFilters((prev) => ({ ...prev, assignedTo: availableAssignees }));
+      setFilters(prev => ({ ...prev, assignedTo: availableAssignees }));
     }
   };
 
   const toggleAiScoreFilter = (score: string) => {
-    setFilters((prev) => {
+    setFilters(prev => {
       const current = prev.aiScores;
       const updated = current.includes(score)
-        ? current.filter((s) => s !== score)
+        ? current.filter(s => s !== score)
         : [...current, score];
       return { ...prev, aiScores: updated };
     });
   };
 
   const selectAllAiScores = (values: string[]) => {
-    setFilters((prev) => ({ ...prev, aiScores: values }));
+    setFilters(prev => ({ ...prev, aiScores: values }));
   };
 
   const clearFilters = () => {
     setFilters({
-        status: [],
-        assignedTo: availableAssignees,
-        severity: '',
-        minAiScore: '',
-        maxAiScore: '',
-        aiScores: [], // Fix aiScores type in clearFilters
-        dueStartDate: '',
-        dueEndDate: '',
-        project: []
+      status: [],
+      assignedTo: availableAssignees,
+      severity: '',
+      minAiScore: '',
+      maxAiScore: '',
+      aiScores: [], // Fix aiScores type in clearFilters
+      dueStartDate: '',
+      dueEndDate: '',
+      project: [],
     });
     setSearch('');
   };
@@ -224,30 +208,29 @@ export default function Dashboard() {
       await prioritizeTasks();
       await loadTasks();
     } catch (error) {
-      console.error("Prioritization failed", error);
+      console.error('Prioritization failed', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleExport = async (type: "raw" | "stats") => {
+  const handleExport = async (type: 'raw' | 'stats') => {
     try {
       const response = await exportXlsx(type);
       const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement("a");
+      const link = document.createElement('a');
       link.href = url;
-      link.setAttribute("download", `tasks_${type}.xlsx`);
+      link.setAttribute('download', `tasks_${type}.xlsx`);
       document.body.appendChild(link);
       link.click();
       link.remove();
     } catch (error) {
-      console.error("Export failed", error);
+      console.error('Export failed', error);
     }
   };
 
   const handleSort = (field: keyof Task) => {
-    const newDirection =
-      sortField === field && sortDirection === "asc" ? "desc" : "asc";
+    const newDirection = sortField === field && sortDirection === 'asc' ? 'desc' : 'asc';
     setSortField(field);
     setSortDirection(newDirection);
 
@@ -258,8 +241,8 @@ export default function Dashboard() {
       if (valA === undefined || valA === null) return 1;
       if (valB === undefined || valB === null) return -1;
 
-      if (valA < valB) return newDirection === "asc" ? -1 : 1;
-      if (valA > valB) return newDirection === "asc" ? 1 : -1;
+      if (valA < valB) return newDirection === 'asc' ? -1 : 1;
+      if (valA > valB) return newDirection === 'asc' ? 1 : -1;
       return 0;
     });
     setTasks(sorted);
@@ -268,33 +251,30 @@ export default function Dashboard() {
   const handleReorder = async (newTasks: Task[]) => {
     setTasks(newTasks);
     try {
-      await reorderTasks(newTasks.map((t) => t.id));
+      await reorderTasks(newTasks.map(t => t.id));
     } catch (error) {
-      console.error("Reorder failed", error);
+      console.error('Reorder failed', error);
       loadTasks();
     }
   };
 
   const handleReset = async () => {
-    const password = prompt("Enter password to reset database:");
+    const password = prompt('Enter password to reset database:');
     if (!password) return;
 
     try {
       await resetDb(password);
-      alert("Database reset successful");
+      alert('Database reset successful');
       loadTasks();
     } catch (error) {
-      alert("Failed to reset database. Check password.");
+      alert('Failed to reset database. Check password.');
       console.error(error);
     }
   };
 
   return (
     <>
-      <PageHeader 
-        title="Task Management"
-        description="Manage, prioritize, and track all tasks"
-      >
+      <PageHeader title="Task Management" description="Manage, prioritize, and track all tasks">
         <div className="flex gap-4">
           <Button
             variant="danger"
@@ -304,7 +284,9 @@ export default function Dashboard() {
             leftIcon={<Trash2 size={18} />}
           />
           <Link href="/import">
-            <Button variant="primary" size="md" leftIcon={<Upload size={18} />}>Import</Button>
+            <Button variant="primary" size="md" leftIcon={<Upload size={18} />}>
+              Import
+            </Button>
           </Link>
           <Button
             variant="success"
@@ -325,16 +307,16 @@ export default function Dashboard() {
             </Button>
 
             {isExportOpen && (
-              <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-50 border border-gray-100">
+              <div className="absolute right-0 z-50 mt-2 w-48 rounded-md border border-gray-100 bg-white shadow-lg">
                 <div className="py-1">
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={() => {
-                      handleExport("raw");
+                      handleExport('raw');
                       setIsExportOpen(false);
                     }}
-                    className="block w-full text-left justify-start"
+                    className="block w-full justify-start text-left"
                   >
                     Raw Data
                   </Button>
@@ -342,10 +324,10 @@ export default function Dashboard() {
                     variant="ghost"
                     size="sm"
                     onClick={() => {
-                      handleExport("stats");
+                      handleExport('stats');
                       setIsExportOpen(false);
                     }}
-                    className="block w-full text-left justify-start"
+                    className="block w-full justify-start text-left"
                   >
                     Statistics
                   </Button>
@@ -366,7 +348,7 @@ export default function Dashboard() {
               variant="outline"
               size="md"
               onClick={() => setIsInfoModalOpen(true)}
-              className="w-10 h-10 p-0"
+              className="h-10 w-10 p-0"
               title="How it works?"
               leftIcon={<Info size={18} />}
             />
@@ -393,15 +375,15 @@ export default function Dashboard() {
         onClearFilters={clearFilters}
       />
 
-      <div className="bg-white rounded-lg shadow p-2">
+      <div className="rounded-lg bg-white p-2 shadow">
         {loading ? (
-          <div className="text-center py-10">Loading tasks...</div>
+          <div className="py-10 text-center">Loading tasks...</div>
         ) : (
           <TasksTable
             tasks={tasks}
             onSort={handleSort}
             onReorder={handleReorder}
-            onTaskClick={(id) => setSelectedTaskId(id)}
+            onTaskClick={id => setSelectedTaskId(id)}
           />
         )}
       </div>
@@ -419,11 +401,7 @@ export default function Dashboard() {
         />
       </Modal>
 
-      <Modal
-        isOpen={!!selectedTaskId}
-        onClose={() => setSelectedTaskId(null)}
-        title="Task Details"
-      >
+      <Modal isOpen={!!selectedTaskId} onClose={() => setSelectedTaskId(null)} title="Task Details">
         {selectedTaskId && (
           <TaskDetail
             taskId={selectedTaskId}

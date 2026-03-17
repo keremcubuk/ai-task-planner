@@ -18,9 +18,9 @@ export default function ProjectDetail() {
   const [filters, setFilters] = useState<ProjectFiltersState>({
     status: [],
     assignedTo: [],
-    severity: ''
+    severity: '',
   });
-  
+
   useEffect(() => {
     if (name) {
       loadProjectTasks(name as string);
@@ -43,7 +43,7 @@ export default function ProjectDetail() {
 
   // Get unique assignees from tasks
   const availableAssignees = [...new Set(tasks.map(t => t.assignedTo || 'Unassigned'))];
-  
+
   // Apply client-side filters
   const filteredTasks = tasks.filter(task => {
     // Search filter
@@ -69,7 +69,9 @@ export default function ProjectDetail() {
   });
 
   const total = filteredTasks.length;
-  const completed = filteredTasks.filter(t => t.status === 'done' || t.status === 'completed').length;
+  const completed = filteredTasks.filter(
+    t => t.status === 'done' || t.status === 'completed'
+  ).length;
   const critical = filteredTasks.filter(t => t.severity === 'critical').length;
 
   const toggleStatusFilter = (status: string) => {
@@ -77,7 +79,7 @@ export default function ProjectDetail() {
       ...prev,
       status: prev.status.includes(status)
         ? prev.status.filter(s => s !== status)
-        : [...prev.status, status]
+        : [...prev.status, status],
     }));
   };
 
@@ -91,7 +93,7 @@ export default function ProjectDetail() {
       ...prev,
       assignedTo: prev.assignedTo.includes(assignee)
         ? prev.assignedTo.filter(a => a !== assignee)
-        : [...prev.assignedTo, assignee]
+        : [...prev.assignedTo, assignee],
     }));
   };
 
@@ -103,7 +105,11 @@ export default function ProjectDetail() {
     }
   };
 
-  const hasActiveFilters = !!search || filters.status.length > 0 || (filters.assignedTo.length > 0 && filters.assignedTo.length < availableAssignees.length) || !!filters.severity;
+  const hasActiveFilters =
+    !!search ||
+    filters.status.length > 0 ||
+    (filters.assignedTo.length > 0 && filters.assignedTo.length < availableAssignees.length) ||
+    !!filters.severity;
 
   const handleSort = (field: keyof Task) => {
     const newDirection = sortField === field && sortDirection === 'asc' ? 'desc' : 'asc';
@@ -115,10 +121,10 @@ export default function ProjectDetail() {
     if (!sortField) return 0;
     const valA = a[sortField];
     const valB = b[sortField];
-    
+
     if (valA === undefined || valA === null) return 1;
     if (valB === undefined || valB === null) return -1;
-    
+
     if (valA < valB) return sortDirection === 'asc' ? -1 : 1;
     if (valA > valB) return sortDirection === 'asc' ? 1 : -1;
     return 0;
@@ -128,55 +134,57 @@ export default function ProjectDetail() {
 
   return (
     <div className="space-y-6">
-      <PageHeader 
+      <PageHeader
         title={`Project: ${name}`}
         description="View and manage project tasks and progress"
       />
 
-        <StatCardGrid columns={3}>
-          <StatCard label="Total Tasks" value={total} />
-          <StatCard label="Completed" value={completed} valueColor="green" />
-          <StatCard label="Critical Issues" value={critical} valueColor="red" />
-        </StatCardGrid>
+      <StatCardGrid columns={3}>
+        <StatCard label="Total Tasks" value={total} />
+        <StatCard label="Completed" value={completed} valueColor="green" />
+        <StatCard label="Critical Issues" value={critical} valueColor="red" />
+      </StatCardGrid>
 
-        <ProjectFilters
-          filters={filters}
-          search={search}
-          onSearchChange={setSearch}
-          availableAssignees={availableAssignees}
-          onToggleStatus={toggleStatusFilter}
-          onSeverityChange={(value) => setFilters(prev => ({ ...prev, severity: value }))}
-          onToggleAssignee={toggleAssigneeFilter}
-          onToggleAllAssignees={toggleAllAssignees}
-          onClearFilters={clearFilters}
-          hasActiveFilters={hasActiveFilters}
-        />
+      <ProjectFilters
+        filters={filters}
+        search={search}
+        onSearchChange={setSearch}
+        availableAssignees={availableAssignees}
+        onToggleStatus={toggleStatusFilter}
+        onSeverityChange={value => setFilters(prev => ({ ...prev, severity: value }))}
+        onToggleAssignee={toggleAssigneeFilter}
+        onToggleAllAssignees={toggleAllAssignees}
+        onClearFilters={clearFilters}
+        hasActiveFilters={hasActiveFilters}
+      />
 
-        <div className="bg-white shadow rounded-lg p-6">
-          <h2 className="text-lg font-medium text-gray-900 mb-4">Tasks ({sortedTasks.length})</h2>
-          {sortedTasks.length > 0 ? (
-            <TasksTable 
-              tasks={sortedTasks} 
-              onSort={handleSort} 
-              onReorder={() => {}} 
-              onTaskClick={(id) => setSelectedTaskId(id)}
-            />
-          ) : (
-            <p className="text-gray-500">{tasks.length > 0 ? 'No tasks match your filters.' : 'No tasks found for this project.'}</p>
-          )}
-        </div>
+      <div className="rounded-lg bg-white p-6 shadow">
+        <h2 className="mb-4 text-lg font-medium text-gray-900">Tasks ({sortedTasks.length})</h2>
+        {sortedTasks.length > 0 ? (
+          <TasksTable
+            tasks={sortedTasks}
+            onSort={handleSort}
+            onReorder={() => {}}
+            onTaskClick={id => setSelectedTaskId(id)}
+          />
+        ) : (
+          <p className="text-gray-500">
+            {tasks.length > 0 ? 'No tasks match your filters.' : 'No tasks found for this project.'}
+          </p>
+        )}
+      </div>
 
-        <Modal isOpen={!!selectedTaskId} onClose={() => setSelectedTaskId(null)} title="Task Details">
-          {selectedTaskId && (
-            <TaskDetail 
-              taskId={selectedTaskId} 
-              onClose={() => setSelectedTaskId(null)} 
-              onUpdate={() => { 
-                if (name) loadProjectTasks(name as string); 
-              }} 
-            />
-          )}
-        </Modal>
+      <Modal isOpen={!!selectedTaskId} onClose={() => setSelectedTaskId(null)} title="Task Details">
+        {selectedTaskId && (
+          <TaskDetail
+            taskId={selectedTaskId}
+            onClose={() => setSelectedTaskId(null)}
+            onUpdate={() => {
+              if (name) loadProjectTasks(name as string);
+            }}
+          />
+        )}
+      </Modal>
     </div>
   );
 }

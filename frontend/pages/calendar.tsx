@@ -37,48 +37,48 @@ export default function CalendarPage() {
   const getDaysInMonth = (date: Date): DayData[] => {
     const year = date.getFullYear();
     const month = date.getMonth();
-    
+
     const firstDay = new Date(year, month, 1);
     const lastDay = new Date(year, month + 1, 0);
-    
+
     const startDate = new Date(firstDay);
     startDate.setDate(startDate.getDate() - firstDay.getDay());
-    
+
     const endDate = new Date(lastDay);
     const remainingDays = 6 - lastDay.getDay();
     endDate.setDate(endDate.getDate() + remainingDays);
-    
+
     const days: DayData[] = [];
     const current = new Date(startDate);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    
+
     while (current <= endDate) {
       const dateStr = current.toISOString().split('T')[0];
-      
+
       const dueTasks = tasks.filter(task => {
         if (!task.dueDate) return false;
         const taskDueDate = new Date(task.dueDate).toISOString().split('T')[0];
         return taskDueDate === dateStr && task.status !== 'done';
       });
-      
+
       const openedTasks = tasks.filter(task => {
         if (!task.createdAt) return false;
         const taskCreatedDate = new Date(task.createdAt).toISOString().split('T')[0];
         return taskCreatedDate === dateStr;
       });
-      
+
       days.push({
         date: new Date(current),
         isCurrentMonth: current.getMonth() === month,
         isToday: current.getTime() === today.getTime(),
         dueTasks,
-        openedTasks
+        openedTasks,
       });
-      
+
       current.setDate(current.getDate() + 1);
     }
-    
+
     return days;
   };
 
@@ -95,8 +95,18 @@ export default function CalendarPage() {
   };
 
   const monthNames = [
-    'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December'
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
   ];
 
   const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -107,9 +117,11 @@ export default function CalendarPage() {
   const thisMonthTasks = tasks.filter(task => {
     if (!task.dueDate) return false;
     const dueDate = new Date(task.dueDate);
-    return dueDate.getMonth() === currentDate.getMonth() && 
-           dueDate.getFullYear() === currentDate.getFullYear() &&
-           task.status !== 'done';
+    return (
+      dueDate.getMonth() === currentDate.getMonth() &&
+      dueDate.getFullYear() === currentDate.getFullYear() &&
+      task.status !== 'done'
+    );
   });
 
   const overdueTasks = tasks.filter(task => {
@@ -124,10 +136,7 @@ export default function CalendarPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader 
-        title="Calendar"
-        description="Task due dates and opening dates overview"
-      />
+      <PageHeader title="Calendar" description="Task due dates and opening dates overview" />
 
       {/* Summary Cards */}
       <StatCardGrid columns={3}>
@@ -137,38 +146,38 @@ export default function CalendarPage() {
       </StatCardGrid>
 
       {/* Calendar */}
-      <div className="bg-white rounded-lg shadow p-6">
+      <div className="rounded-lg bg-white p-6 shadow">
         {/* Calendar Header */}
-        <div className="flex items-center justify-center mb-6 relative">
+        <div className="relative mb-6 flex items-center justify-center">
           <div className="flex items-center gap-4">
             <button
               onClick={goToPreviousMonth}
-              className="p-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors text-gray-700"
+              className="rounded-lg bg-gray-100 p-2 text-gray-700 transition-colors hover:bg-gray-200"
             >
               <ChevronLeft size={24} strokeWidth={2.5} />
             </button>
-            <h3 className="text-xl font-semibold text-gray-900 min-w-[200px] text-center">
+            <h3 className="min-w-[200px] text-center text-xl font-semibold text-gray-900">
               {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
             </h3>
             <button
               onClick={goToNextMonth}
-              className="p-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors text-gray-700"
+              className="rounded-lg bg-gray-100 p-2 text-gray-700 transition-colors hover:bg-gray-200"
             >
               <ChevronRight size={24} strokeWidth={2.5} />
             </button>
           </div>
           <button
             onClick={goToToday}
-            className="absolute right-0 px-4 py-2 text-sm font-medium text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+            className="absolute right-0 rounded-lg px-4 py-2 text-sm font-medium text-blue-600 transition-colors hover:bg-blue-50"
           >
             Today
           </button>
         </div>
 
         {/* Day Headers */}
-        <div className="grid grid-cols-7 gap-1 mb-2">
+        <div className="mb-2 grid grid-cols-7 gap-1">
           {dayNames.map(day => (
-            <div key={day} className="text-center text-sm font-medium text-gray-500 py-2">
+            <div key={day} className="py-2 text-center text-sm font-medium text-gray-500">
               {day}
             </div>
           ))}
@@ -179,27 +188,37 @@ export default function CalendarPage() {
           {days.map((day, index) => (
             <div
               key={index}
-              onClick={() => (day.dueTasks.length > 0 || day.openedTasks.length > 0) && setSelectedDay(day)}
-              className={`min-h-[100px] p-2 border rounded-lg transition-colors ${
+              onClick={() =>
+                (day.dueTasks.length > 0 || day.openedTasks.length > 0) && setSelectedDay(day)
+              }
+              className={`min-h-[100px] rounded-lg border p-2 transition-colors ${
                 day.isCurrentMonth ? 'bg-white' : 'bg-gray-50'
-              } ${day.isToday ? 'border-blue-500 border-2' : 'border-gray-200'} ${
-                (day.dueTasks.length > 0 || day.openedTasks.length > 0) ? 'cursor-pointer hover:bg-gray-50' : ''
+              } ${day.isToday ? 'border-2 border-blue-500' : 'border-gray-200'} ${
+                day.dueTasks.length > 0 || day.openedTasks.length > 0
+                  ? 'cursor-pointer hover:bg-gray-50'
+                  : ''
               }`}
             >
-              <div className={`text-sm font-medium mb-1 ${
-                day.isToday ? 'text-blue-600' : day.isCurrentMonth ? 'text-gray-900' : 'text-gray-400'
-              }`}>
+              <div
+                className={`mb-1 text-sm font-medium ${
+                  day.isToday
+                    ? 'text-blue-600'
+                    : day.isCurrentMonth
+                      ? 'text-gray-900'
+                      : 'text-gray-400'
+                }`}
+              >
                 {day.date.getDate()}
               </div>
-              
+
               {day.dueTasks.length > 0 && (
-                <div className="bg-red-100 text-red-700 text-xs px-2 py-1 rounded mb-1 truncate">
+                <div className="mb-1 truncate rounded bg-red-100 px-2 py-1 text-xs text-red-700">
                   📅 {day.dueTasks.length} due
                 </div>
               )}
-              
+
               {day.openedTasks.length > 0 && (
-                <div className="bg-green-100 text-green-700 text-xs px-2 py-1 rounded truncate">
+                <div className="truncate rounded bg-green-100 px-2 py-1 text-xs text-green-700">
                   ✨ {day.openedTasks.length} opened
                 </div>
               )}
@@ -208,45 +227,51 @@ export default function CalendarPage() {
         </div>
 
         {/* Legend */}
-        <div className="flex gap-6 mt-4 pt-4 border-t border-gray-100">
+        <div className="mt-4 flex gap-6 border-t border-gray-100 pt-4">
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-red-100 rounded"></div>
+            <div className="h-4 w-4 rounded bg-red-100"></div>
             <span className="text-sm text-gray-600">Due Date</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-green-100 rounded"></div>
+            <div className="h-4 w-4 rounded bg-green-100"></div>
             <span className="text-sm text-gray-600">Opened Date</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 border-2 border-blue-500 rounded"></div>
+            <div className="h-4 w-4 rounded border-2 border-blue-500"></div>
             <span className="text-sm text-gray-600">Today</span>
           </div>
         </div>
       </div>
 
       {/* Day Detail Modal */}
-      <Modal 
-        isOpen={!!selectedDay} 
-        onClose={() => setSelectedDay(null)} 
-        title={selectedDay ? `Tasks for ${selectedDay.date.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}` : ''}
+      <Modal
+        isOpen={!!selectedDay}
+        onClose={() => setSelectedDay(null)}
+        title={
+          selectedDay
+            ? `Tasks for ${selectedDay.date.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`
+            : ''
+        }
       >
         {selectedDay && (
           <div className="space-y-4">
             {selectedDay.dueTasks.length > 0 && (
               <div>
-                <h4 className="text-sm font-semibold text-red-600 uppercase mb-2">📅 Due on this day ({selectedDay.dueTasks.length})</h4>
+                <h4 className="mb-2 text-sm font-semibold text-red-600 uppercase">
+                  📅 Due on this day ({selectedDay.dueTasks.length})
+                </h4>
                 <div className="space-y-2">
                   {selectedDay.dueTasks.map(task => (
-                    <div 
+                    <div
                       key={task.id}
                       onClick={() => {
                         setSelectedDay(null);
                         setSelectedTaskId(task.id);
                       }}
-                      className="p-3 bg-red-50 border border-red-200 rounded-lg cursor-pointer hover:bg-red-100 transition-colors"
+                      className="cursor-pointer rounded-lg border border-red-200 bg-red-50 p-3 transition-colors hover:bg-red-100"
                     >
                       <div className="font-medium text-gray-900">{task.title}</div>
-                      <div className="text-sm text-gray-500 flex gap-4 mt-1">
+                      <div className="mt-1 flex gap-4 text-sm text-gray-500">
                         <span>Status: {task.status}</span>
                         <span>Severity: {task.severity}</span>
                         {task.assignedTo && <span>Assigned: {task.assignedTo}</span>}
@@ -256,22 +281,24 @@ export default function CalendarPage() {
                 </div>
               </div>
             )}
-            
+
             {selectedDay.openedTasks.length > 0 && (
               <div>
-                <h4 className="text-sm font-semibold text-green-600 uppercase mb-2">✨ Opened on this day ({selectedDay.openedTasks.length})</h4>
+                <h4 className="mb-2 text-sm font-semibold text-green-600 uppercase">
+                  ✨ Opened on this day ({selectedDay.openedTasks.length})
+                </h4>
                 <div className="space-y-2">
                   {selectedDay.openedTasks.map(task => (
-                    <div 
+                    <div
                       key={task.id}
                       onClick={() => {
                         setSelectedDay(null);
                         setSelectedTaskId(task.id);
                       }}
-                      className="p-3 bg-green-50 border border-green-200 rounded-lg cursor-pointer hover:bg-green-100 transition-colors"
+                      className="cursor-pointer rounded-lg border border-green-200 bg-green-50 p-3 transition-colors hover:bg-green-100"
                     >
                       <div className="font-medium text-gray-900">{task.title}</div>
-                      <div className="text-sm text-gray-500 flex gap-4 mt-1">
+                      <div className="mt-1 flex gap-4 text-sm text-gray-500">
                         <span>Status: {task.status}</span>
                         <span>Severity: {task.severity}</span>
                         {task.assignedTo && <span>Assigned: {task.assignedTo}</span>}
@@ -288,10 +315,10 @@ export default function CalendarPage() {
       {/* Task Detail Modal */}
       <Modal isOpen={!!selectedTaskId} onClose={() => setSelectedTaskId(null)} title="Task Details">
         {selectedTaskId && (
-          <TaskDetail 
-            taskId={selectedTaskId} 
-            onClose={() => setSelectedTaskId(null)} 
-            onUpdate={loadTasks} 
+          <TaskDetail
+            taskId={selectedTaskId}
+            onClose={() => setSelectedTaskId(null)}
+            onUpdate={loadTasks}
           />
         )}
       </Modal>

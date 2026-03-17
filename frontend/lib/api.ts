@@ -52,20 +52,22 @@ export const getProjectsStats = async (): Promise<ProjectStats[]> => {
   return response.data;
 };
 
-export const fetchTasks = async (params: { 
-  sort?: string; 
-  order?: 'asc' | 'desc'; 
-  project?: string; 
-  search?: string;
-  status?: string;
-  assignedTo?: string;
-  severity?: string;
-  minAiScore?: number;
-  maxAiScore?: number;
-  aiScores?: string;
-  dueStartDate?: string;
-  dueEndDate?: string;
-} = {}): Promise<Task[]> => {
+export const fetchTasks = async (
+  params: {
+    sort?: string;
+    order?: 'asc' | 'desc';
+    project?: string;
+    search?: string;
+    status?: string;
+    assignedTo?: string;
+    severity?: string;
+    minAiScore?: number;
+    maxAiScore?: number;
+    aiScores?: string;
+    dueStartDate?: string;
+    dueEndDate?: string;
+  } = {}
+): Promise<Task[]> => {
   const response = await api.get('/tasks', { params });
   return response.data;
 };
@@ -80,7 +82,10 @@ export const createTask = async (data: Partial<Omit<Task, 'id' | 'createdAt' | '
   return response.data;
 };
 
-export const updateTask = async (id: number, data: Partial<Omit<Task, 'id' | 'createdAt' | 'updatedAt'>>) => {
+export const updateTask = async (
+  id: number,
+  data: Partial<Omit<Task, 'id' | 'createdAt' | 'updatedAt'>>
+) => {
   const response = await api.patch(`/tasks/${id}`, data);
   return response.data;
 };
@@ -158,21 +163,21 @@ export interface ConfluenceCrawlResponse {
 
 export const crawlConfluence = async (
   url: string,
-  cookies?: string,
+  cookies?: string
 ): Promise<ConfluenceCrawlResponse> => {
   const response = await api.post('/confluence/crawl', { url, cookies });
   return response.data;
 };
 
 export const confirmConfluenceTasks = async (
-  tasks: ConfluenceTask[],
+  tasks: ConfluenceTask[]
 ): Promise<{ count: number; message: string }> => {
   const response = await api.post('/confluence/confirm', { tasks });
   return response.data;
 };
 
 export const extractConfluenceCookies = async (
-  baseUrl: string,
+  baseUrl: string
 ): Promise<{ success: boolean; cookies: string; error?: string }> => {
   const response = await api.post('/confluence/extract-cookies', { baseUrl });
   return response.data;
@@ -211,7 +216,7 @@ export const getOllamaStatus = async (): Promise<OllamaStatus> => {
 
 export const getComponentAnalysis = async (
   useOllama: boolean = true,
-  model?: string,
+  model?: string
 ): Promise<ComponentAnalysisResult> => {
   const params: { useOllama?: string; model?: string } = {};
   if (!useOllama) params.useOllama = 'false';
@@ -366,29 +371,26 @@ export const getReviewScores = async (): Promise<ReviewScoreSummary[]> => {
 
 export const getReviewScoreDetail = async (
   projectName: string,
-  scoreId?: number,
+  scoreId?: number
 ): Promise<ReviewScoreDetail> => {
   const params: { scoreId?: string } = {};
   if (scoreId) params.scoreId = String(scoreId);
-  const response = await api.get(
-    `/project-review-scores/${encodeURIComponent(projectName)}`,
-    { params },
-  );
+  const response = await api.get(`/project-review-scores/${encodeURIComponent(projectName)}`, {
+    params,
+  });
   return response.data;
 };
 
-export const getReviewScoreHistory = async (
-  projectName: string,
-): Promise<ReviewScoreSummary[]> => {
+export const getReviewScoreHistory = async (projectName: string): Promise<ReviewScoreSummary[]> => {
   const response = await api.get(
-    `/project-review-scores/${encodeURIComponent(projectName)}/history`,
+    `/project-review-scores/${encodeURIComponent(projectName)}/history`
   );
   return response.data;
 };
 
 export const crawlReviewScore = async (
   url: string,
-  cookies?: string,
+  cookies?: string
 ): Promise<CrawlReviewResponse> => {
   const response = await api.post('/project-review-scores/crawl', {
     url,
@@ -399,7 +401,7 @@ export const crawlReviewScore = async (
 
 export const saveReviewScore = async (
   parsed: CrawlReviewResponse['parsed'],
-  confluenceUrl?: string,
+  confluenceUrl?: string
 ): Promise<{ id: number; message: string }> => {
   const response = await api.post('/project-review-scores/save', {
     parsed,
@@ -410,7 +412,7 @@ export const saveReviewScore = async (
 
 export const importReviewMarkdown = async (
   markdown: string,
-  confluenceUrl?: string,
+  confluenceUrl?: string
 ): Promise<{ id: number; message: string }> => {
   const response = await api.post('/project-review-scores/import-markdown', {
     markdown,
@@ -419,9 +421,7 @@ export const importReviewMarkdown = async (
   return response.data;
 };
 
-export const deleteReviewScore = async (
-  id: number,
-): Promise<{ message: string }> => {
+export const deleteReviewScore = async (id: number): Promise<{ message: string }> => {
   const response = await api.delete(`/project-review-scores/${id}`);
   return response.data;
 };

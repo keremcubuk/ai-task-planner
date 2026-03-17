@@ -73,10 +73,7 @@ export default function ProjectReviewScoreDetailPage() {
     return (
       <div className="p-8 text-red-600">
         {error}
-        <Link
-          href="/project-review-scores"
-          className="ml-4 text-blue-600 underline"
-        >
+        <Link href="/project-review-scores" className="ml-4 text-blue-600 underline">
           Back to list
         </Link>
       </div>
@@ -94,9 +91,7 @@ export default function ProjectReviewScoreDetailPage() {
     /* empty */
   }
   try {
-    criticalIssues = detail.criticalIssues
-      ? JSON.parse(detail.criticalIssues)
-      : [];
+    criticalIssues = detail.criticalIssues ? JSON.parse(detail.criticalIssues) : [];
   } catch {
     /* empty */
   }
@@ -208,15 +203,13 @@ export default function ProjectReviewScoreDetailPage() {
       <div className="flex items-center gap-4">
         <Link
           href="/project-review-scores"
-          className="p-2 hover:bg-gray-100 rounded-md text-gray-700 hover:text-gray-900"
+          className="rounded-md p-2 text-gray-700 hover:bg-gray-100 hover:text-gray-900"
         >
           <ArrowLeft size={20} />
         </Link>
         <div className="flex-1">
-          <h2 className="text-2xl font-bold text-gray-900">
-            {detail.projectName}
-          </h2>
-          <div className="flex items-center gap-3 mt-1 text-sm text-gray-500">
+          <h2 className="text-2xl font-bold text-gray-900">{detail.projectName}</h2>
+          <div className="mt-1 flex items-center gap-3 text-sm text-gray-500">
             <span className="flex items-center gap-1">
               <Clock size={14} /> {reportDate}
             </span>
@@ -243,15 +236,13 @@ export default function ProjectReviewScoreDetailPage() {
       </div>
 
       {/* Score Summary */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         {/* Overall Score */}
-        <div className="bg-white rounded-lg shadow p-6 flex flex-col items-center justify-center">
-          <span className="text-5xl font-bold text-gray-900">
-            {detail.overallScore}
-          </span>
-          <span className="text-gray-500 text-sm">/100</span>
+        <div className="flex flex-col items-center justify-center rounded-lg bg-white p-6 shadow">
+          <span className="text-5xl font-bold text-gray-900">{detail.overallScore}</span>
+          <span className="text-sm text-gray-500">/100</span>
           <div className="mt-2">{getStatusBadge(detail.status)}</div>
-          <div className="w-full mt-4 bg-gray-200 rounded-full h-3">
+          <div className="mt-4 h-3 w-full rounded-full bg-gray-200">
             <div
               className={`h-3 rounded-full transition-all ${
                 detail.overallScore >= 85
@@ -266,33 +257,27 @@ export default function ProjectReviewScoreDetailPage() {
         </div>
 
         {/* Quick Stats */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-sm font-semibold text-gray-600 mb-3">
-            Quick Stats
-          </h3>
+        <div className="rounded-lg bg-white p-6 shadow">
+          <h3 className="mb-3 text-sm font-semibold text-gray-600">Quick Stats</h3>
           <div className="space-y-2 text-sm">
             <div className="flex justify-between">
-              <span className="text-gray-700 font-medium">Categories</span>
+              <span className="font-medium text-gray-700">Categories</span>
               <span className="font-bold text-gray-900">{categories.length}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-700 font-medium flex items-center gap-1">
+              <span className="flex items-center gap-1 font-medium text-gray-700">
                 <XCircle size={14} className="text-red-500" /> Critical Issues
               </span>
-              <span className="font-bold text-red-700">
-                {criticalIssues.length}
-              </span>
+              <span className="font-bold text-red-700">{criticalIssues.length}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-700 font-medium flex items-center gap-1">
+              <span className="flex items-center gap-1 font-medium text-gray-700">
                 <CheckCircle size={14} className="text-green-500" /> Strengths
               </span>
-              <span className="font-bold text-green-700">
-                {strengths.length}
-              </span>
+              <span className="font-bold text-green-700">{strengths.length}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-700 font-medium flex items-center gap-1">
+              <span className="flex items-center gap-1 font-medium text-gray-700">
                 <History size={14} /> Reports
               </span>
               <span className="font-bold text-gray-900">{history.length}</span>
@@ -301,41 +286,27 @@ export default function ProjectReviewScoreDetailPage() {
         </div>
 
         {/* Top concerns */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-sm font-semibold text-gray-600 mb-3">
-            Lowest Categories
-          </h3>
+        <div className="rounded-lg bg-white p-6 shadow">
+          <h3 className="mb-3 text-sm font-semibold text-gray-600">Lowest Categories</h3>
           <div className="space-y-2">
             {[...categories]
-              .sort(
-                (a, b) =>
-                  a.score / (a.maxScore || 1) - b.score / (b.maxScore || 1),
-              )
+              .sort((a, b) => a.score / (a.maxScore || 1) - b.score / (b.maxScore || 1))
               .slice(0, 3)
-              .map((cat) => {
-                const pct =
-                  cat.maxScore > 0
-                    ? Math.round((cat.score / cat.maxScore) * 100)
-                    : 0;
+              .map(cat => {
+                const pct = cat.maxScore > 0 ? Math.round((cat.score / cat.maxScore) * 100) : 0;
                 const colors = getScoreColor(cat.score, cat.maxScore);
                 return (
-                  <div
-                    key={cat.name}
-                    className="flex items-center gap-2 text-sm"
-                  >
-                    <span
-                      className="text-gray-600 w-32 truncate"
-                      title={cat.name}
-                    >
+                  <div key={cat.name} className="flex items-center gap-2 text-sm">
+                    <span className="w-32 truncate text-gray-600" title={cat.name}>
                       {cat.name}
                     </span>
-                    <div className="flex-1 bg-gray-200 rounded-full h-2">
+                    <div className="h-2 flex-1 rounded-full bg-gray-200">
                       <div
                         className={`h-2 rounded-full ${colors.bar}`}
                         style={{ width: `${pct}%` }}
                       />
                     </div>
-                    <span className={`font-medium w-12 text-right ${colors.text}`}>
+                    <span className={`w-12 text-right font-medium ${colors.text}`}>
                       {cat.score}/{cat.maxScore}
                     </span>
                   </div>
@@ -350,21 +321,31 @@ export default function ProjectReviewScoreDetailPage() {
         <nav className="flex space-x-6 overflow-x-auto">
           {[
             { key: 'overview' as Tab, label: 'Overview', icon: FileText },
-            { key: 'closed' as Tab, label: `Closed (${closedIssues.length})`, icon: CheckCircle, color: 'text-green-600' },
-            { key: 'remaining' as Tab, label: `Remaining (${remainingIssues.length})`, icon: AlertTriangle, color: 'text-orange-600' },
+            {
+              key: 'closed' as Tab,
+              label: `Closed (${closedIssues.length})`,
+              icon: CheckCircle,
+              color: 'text-green-600',
+            },
+            {
+              key: 'remaining' as Tab,
+              label: `Remaining (${remainingIssues.length})`,
+              icon: AlertTriangle,
+              color: 'text-orange-600',
+            },
             { key: 'history' as Tab, label: 'History', icon: History },
             { key: 'raw' as Tab, label: 'Raw Data', icon: FileText },
-          ].map((tab) => (
+          ].map(tab => (
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
-              className={`inline-flex items-center gap-2 px-1 py-3 text-sm font-medium border-b-2 whitespace-nowrap ${
+              className={`inline-flex items-center gap-2 border-b-2 px-1 py-3 text-sm font-medium whitespace-nowrap ${
                 activeTab === tab.key
                   ? 'border-blue-500 text-blue-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700'
               }`}
             >
-              <tab.icon size={16} className={activeTab === tab.key ? '' : (tab.color || '')} />
+              <tab.icon size={16} className={activeTab === tab.key ? '' : tab.color || ''} />
               {tab.label}
             </button>
           ))}
@@ -375,41 +356,32 @@ export default function ProjectReviewScoreDetailPage() {
       {activeTab === 'overview' && (
         <div className="space-y-6">
           {/* Categories */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              Category Scores
-            </h3>
+          <div className="rounded-lg bg-white p-6 shadow">
+            <h3 className="mb-4 text-lg font-semibold text-gray-900">Category Scores</h3>
             <div className="space-y-3">
-              {categories.map((cat) => {
-                const pct =
-                  cat.maxScore > 0
-                    ? Math.round((cat.score / cat.maxScore) * 100)
-                    : 0;
+              {categories.map(cat => {
+                const pct = cat.maxScore > 0 ? Math.round((cat.score / cat.maxScore) * 100) : 0;
                 const colors = getScoreColor(cat.score, cat.maxScore);
                 return (
-                  <div
-                    key={cat.name}
-                    className="flex items-center gap-4"
-                  >
-                    <span className="text-sm text-gray-700 w-48 truncate font-medium">
+                  <div key={cat.name} className="flex items-center gap-4">
+                    <span className="w-48 truncate text-sm font-medium text-gray-700">
                       {cat.name}
                     </span>
-                    <div className="flex-1 bg-gray-200 rounded-full h-3">
+                    <div className="h-3 flex-1 rounded-full bg-gray-200">
                       <div
                         className={`h-3 rounded-full ${colors.bar} transition-all`}
                         style={{ width: `${pct}%` }}
                       />
                     </div>
-                    <span
-                      className={`text-sm font-bold w-14 text-right ${colors.text}`}
-                    >
+                    <span className={`w-14 text-right text-sm font-bold ${colors.text}`}>
                       {cat.score}/{cat.maxScore}
                     </span>
-                    <span className="text-xs text-gray-400 w-10 text-right">
-                      {pct}%
-                    </span>
+                    <span className="w-10 text-right text-xs text-gray-400">{pct}%</span>
                     {cat.status && (
-                      <span className="text-xs font-medium w-20 truncate px-2 py-0.5 rounded-full bg-gray-100 text-gray-700" title={cat.status}>
+                      <span
+                        className="w-20 truncate rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700"
+                        title={cat.status}
+                      >
                         {cat.status}
                       </span>
                     )}
@@ -421,34 +393,27 @@ export default function ProjectReviewScoreDetailPage() {
 
           {/* Critical Issues */}
           {criticalIssues.length > 0 && (
-            <div className="bg-white rounded-lg shadow p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+            <div className="rounded-lg bg-white p-6 shadow">
+              <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-gray-900">
                 <XCircle size={20} className="text-red-500" />
                 Critical Issues ({criticalIssues.length})
               </h3>
               <div className="space-y-4">
                 {criticalIssues.map((issue, idx) => (
-                  <div
-                    key={idx}
-                    className="border-l-4 border-red-400 pl-4 py-2"
-                  >
-                    <div className="flex items-center gap-2 mb-1">
-                      <h4 className="font-semibold text-gray-900">
-                        {issue.title}
-                      </h4>
+                  <div key={idx} className="border-l-4 border-red-400 py-2 pl-4">
+                    <div className="mb-1 flex items-center gap-2">
+                      <h4 className="font-semibold text-gray-900">{issue.title}</h4>
                       {issue.severity && (
-                        <span className="text-xs px-2 py-0.5 rounded bg-red-100 text-red-700">
+                        <span className="rounded bg-red-100 px-2 py-0.5 text-xs text-red-700">
                           {issue.severity}
                         </span>
                       )}
                       {issue.pointImpact && (
-                        <span className="text-xs text-gray-500">
-                          {issue.pointImpact}
-                        </span>
+                        <span className="text-xs text-gray-500">{issue.pointImpact}</span>
                       )}
                     </div>
                     {issue.description && (
-                      <p className="text-sm text-gray-600 whitespace-pre-line">
+                      <p className="text-sm whitespace-pre-line text-gray-600">
                         {issue.description}
                       </p>
                     )}
@@ -460,21 +425,16 @@ export default function ProjectReviewScoreDetailPage() {
 
           {/* Strengths */}
           {strengths.length > 0 && (
-            <div className="bg-white rounded-lg shadow p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+            <div className="rounded-lg bg-white p-6 shadow">
+              <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-gray-900">
                 <CheckCircle size={20} className="text-green-500" />
                 Strengths ({strengths.length})
               </h3>
               <div className="space-y-3">
                 {strengths.map((s, idx) => (
-                  <div
-                    key={idx}
-                    className="border-l-4 border-green-400 pl-4 py-2"
-                  >
+                  <div key={idx} className="border-l-4 border-green-400 py-2 pl-4">
                     <h4 className="font-semibold text-gray-900">{s.title}</h4>
-                    {s.description && (
-                      <p className="text-sm text-gray-600">{s.description}</p>
-                    )}
+                    {s.description && <p className="text-sm text-gray-600">{s.description}</p>}
                   </div>
                 ))}
               </div>
@@ -485,25 +445,28 @@ export default function ProjectReviewScoreDetailPage() {
 
       {/* Closed Issues Tab */}
       {activeTab === 'closed' && (
-        <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+        <div className="rounded-lg bg-white p-6 shadow">
+          <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-gray-900">
             <CheckCircle size={20} className="text-green-500" />
             Önceki Dönemden Kapanan Sorunlar ({closedIssues.length})
           </h3>
           {closedIssues.length > 0 ? (
             <div className="space-y-3">
               {closedIssues.map((issue, idx) => (
-                <div key={idx} className="border-l-4 border-green-400 pl-4 py-3 bg-green-50 rounded-r-lg">
-                  <div className="flex items-center gap-2 mb-1 flex-wrap">
-                    <span className="text-xs font-mono px-2 py-0.5 rounded bg-gray-200 text-gray-700">
+                <div
+                  key={idx}
+                  className="rounded-r-lg border-l-4 border-green-400 bg-green-50 py-3 pl-4"
+                >
+                  <div className="mb-1 flex flex-wrap items-center gap-2">
+                    <span className="rounded bg-gray-200 px-2 py-0.5 font-mono text-xs text-gray-700">
                       {issue.rule}
                     </span>
                     {issue.severity && (
-                      <span className="text-xs px-2 py-0.5 rounded bg-green-100 text-green-700">
+                      <span className="rounded bg-green-100 px-2 py-0.5 text-xs text-green-700">
                         {issue.severity}
                       </span>
                     )}
-                    <span className="text-xs px-2 py-0.5 rounded bg-green-600 text-white font-medium">
+                    <span className="rounded bg-green-600 px-2 py-0.5 text-xs font-medium text-white">
                       {issue.status}
                     </span>
                   </div>
@@ -512,65 +475,68 @@ export default function ProjectReviewScoreDetailPage() {
               ))}
             </div>
           ) : (
-            <p className="text-gray-500 text-sm">Bu raporda kapanan sorun kaydı bulunmuyor.</p>
+            <p className="text-sm text-gray-500">Bu raporda kapanan sorun kaydı bulunmuyor.</p>
           )}
         </div>
       )}
 
       {/* Remaining Issues Tab */}
       {activeTab === 'remaining' && (
-        <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+        <div className="rounded-lg bg-white p-6 shadow">
+          <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-gray-900">
             <AlertTriangle size={20} className="text-orange-500" />
             Kalan Sorunlar ({remainingIssues.length})
           </h3>
           {remainingIssues.length > 0 ? (
             <div className="space-y-4">
               {remainingIssues.map((issue, idx) => (
-                <div key={idx} className="border-l-4 border-orange-400 pl-4 py-3 bg-orange-50 rounded-r-lg">
-                  <div className="flex items-center gap-2 mb-2 flex-wrap">
+                <div
+                  key={idx}
+                  className="rounded-r-lg border-l-4 border-orange-400 bg-orange-50 py-3 pl-4"
+                >
+                  <div className="mb-2 flex flex-wrap items-center gap-2">
                     <h4 className="font-semibold text-gray-900">{issue.title}</h4>
                     {issue.rule && (
-                      <span className="text-xs font-mono px-2 py-0.5 rounded bg-gray-200 text-gray-700">
+                      <span className="rounded bg-gray-200 px-2 py-0.5 font-mono text-xs text-gray-700">
                         {issue.rule}
                       </span>
                     )}
                     {issue.severity && (
-                      <span className="text-xs px-2 py-0.5 rounded bg-orange-100 text-orange-700">
+                      <span className="rounded bg-orange-100 px-2 py-0.5 text-xs text-orange-700">
                         {issue.severity}
                       </span>
                     )}
                     {issue.pointImpact && (
-                      <span className="text-xs px-2 py-0.5 rounded bg-red-100 text-red-700">
+                      <span className="rounded bg-red-100 px-2 py-0.5 text-xs text-red-700">
                         {issue.pointImpact}
                       </span>
                     )}
                   </div>
                   {issue.description && (
                     <div className="mb-2">
-                      <p className="text-sm text-gray-700 whitespace-pre-line">{issue.description}</p>
+                      <p className="text-sm whitespace-pre-line text-gray-700">
+                        {issue.description}
+                      </p>
                     </div>
                   )}
                   {issue.solution && (
-                    <div className="mt-2 p-2 bg-blue-50 rounded border border-blue-200">
-                      <p className="text-xs font-semibold text-blue-700 mb-1">Çözüm Önerisi:</p>
-                      <p className="text-sm text-blue-800 whitespace-pre-line">{issue.solution}</p>
+                    <div className="mt-2 rounded border border-blue-200 bg-blue-50 p-2">
+                      <p className="mb-1 text-xs font-semibold text-blue-700">Çözüm Önerisi:</p>
+                      <p className="text-sm whitespace-pre-line text-blue-800">{issue.solution}</p>
                     </div>
                   )}
                 </div>
               ))}
             </div>
           ) : (
-            <p className="text-gray-500 text-sm">Bu raporda kalan sorun kaydı bulunmuyor.</p>
+            <p className="text-sm text-gray-500">Bu raporda kalan sorun kaydı bulunmuyor.</p>
           )}
         </div>
       )}
 
       {activeTab === 'history' && (
-        <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            Score History
-          </h3>
+        <div className="rounded-lg bg-white p-6 shadow">
+          <h3 className="mb-4 text-lg font-semibold text-gray-900">Score History</h3>
           {history.length > 0 ? (
             <div className="space-y-3">
               {history.map((h, idx) => {
@@ -580,30 +546,42 @@ export default function ProjectReviewScoreDetailPage() {
                   year: 'numeric',
                 });
                 const prevItem = history[idx + 1];
-                const scoreDiff = prevItem ? getScoreDiff(h.overallScore, prevItem.overallScore) : null;
+                const scoreDiff = prevItem
+                  ? getScoreDiff(h.overallScore, prevItem.overallScore)
+                  : null;
                 return (
                   <div
                     key={h.id}
-                    className={`flex items-center gap-4 p-3 rounded-lg border hover:shadow-sm ${
+                    className={`flex items-center gap-4 rounded-lg border p-3 hover:shadow-sm ${
                       h.id === detail.id ? 'border-blue-300 bg-blue-50' : 'border-gray-200'
                     }`}
                   >
                     <div
-                      className="flex items-center gap-4 flex-1 cursor-pointer"
+                      className="flex flex-1 cursor-pointer items-center gap-4"
                       onClick={() => {
                         if (h.id !== detail.id && projectName) {
-                          router.push(`/project-review-scores/${encodeURIComponent(String(projectName))}?scoreId=${h.id}`);
+                          router.push(
+                            `/project-review-scores/${encodeURIComponent(String(projectName))}?scoreId=${h.id}`
+                          );
                           loadDetail(decodeURIComponent(String(projectName)));
                         }
                       }}
                     >
-                      <span className={`text-2xl font-bold ${
-                        h.overallScore >= 85 ? 'text-green-700' : h.overallScore >= 60 ? 'text-yellow-700' : 'text-red-700'
-                      }`}>
+                      <span
+                        className={`text-2xl font-bold ${
+                          h.overallScore >= 85
+                            ? 'text-green-700'
+                            : h.overallScore >= 60
+                              ? 'text-yellow-700'
+                              : 'text-red-700'
+                        }`}
+                      >
                         {h.overallScore}
                       </span>
                       {scoreDiff && (
-                        <span className={`text-sm font-medium flex items-center gap-1 ${scoreDiff.color}`}>
+                        <span
+                          className={`flex items-center gap-1 text-sm font-medium ${scoreDiff.color}`}
+                        >
                           {scoreDiff.icon && <scoreDiff.icon size={14} />}
                           {scoreDiff.value}
                         </span>
@@ -611,21 +589,29 @@ export default function ProjectReviewScoreDetailPage() {
                       <div className="flex-1">
                         <span className="text-sm text-gray-600">{hDate}</span>
                       </div>
-                      <span className={`text-xs px-2 py-1 rounded-full ${
-                        h.status === 'good' ? 'bg-green-100 text-green-700' :
-                        h.status === 'warning' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'
-                      }`}>
+                      <span
+                        className={`rounded-full px-2 py-1 text-xs ${
+                          h.status === 'good'
+                            ? 'bg-green-100 text-green-700'
+                            : h.status === 'warning'
+                              ? 'bg-yellow-100 text-yellow-700'
+                              : 'bg-red-100 text-red-700'
+                        }`}
+                      >
                         {h.status}
                       </span>
                       {h.id === detail.id && (
-                        <span className="text-xs text-blue-600 font-medium">Current</span>
+                        <span className="text-xs font-medium text-blue-600">Current</span>
                       )}
                     </div>
                     {/* Action buttons */}
                     <div className="flex items-center gap-2">
                       {prevItem && (
                         <Button
-                          onClick={(e) => { e.stopPropagation(); openCompareModal(h); }}
+                          onClick={e => {
+                            e.stopPropagation();
+                            openCompareModal(h);
+                          }}
                           variant="outline"
                           size="sm"
                           title="Önceki ile karşılaştır"
@@ -633,7 +619,10 @@ export default function ProjectReviewScoreDetailPage() {
                         />
                       )}
                       <Button
-                        onClick={(e) => { e.stopPropagation(); handleDelete(h.id); }}
+                        onClick={e => {
+                          e.stopPropagation();
+                          handleDelete(h.id);
+                        }}
                         disabled={deleting === h.id}
                         variant="danger"
                         size="sm"
@@ -646,17 +635,15 @@ export default function ProjectReviewScoreDetailPage() {
               })}
             </div>
           ) : (
-            <p className="text-gray-500 text-sm">No history records found.</p>
+            <p className="text-sm text-gray-500">No history records found.</p>
           )}
         </div>
       )}
 
       {activeTab === 'raw' && (
-        <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            Raw Parsed Data
-          </h3>
-          <pre className="bg-gray-50 border rounded-lg p-4 text-xs text-gray-700 overflow-x-auto max-h-[600px] overflow-y-auto">
+        <div className="rounded-lg bg-white p-6 shadow">
+          <h3 className="mb-4 text-lg font-semibold text-gray-900">Raw Parsed Data</h3>
+          <pre className="max-h-[600px] overflow-x-auto overflow-y-auto rounded-lg border bg-gray-50 p-4 text-xs text-gray-700">
             {JSON.stringify(rawParsed, null, 2)}
           </pre>
         </div>
@@ -664,23 +651,21 @@ export default function ProjectReviewScoreDetailPage() {
 
       {/* Compare Modal */}
       {showCompareModal && compareItem && (
-        <div 
-          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
           onClick={() => setShowCompareModal(false)}
         >
-          <div 
-            className="bg-white rounded-lg shadow-xl p-6 w-full max-w-2xl mx-4 max-h-[80vh] overflow-y-auto"
-            onClick={(e) => e.stopPropagation()}
+          <div
+            className="mx-4 max-h-[80vh] w-full max-w-2xl overflow-y-auto rounded-lg bg-white p-6 shadow-xl"
+            onClick={e => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between mb-4 sticky top-0 bg-white pb-2 z-10">
-              <h3 className="text-lg font-semibold text-gray-900">
-                Versiyon Karşılaştırma
-              </h3>
+            <div className="sticky top-0 z-10 mb-4 flex items-center justify-between bg-white pb-2">
+              <h3 className="text-lg font-semibold text-gray-900">Versiyon Karşılaştırma</h3>
               <Button
                 onClick={() => setShowCompareModal(false)}
                 variant="ghost"
                 size="md"
-                className="p-1 w-8 h-8"
+                className="h-8 w-8 p-1"
                 leftIcon={<X size={20} />}
               />
             </div>
@@ -688,31 +673,46 @@ export default function ProjectReviewScoreDetailPage() {
             {(() => {
               const currentIdx = history.findIndex(h => h.id === compareItem.id);
               const prevItem = history[currentIdx + 1];
-              if (!prevItem) return <p className="text-gray-500">Karşılaştırma için önceki versiyon bulunamadı.</p>;
+              if (!prevItem)
+                return (
+                  <p className="text-gray-500">Karşılaştırma için önceki versiyon bulunamadı.</p>
+                );
 
-              const currentDate = new Date(compareItem.reportDate).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
-              const prevDate = new Date(prevItem.reportDate).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
+              const currentDate = new Date(compareItem.reportDate).toLocaleDateString('tr-TR', {
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric',
+              });
+              const prevDate = new Date(prevItem.reportDate).toLocaleDateString('tr-TR', {
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric',
+              });
               const diff = getScoreDiff(compareItem.overallScore, prevItem.overallScore);
 
               return (
                 <div className="space-y-4">
                   {/* Score comparison */}
                   <div className="grid grid-cols-3 gap-4 text-center">
-                    <div className="p-4 bg-gray-50 rounded-lg">
-                      <p className="text-xs text-gray-500 mb-1">Önceki ({prevDate})</p>
-                      <p className={`text-3xl font-bold ${prevItem.overallScore >= 85 ? 'text-green-700' : prevItem.overallScore >= 60 ? 'text-yellow-700' : 'text-red-700'}`}>
+                    <div className="rounded-lg bg-gray-50 p-4">
+                      <p className="mb-1 text-xs text-gray-500">Önceki ({prevDate})</p>
+                      <p
+                        className={`text-3xl font-bold ${prevItem.overallScore >= 85 ? 'text-green-700' : prevItem.overallScore >= 60 ? 'text-yellow-700' : 'text-red-700'}`}
+                      >
                         {prevItem.overallScore}
                       </p>
                     </div>
-                    <div className="p-4 flex items-center justify-center">
-                      <div className={`text-2xl font-bold flex items-center gap-1 ${diff.color}`}>
+                    <div className="flex items-center justify-center p-4">
+                      <div className={`flex items-center gap-1 text-2xl font-bold ${diff.color}`}>
                         {diff.icon && <diff.icon size={24} />}
                         {diff.value}
                       </div>
                     </div>
-                    <div className="p-4 bg-blue-50 rounded-lg border-2 border-blue-200">
-                      <p className="text-xs text-gray-500 mb-1">Güncel ({currentDate})</p>
-                      <p className={`text-3xl font-bold ${compareItem.overallScore >= 85 ? 'text-green-700' : compareItem.overallScore >= 60 ? 'text-yellow-700' : 'text-red-700'}`}>
+                    <div className="rounded-lg border-2 border-blue-200 bg-blue-50 p-4">
+                      <p className="mb-1 text-xs text-gray-500">Güncel ({currentDate})</p>
+                      <p
+                        className={`text-3xl font-bold ${compareItem.overallScore >= 85 ? 'text-green-700' : compareItem.overallScore >= 60 ? 'text-yellow-700' : 'text-red-700'}`}
+                      >
                         {compareItem.overallScore}
                       </p>
                     </div>
@@ -720,9 +720,9 @@ export default function ProjectReviewScoreDetailPage() {
 
                   {/* Category comparison */}
                   <div>
-                    <h4 className="font-semibold text-gray-700 mb-2">Kategori Değişimleri</h4>
+                    <h4 className="mb-2 font-semibold text-gray-700">Kategori Değişimleri</h4>
                     <div className="space-y-2">
-                      {compareItem.categorySummary?.map((cat) => {
+                      {compareItem.categorySummary?.map(cat => {
                         const prevCat = prevItem.categorySummary?.find(c => c.name === cat.name);
                         const catDiff = prevCat ? getScoreDiff(cat.score, prevCat.score) : null;
                         return (
@@ -730,7 +730,9 @@ export default function ProjectReviewScoreDetailPage() {
                             <span className="w-40 truncate text-gray-600">{cat.name}</span>
                             <span className="text-gray-900">{prevCat?.score || '-'}</span>
                             <span className="text-gray-700">→</span>
-                            <span className="font-medium text-gray-900">{cat.score}/{cat.maxScore}</span>
+                            <span className="font-medium text-gray-900">
+                              {cat.score}/{cat.maxScore}
+                            </span>
                             {catDiff && catDiff.value !== '0' && (
                               <span className={`text-xs font-medium ${catDiff.color}`}>
                                 ({catDiff.value})

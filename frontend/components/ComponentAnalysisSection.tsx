@@ -27,9 +27,9 @@ export function ComponentAnalysisSection({
   onTaskClick,
 }: ComponentAnalysisSectionProps) {
   return (
-    <div className="bg-white p-6 rounded-lg shadow">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-medium text-gray-900 flex items-center gap-2">
+    <div className="rounded-lg bg-white p-6 shadow">
+      <div className="mb-4 flex items-center justify-between">
+        <h3 className="flex items-center gap-2 text-lg font-medium text-gray-900">
           <Layers size={20} /> UI Component Analysis
         </h3>
         <div className="flex items-center gap-4">
@@ -37,18 +37,12 @@ export function ComponentAnalysisSection({
           <div className="flex items-center gap-2">
             <Cpu
               size={16}
-              className={
-                ollamaStatus?.available ? 'text-green-500' : 'text-gray-400'
-              }
+              className={ollamaStatus?.available ? 'text-green-500' : 'text-gray-400'}
             />
             <span
-              className={`text-sm ${
-                ollamaStatus?.available ? 'text-green-600' : 'text-gray-500'
-              }`}
+              className={`text-sm ${ollamaStatus?.available ? 'text-green-600' : 'text-gray-500'}`}
             >
-              {ollamaStatus?.available
-                ? 'Ollama Active'
-                : 'Ollama Offline (Pattern Mode)'}
+              {ollamaStatus?.available ? 'Ollama Active' : 'Ollama Offline (Pattern Mode)'}
             </span>
           </div>
           {/* Toggle for Ollama usage */}
@@ -57,7 +51,7 @@ export function ComponentAnalysisSection({
               <input
                 type="checkbox"
                 checked={useOllama}
-                onChange={(e) => setUseOllama(e.target.checked)}
+                onChange={e => setUseOllama(e.target.checked)}
                 className="rounded border-gray-300"
               />
               Use AI
@@ -66,7 +60,7 @@ export function ComponentAnalysisSection({
           <button
             onClick={loadComponentAnalysis}
             disabled={componentLoading}
-            className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50 text-sm"
+            className="rounded-md bg-indigo-600 px-4 py-2 text-sm text-white hover:bg-indigo-700 disabled:opacity-50"
           >
             {componentLoading ? 'Analyzing...' : 'Analyze Components'}
           </button>
@@ -75,39 +69,33 @@ export function ComponentAnalysisSection({
 
       {componentData && (
         <div>
-          <div className="text-sm text-gray-500 mb-4">
-            Analyzed {componentData.analyzedTasks} of {componentData.totalTasks}{' '}
-            tasks. Found {componentData.components.length} unique components.
+          <div className="mb-4 text-sm text-gray-500">
+            Analyzed {componentData.analyzedTasks} of {componentData.totalTasks} tasks. Found{' '}
+            {componentData.components.length} unique components.
           </div>
 
           {componentData.components.length === 0 ? (
-            <div className="text-gray-500 text-center py-8">
+            <div className="py-8 text-center text-gray-500">
               No UI components detected in task descriptions.
             </div>
           ) : (
             <div className="space-y-2">
-              {componentData.components.map((component) => {
+              {componentData.components.map(component => {
                 const criticalityScore =
-                  component.activeTasks > 0
-                    ? (component.activeTasks / component.count) * 100
-                    : 0;
+                  component.activeTasks > 0 ? (component.activeTasks / component.count) * 100 : 0;
                 const isCritical = component.activeTasks >= 3;
 
                 return (
                   <div
                     key={component.name}
-                    className={`border rounded-lg ${
-                      isCritical ? 'border-red-300 bg-red-50' : ''
-                    }`}
+                    className={`rounded-lg border ${isCritical ? 'border-red-300 bg-red-50' : ''}`}
                   >
                     <button
                       onClick={() => toggleComponentExpand(component.name)}
-                      className="w-full px-4 py-3 flex items-center justify-between hover:bg-gray-50 hover:rounded-lg"
+                      className="flex w-full items-center justify-between px-4 py-3 hover:rounded-lg hover:bg-gray-50"
                     >
-                      <div className="flex items-center gap-3 flex-wrap">
-                        <span className="font-medium text-gray-900">
-                          {component.name}
-                        </span>
+                      <div className="flex flex-wrap items-center gap-3">
+                        <span className="font-medium text-gray-900">{component.name}</span>
 
                         {/* Active Tasks Badge */}
                         {component.activeTasks > 0 && (
@@ -143,29 +131,23 @@ export function ComponentAnalysisSection({
                     </button>
 
                     {expandedComponents.has(component.name) && (
-                      <div className="px-4 pb-3 border-t bg-gray-50">
+                      <div className="border-t bg-gray-50 px-4 pb-3">
                         <div className="pt-3">
                           {/* Statistics */}
-                          <div className="mb-3 p-3 bg-white rounded border text-sm">
+                          <div className="mb-3 rounded border bg-white p-3 text-sm">
                             <div className="grid grid-cols-2 gap-2">
                               <div>
-                                <span className="text-gray-500">
-                                  Kritiklik Skoru:
-                                </span>
+                                <span className="text-gray-500">Kritiklik Skoru:</span>
                                 <span
                                   className={`ml-2 font-bold ${
-                                    criticalityScore > 50
-                                      ? 'text-red-600'
-                                      : 'text-green-600'
+                                    criticalityScore > 50 ? 'text-red-600' : 'text-green-600'
                                   }`}
                                 >
                                   {criticalityScore.toFixed(0)}%
                                 </span>
                               </div>
                               <div>
-                                <span className="text-gray-500">
-                                  Toplam Sorun:
-                                </span>
+                                <span className="text-gray-500">Toplam Sorun:</span>
                                 <span className="ml-2 font-bold text-gray-900">
                                   {component.count}
                                 </span>
@@ -175,38 +157,34 @@ export function ComponentAnalysisSection({
 
                           {/* Active Tasks Section */}
                           {component.tasks.filter(
-                            (t) => t.status !== 'done' && t.status !== 'completed',
+                            t => t.status !== 'done' && t.status !== 'completed'
                           ).length > 0 && (
                             <div className="mb-4">
-                              <h4 className="font-semibold text-red-700 mb-2 flex items-center gap-2">
+                              <h4 className="mb-2 flex items-center gap-2 font-semibold text-red-700">
                                 🔴 Aktif Sorunlar ({component.activeTasks})
                               </h4>
                               <div className="space-y-2">
                                 {component.tasks
-                                  .filter(
-                                    (t) =>
-                                      t.status !== 'done' &&
-                                      t.status !== 'completed',
-                                  )
-                                  .map((task) => (
+                                  .filter(t => t.status !== 'done' && t.status !== 'completed')
+                                  .map(task => (
                                     <div
                                       key={task.id}
-                                      className="text-sm bg-white p-2 rounded border border-red-200"
+                                      className="rounded border border-red-200 bg-white p-2 text-sm"
                                     >
                                       <div className="flex items-start gap-2">
                                         <a
                                           href={`/tasks/${task.id}`}
-                                          onClick={(e) => {
+                                          onClick={e => {
                                             e.preventDefault();
                                             onTaskClick(task.id);
                                           }}
-                                          className="text-indigo-600 hover:text-indigo-800 font-medium flex-1"
+                                          className="flex-1 font-medium text-indigo-600 hover:text-indigo-800"
                                         >
                                           #{task.id}: {task.title}
                                         </a>
                                         {task.severity && (
                                           <span
-                                            className={`text-xs px-2 py-0.5 rounded ${
+                                            className={`rounded px-2 py-0.5 text-xs ${
                                               task.severity === 'critical'
                                                 ? 'bg-red-100 text-red-800'
                                                 : task.severity === 'major'
@@ -219,7 +197,7 @@ export function ComponentAnalysisSection({
                                         )}
                                       </div>
                                       {task.description && (
-                                        <p className="text-gray-500 text-xs mt-1 line-clamp-2">
+                                        <p className="mt-1 line-clamp-2 text-xs text-gray-500">
                                           {task.description}
                                         </p>
                                       )}
@@ -231,53 +209,45 @@ export function ComponentAnalysisSection({
 
                           {/* Completed Tasks Section */}
                           {component.tasks.filter(
-                            (t) => t.status === 'done' || t.status === 'completed',
+                            t => t.status === 'done' || t.status === 'completed'
                           ).length > 0 && (
                             <div>
-                              <h4 className="font-semibold text-green-700 mb-2 flex items-center gap-2">
+                              <h4 className="mb-2 flex items-center gap-2 font-semibold text-green-700">
                                 ✅ Geçmiş Sorunlar ({component.completedTasks})
                               </h4>
                               <div className="space-y-2">
                                 {component.tasks
-                                  .filter(
-                                    (t) =>
-                                      t.status === 'done' ||
-                                      t.status === 'completed',
-                                  )
+                                  .filter(t => t.status === 'done' || t.status === 'completed')
                                   .slice(0, 5)
-                                  .map((task) => (
+                                  .map(task => (
                                     <div
                                       key={task.id}
-                                      className="text-sm bg-white p-2 rounded border border-green-200 opacity-75"
+                                      className="rounded border border-green-200 bg-white p-2 text-sm opacity-75"
                                     >
                                       <a
                                         href={`/tasks/${task.id}`}
-                                        onClick={(e) => {
+                                        onClick={e => {
                                           e.preventDefault();
                                           onTaskClick(task.id);
                                         }}
-                                        className="text-indigo-600 hover:text-indigo-800 font-medium"
+                                        className="font-medium text-indigo-600 hover:text-indigo-800"
                                       >
                                         #{task.id}: {task.title}
                                       </a>
                                       {task.description && (
-                                        <p className="text-gray-500 text-xs mt-1 line-clamp-1">
+                                        <p className="mt-1 line-clamp-1 text-xs text-gray-500">
                                           {task.description}
                                         </p>
                                       )}
                                     </div>
                                   ))}
                                 {component.tasks.filter(
-                                  (t) =>
-                                    t.status === 'done' ||
-                                    t.status === 'completed',
+                                  t => t.status === 'done' || t.status === 'completed'
                                 ).length > 5 && (
                                   <p className="text-xs text-gray-500 italic">
                                     +
                                     {component.tasks.filter(
-                                      (t) =>
-                                        t.status === 'done' ||
-                                        t.status === 'completed',
+                                      t => t.status === 'done' || t.status === 'completed'
                                     ).length - 5}{' '}
                                     daha fazla tamamlanmış task
                                   </p>
@@ -297,9 +267,9 @@ export function ComponentAnalysisSection({
       )}
 
       {!componentData && !componentLoading && (
-        <div className="text-gray-500 text-center py-8">
-          Click &quot;Analyze Components&quot; to detect UI components mentioned in
-          task descriptions.
+        <div className="py-8 text-center text-gray-500">
+          Click &quot;Analyze Components&quot; to detect UI components mentioned in task
+          descriptions.
           <br />
           <span className="text-sm">
             {ollamaStatus?.available

@@ -17,7 +17,7 @@ export const TaskForm: React.FC<TaskFormProps> = ({ onClose, onSuccess }) => {
     manualPriority: 0,
     dueDate: '',
     project: '',
-    source: 'manual'
+    source: 'manual',
   });
 
   const handleFieldChange = (name: string) => (value: string) => {
@@ -31,7 +31,7 @@ export const TaskForm: React.FC<TaskFormProps> = ({ onClose, onSuccess }) => {
       await createTask({
         ...formData,
         manualPriority: Number(formData.manualPriority),
-        dueDate: formData.dueDate ? new Date(formData.dueDate) : undefined
+        dueDate: formData.dueDate ? new Date(formData.dueDate) : undefined,
       });
       onSuccess();
       onClose();
@@ -63,7 +63,7 @@ export const TaskForm: React.FC<TaskFormProps> = ({ onClose, onSuccess }) => {
         rows={4}
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         <InputSelect
           label="Severity"
           value={formData.severity}
@@ -71,7 +71,7 @@ export const TaskForm: React.FC<TaskFormProps> = ({ onClose, onSuccess }) => {
           options={[
             { value: 'minor', label: 'Minor' },
             { value: 'major', label: 'Major' },
-            { value: 'critical', label: 'Critical' }
+            { value: 'critical', label: 'Critical' },
           ]}
         />
         <InputField
@@ -85,7 +85,7 @@ export const TaskForm: React.FC<TaskFormProps> = ({ onClose, onSuccess }) => {
         />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         <InputDate
           label="Due Date"
           value={formData.dueDate}
@@ -100,17 +100,12 @@ export const TaskForm: React.FC<TaskFormProps> = ({ onClose, onSuccess }) => {
         />
       </div>
 
-      <div className="flex justify-end pt-4 gap-2">
-        <Button
-          variant="secondary"
-          size="md"
-          type="button"
-          onClick={onClose}
-        >
+      <div className="flex justify-end gap-2 pt-4">
+        <Button variant="secondary" size="md" type="button" onClick={onClose}>
           Cancel
         </Button>
-        <Button 
-          type="submit" 
+        <Button
+          type="submit"
           variant="primary"
           size="md"
           disabled={loading}
