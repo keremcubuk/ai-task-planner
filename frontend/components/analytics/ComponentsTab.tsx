@@ -1,4 +1,5 @@
 import React from 'react';
+import Link from 'next/link';
 import { ComponentAnalysisSection } from '@components/ComponentAnalysisSection';
 import { ComponentAnalysisResult, OllamaStatus } from '@lib/api';
 import { StatCard, StatCardGrid, DataTable, DataTableColumn, ProgressBar } from '@components/ui';
@@ -126,7 +127,16 @@ export function ComponentsTab({
     {
       key: 'component',
       header: 'Component',
-      render: (_, row) => <span className="font-medium text-gray-900">{row.component}</span>,
+      render: (_, row) => (
+        <Link
+          href={`/component-tasks/${encodeURIComponent(row.component)}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-medium text-blue-600 hover:text-blue-800 hover:underline"
+        >
+          {row.component}
+        </Link>
+      ),
     },
     {
       key: 'stats.total',
@@ -198,7 +208,16 @@ export function ComponentsTab({
     {
       key: 'component',
       header: 'Component',
-      render: (_, row) => <span className="font-medium text-gray-900">{row.component}</span>,
+      render: (_, row) => (
+        <Link
+          href={`/component-tasks/${encodeURIComponent(row.component)}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-medium text-blue-600 hover:text-blue-800 hover:underline"
+        >
+          {row.component}
+        </Link>
+      ),
     },
     {
       key: 'total',
@@ -280,7 +299,14 @@ export function ComponentsTab({
                 <span className="w-6 text-sm text-gray-400">{idx + 1}.</span>
                 <div className="flex-1">
                   <div className="mb-1 flex items-center justify-between">
-                    <span className="text-sm font-medium text-gray-900">{item.component}</span>
+                    <Link
+                      href={`/component-tasks/${encodeURIComponent(item.component)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline"
+                    >
+                      {item.component}
+                    </Link>
                     <span className="text-sm font-bold text-green-600">{item.count}</span>
                   </div>
                   <ProgressBar
@@ -308,7 +334,14 @@ export function ComponentsTab({
                 <span className="w-6 text-sm text-gray-400">{idx + 1}.</span>
                 <div className="flex-1">
                   <div className="mb-1 flex items-center justify-between">
-                    <span className="text-sm font-medium text-gray-900">{item.component}</span>
+                    <Link
+                      href={`/component-tasks/${encodeURIComponent(item.component)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline"
+                    >
+                      {item.component}
+                    </Link>
                     <span className="text-sm font-bold text-blue-600">{item.count}</span>
                   </div>
                   <ProgressBar

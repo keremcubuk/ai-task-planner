@@ -13,6 +13,7 @@ export interface MappedTaskData {
   severity: string;
   dueDate?: Date;
   createdAt: Date;
+  completedDate?: Date;
   externalId?: string;
   assignedTo?: string;
   openedBy?: string;
@@ -122,6 +123,13 @@ export class ImportMapperService {
       row['Date Created'] ||
       row['Start Date'];
 
+    const completedDate =
+      row['Completed Date'] ||
+      row['completedDate'] ||
+      row['Date Completed'] ||
+      row['Completion Date'] ||
+      row['Closed Date'];
+
     const externalId =
       row['Task ID'] || row['ID'] || row['TaskId'] || row['External ID'];
 
@@ -199,6 +207,7 @@ export class ImportMapperService {
       severity: this.validator.normalizeSeverity(severity),
       dueDate: this.validator.safeParseDate(dueDate),
       createdAt: this.validator.safeParseDate(createdAt) || new Date(),
+      completedDate: this.validator.safeParseDate(completedDate),
       externalId: externalId ? String(externalId) : undefined,
       assignedTo: assignedTo ? String(assignedTo) : undefined,
       openedBy: openerFromDescription,

@@ -277,6 +277,228 @@ export async function exportTrendsToPdf(
   pdf.save(filename);
 }
 
+export async function exportTaskAnalyticsToPdf(
+  data: {
+    bucketDistribution: {
+      solvedInComponent: { count: number; percent: number };
+      solvedInProject: { count: number; percent: number };
+      declined: { count: number; percent: number };
+      design: { count: number; percent: number };
+      other: { count: number; percent: number };
+      none: { count: number; percent: number };
+      total: number;
+    };
+    resolutionTime: {
+      avgDays: number;
+      minDays: number;
+      maxDays: number;
+      medianDays: number;
+      totalResolved: number;
+    };
+    resolutionBySeverity: Array<{ severity: string; avgDays: number; count: number }>;
+    resolutionByProject: Array<{ project: string; avgDays: number; count: number }>;
+    monthlyOpenedClosed: Array<{
+      month: string;
+      year: number;
+      opened: number;
+      closed: number;
+      netChange: number;
+    }>;
+  },
+  options: PdfExportOptions = {}
+): Promise<void> {
+  const {
+    title = 'Task Analizi Raporu',
+    subtitle = `Oluşturulma Tarihi: ${new Date().toLocaleDateString('tr-TR')}`,
+    filename = `task-analizi-${new Date().toISOString().split('T')[0]}.pdf`,
+  } = options;
+
+  const pdf = new jsPDF({
+    orientation: 'p',
+    unit: 'mm',
+    format: 'a4',
+  });
+
+  pdf.addFileToVFS('Roboto-Regular.ttf', RobotoBase64);
+  pdf.addFont('Roboto-Regular.ttf', 'Roboto', 'normal');
+  pdf.addFont('Roboto-Regular.ttf', 'Roboto', 'bold');
+  pdf.setFont('Roboto');
+
+  const pageWidth = pdf.internal.pageSize.getWidth();
+  const pageHeight = pdf.internal.pageSize.getHeight();
+  const margin = 15;
+  let yPos = margin;
+
+  const addHeader = () => {
+    pdf.setFillColor(...COLORS.primary);
+    pdf.rect(0, 0, pageWidth, 35, 'F');
+
+    pdf.setTextColor(255, 255, 255);
+    pdf.setFontSize(22);
+    pdf.setFont('Roboto', 'bold');
+    pdf.text(title, margin, 20);
+
+    pdf.setFontSize(10);
+    pdf.setFont('Roboto', 'normal');
+    pdf.text(subtitle, margin, 28);
+
+    yPos = 45;
+  };
+
+  const addSectionTitle = (text: string) => {
+    if (yPos > pageHeight - 40) {
+      pdf.addPage();
+      yPos = margin;
+    }
+
+    pdf.setFillColor(...COLORS.light);
+    pdf.rect(margin, yPos - 5, pageWidth - margin * 2, 10, 'F');
+
+    pdf.setTextColor(...COLORS.dark);
+    pdf.setFontSize(14);
+    pdf.setFont('Roboto', 'bold');
+    pdf.text(text, margin + 3, yPos + 2);
+    yPos += 15;
+  };
+
+  const addTable = (headers: string[], rows: (string | number)[][]) => {
+    autoTable(pdf, {
+      startY: yPos,
+      head: [headers],
+      body: rows.map(row => row.map(cell => String(cell))),
+      theme: 'striped',
+      styles: {
+        font: 'Roboto',
+      },
+      headStyles: {
+        fillColor: [59, 130, 246],
+        textColor: [255, 255, 255],
+        fontSize: 9,
+        fontStyle: 'bold',
+      },
+      bodyStyles: {
+        textColor: [31, 41, 55],
+        fontSize: 9,
+      },
+      alternateRowStyles: {
+        fillColor: [249, 250, 251],
+      },
+      margin: { left: margin, right: margin },
+    });
+
+    // @ts-expect-error - jspdf-autotable adds lastAutoTable property
+    yPos = pdf.lastAutoTable.finalY + 10;
+  };
+
+  const addStatBox = (
+    label: string,
+    value: string | number,
+    color: [number, number, number] = COLORS.primary,
+    index: number
+  ) => {
+    const boxWidth = 40;
+    const boxHeight = 25;
+
+    pdf.setFillColor(...color);
+    pdf.roundedRect(margin + index * (boxWidth + 5), yPos, boxWidth, boxHeight, 3, 3, 'F');
+
+    pdf.setTextColor(255, 255, 255);
+    pdf.setFontSize(8);
+    pdf.setFont('Roboto', 'normal');
+    pdf.text(label, margin + index * (boxWidth + 5) + 3, yPos + 8);
+
+    pdf.setFontSize(14);
+    pdf.setFont('Roboto', 'bold');
+    pdf.text(String(value), margin + index * (boxWidth + 5) + 3, yPos + 18);
+  };
+
+  addHeader();
+
+  // Bucket Distribution
+  addSectionTitle('Bucket Dağılımı');
+
+  const bucketHeaders = ['Kategori', 'Sayı', 'Yüzde'];
+  const bucketRows = [
+    [
+      'Componentte Çözülen',
+      data.bucketDistribution.solvedInComponent.count,
+      `${data.bucketDistribution.solvedInComponent.percent}%`,
+    ],
+    [
+      'Projede Çözülen',
+      data.bucketDistribution.solvedInProject.count,
+      `${data.bucketDistribution.solvedInProject.percent}%`,
+    ],
+    ['Tasarım', data.bucketDistribution.design.count, `${data.bucketDistribution.design.percent}%`],
+    [
+      'Declined',
+      data.bucketDistribution.declined.count,
+      `${data.bucketDistribution.declined.percent}%`,
+    ],
+    ['Diğer', data.bucketDistribution.other.count, `${data.bucketDistribution.other.percent}%`],
+    ['Belirsiz', data.bucketDistribution.none.count, `${data.bucketDistribution.none.percent}%`],
+    ['TOPLAM', data.bucketDistribution.total, '100%'],
+  ];
+  addTable(bucketHeaders, bucketRows);
+
+  // Resolution Time Stats
+  addSectionTitle('Çözüm Süresi İstatistikleri');
+
+  pdf.setTextColor(...COLORS.gray);
+  pdf.setFontSize(9);
+  pdf.setFont('Roboto', 'normal');
+  pdf.text(`${data.resolutionTime.totalResolved} task analiz edildi`, margin, yPos);
+  yPos += 10;
+
+  addStatBox('Ortalama', `${data.resolutionTime.avgDays} gün`, COLORS.primary, 0);
+  addStatBox('Minimum', `${data.resolutionTime.minDays} gün`, COLORS.success, 1);
+  addStatBox('Maksimum', `${data.resolutionTime.maxDays} gün`, COLORS.danger, 2);
+  addStatBox('Medyan', `${data.resolutionTime.medianDays} gün`, COLORS.warning, 3);
+  yPos += 35;
+
+  // Resolution by Severity
+  addSectionTitle('Severity Bazında Çözüm Süresi');
+
+  const severityHeaders = ['Severity', 'Ortalama Süre (gün)', 'Çözülen Task'];
+  const severityRows = data.resolutionBySeverity.map(s => [s.severity, s.avgDays, s.count]);
+  addTable(severityHeaders, severityRows);
+
+  // Resolution by Project
+  addSectionTitle('Proje Bazında Çözüm Süresi (Top 10)');
+
+  const projectHeaders = ['Proje', 'Ortalama Süre (gün)', 'Çözülen Task'];
+  const projectRows = data.resolutionByProject.map(p => [p.project, p.avgDays, p.count]);
+  addTable(projectHeaders, projectRows);
+
+  // Monthly Opened vs Closed
+  addSectionTitle('Aylık Açılan vs Kapanan Tasklar');
+
+  const monthlyHeaders = ['Dönem', 'Açılan', 'Kapanan', 'Net Değişim'];
+  const monthlyRows = data.monthlyOpenedClosed
+    .slice(-12)
+    .reverse()
+    .map(m => [
+      `${m.month} ${m.year}`,
+      m.opened,
+      m.closed,
+      m.netChange > 0 ? `+${m.netChange}` : m.netChange,
+    ]);
+  addTable(monthlyHeaders, monthlyRows);
+
+  // Footer
+  const totalPages = pdf.getNumberOfPages();
+  for (let i = 1; i <= totalPages; i++) {
+    pdf.setPage(i);
+    pdf.setFontSize(8);
+    pdf.setTextColor(...COLORS.gray);
+    pdf.setFont('Roboto', 'normal');
+    pdf.text(`Sayfa ${i} / ${totalPages}`, pageWidth - margin - 20, pageHeight - 10);
+    pdf.text('AI Task Planner - Task Analizi Raporu', margin, pageHeight - 10);
+  }
+
+  pdf.save(filename);
+}
+
 export async function exportElementToPdf(
   elementId: string,
   filename: string = 'export.pdf'

@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { StatCard, StatCardGrid, DataTable, DataTableColumn, ProgressBar } from '../ui';
 
 interface ProjectDetails {
@@ -39,7 +40,16 @@ export function ProjectsTab({
     {
       key: 'project',
       header: 'Project Name',
-      render: (_, row) => <span className="font-medium text-gray-900">{row.project}</span>,
+      render: (_, row) => (
+        <Link
+          href={`/projects/${encodeURIComponent(row.project)}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-medium text-blue-600 hover:text-blue-800 hover:underline"
+        >
+          {row.project}
+        </Link>
+      ),
     },
     {
       key: 'stats.total',

@@ -13,6 +13,12 @@ import {
   PeriodComparison,
   QuarterlyData,
   YearlyComparison,
+  TaskAnalytics,
+  BucketDistribution,
+  ResolutionTimeStats,
+  ResolutionBySeverity,
+  ResolutionByProject,
+  MonthlyOpenedClosed,
   getErrorMessage,
 } from '../../shared/types/common.types';
 
@@ -523,6 +529,13 @@ export class TasksService {
         .sort((a, b) => b.count - a.count)
         .slice(0, 10);
 
+      // Calculate Task Analytics
+      const taskAnalytics = this.calculateTaskAnalytics(
+        allTasks,
+        byBucketCategory,
+        totalTasks,
+      );
+
       return {
         totalTasks,
         byStatus,
@@ -537,6 +550,7 @@ export class TasksService {
         avgCompletionTimeDays: Math.round(avgCompletionTimeDays * 10) / 10,
         projectCount,
         topProjectsByTickets,
+        taskAnalytics,
       };
     } catch (error) {
       const errorMessage = getErrorMessage(error);
@@ -863,5 +877,231 @@ export class TasksService {
       this.logger.error(`Error in getTrendAnalytics: ${errorMessage}`);
       throw error;
     }
+  }
+
+  private calculateTaskAnalytics(
+    allTasks: Array<{
+      id: number;
+      createdAt: Date;
+      completedDate?: Date | null;
+      status?: string | null;
+      severity?: string | null;
+      project?: string | null;
+      bucketName?: string | null;
+    }>,
+    byBucketCategory: BucketCategoryBreakdown,
+    totalTasks: number,
+  ): TaskAnalytics {
+    // 1. Bucket Distribution with percentages
+    const bucketDistribution: BucketDistribution = {
+      solvedInComponent: {
+        count: byBucketCategory.solvedInComponent,
+        percent:
+          totalTasks > 0
+            ? Math.round((byBucketCategory.solvedInComponent / totalTasks) * 100)
+            : 0,
+      },
+      solvedInProject: {
+        count: byBucketCategory.solvedInProject,
+        percent:
+          totalTasks > 0
+            ? Math.round((byBucketCategory.solvedInProject / totalTasks) * 100)
+            : 0,
+      },
+      declined: {
+        count: byBucketCategory.declined,
+        percent:
+          totalTasks > 0
+            ? Math.round((byBucketCategory.declined / totalTasks) * 100)
+            : 0,
+      },
+      design: {
+        count: byBucketCategory.design,
+        percent:
+          totalTasks > 0
+            ? Math.round((byBucketCategory.design / totalTasks) * 100)
+            : 0,
+      },
+      other: {
+        count: byBucketCategory.other,
+        percent:
+          totalTasks > 0
+            ? Math.round((byBucketCategory.other / totalTasks) * 100)
+            : 0,
+      },
+      none: {
+        count: byBucketCategory.none,
+        percent:
+          totalTasks > 0
+            ? Math.round((byBucketCategory.none / totalTasks) * 100)
+            : 0,
+      },
+      total: totalTasks,
+    };
+
+    // 2. Resolution Time Stats (using completedDate - createdAt)
+    const resolutionTimes: number[] = [];
+    const resolutionBySeverityMap: Record<string, number[]> = {};
+    const resolutionByProjectMap: Record<string, number[]> = {};
+
+    for (const task of allTasks) {
+      if (task.completedDate && task.createdAt) {
+        const completedDate = new Date(task.completedDate);
+        const createdAt = new Date(task.createdAt);
+        const durationDays =
+          (completedDate.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24);
+
+        if (durationDays >= 0) {
+          resolutionTimes.push(durationDays);
+
+          // By severity
+          const severity = task.severity || 'unknown';
+          if (!resolutionBySeverityMap[severity]) {
+            resolutionBySeverityMap[severity] = [];
+          }
+          resolutionBySeverityMap[severity].push(durationDays);
+
+          // By project
+          const project = task.project || 'No Project';
+          if (!resolutionByProjectMap[project]) {
+            resolutionByProjectMap[project] = [];
+          }
+          resolutionByProjectMap[project].push(durationDays);
+        }
+      }
+    }
+
+    // Calculate resolution time stats
+    const sortedTimes = [...resolutionTimes].sort((a, b) => a - b);
+    const resolutionTime: ResolutionTimeStats = {
+      avgDays:
+        resolutionTimes.length > 0
+          ? Math.round(
+              (resolutionTimes.reduce((a, b) => a + b, 0) /
+                resolutionTimes.length) *
+                10,
+            ) / 10
+          : 0,
+      minDays:
+        sortedTimes.length > 0 ? Math.round(sortedTimes[0] * 10) / 10 : 0,
+      maxDays:
+        sortedTimes.length > 0
+          ? Math.round(sortedTimes[sortedTimes.length - 1] * 10) / 10
+          : 0,
+      medianDays:
+        sortedTimes.length > 0
+          ? Math.round(sortedTimes[Math.floor(sortedTimes.length / 2)] * 10) /
+            10
+          : 0,
+      totalResolved: resolutionTimes.length,
+    };
+
+    // Resolution by severity
+    const resolutionBySeverity: ResolutionBySeverity[] = Object.entries(
+      resolutionBySeverityMap,
+    )
+      .map(([severity, times]) => ({
+        severity,
+        avgDays:
+          times.length > 0
+            ? Math.round((times.reduce((a, b) => a + b, 0) / times.length) * 10) /
+              10
+            : 0,
+        count: times.length,
+      }))
+      .sort((a, b) => b.count - a.count);
+
+    // Resolution by project (top 10)
+    const resolutionByProject: ResolutionByProject[] = Object.entries(
+      resolutionByProjectMap,
+    )
+      .map(([project, times]) => ({
+        project,
+        avgDays:
+          times.length > 0
+            ? Math.round((times.reduce((a, b) => a + b, 0) / times.length) * 10) /
+              10
+            : 0,
+        count: times.length,
+      }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 10);
+
+    // 3. Monthly Opened vs Closed
+    const monthlyData: Record<
+      string,
+      { year: number; month: string; opened: number; closed: number }
+    > = {};
+
+    const monthNames = [
+      'Ocak',
+      'Şubat',
+      'Mart',
+      'Nisan',
+      'Mayıs',
+      'Haziran',
+      'Temmuz',
+      'Ağustos',
+      'Eylül',
+      'Ekim',
+      'Kasım',
+      'Aralık',
+    ];
+
+    for (const task of allTasks) {
+      // Count opened tasks by month
+      if (task.createdAt) {
+        const date = new Date(task.createdAt);
+        const year = date.getFullYear();
+        const monthIdx = date.getMonth();
+        const key = `${year}-${String(monthIdx + 1).padStart(2, '0')}`;
+
+        if (!monthlyData[key]) {
+          monthlyData[key] = {
+            year,
+            month: monthNames[monthIdx],
+            opened: 0,
+            closed: 0,
+          };
+        }
+        monthlyData[key].opened++;
+      }
+
+      // Count closed tasks by completedDate month
+      if (task.completedDate) {
+        const date = new Date(task.completedDate);
+        const year = date.getFullYear();
+        const monthIdx = date.getMonth();
+        const key = `${year}-${String(monthIdx + 1).padStart(2, '0')}`;
+
+        if (!monthlyData[key]) {
+          monthlyData[key] = {
+            year,
+            month: monthNames[monthIdx],
+            opened: 0,
+            closed: 0,
+          };
+        }
+        monthlyData[key].closed++;
+      }
+    }
+
+    const monthlyOpenedClosed: MonthlyOpenedClosed[] = Object.entries(monthlyData)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([, data]) => ({
+        month: data.month,
+        year: data.year,
+        opened: data.opened,
+        closed: data.closed,
+        netChange: data.opened - data.closed,
+      }));
+
+    return {
+      bucketDistribution,
+      resolutionTime,
+      resolutionBySeverity,
+      resolutionByProject,
+      monthlyOpenedClosed,
+    };
   }
 }

@@ -15,7 +15,7 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <div className="min-h-screen bg-gray-100">
-      <header className="sticky top-0 z-20 bg-white shadow-sm">
+      <header className="fixed top-0 right-0 left-0 z-[100] border-b border-gray-200 bg-white shadow-sm">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 justify-between">
             <div className="flex">
@@ -61,7 +61,7 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
           </div>
         </div>
       </header>
-      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">{children}</main>
+      <main className="mx-auto max-w-7xl px-4 pt-24 pb-8 sm:px-6 lg:px-8">{children}</main>
     </div>
   );
 };

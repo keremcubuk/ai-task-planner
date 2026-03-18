@@ -21,6 +21,7 @@ model Task {
   updatedAt       DateTime  @updatedAt
   transitionDate  DateTime?
   dueDate         DateTime?
+  completedDate   DateTime?
   assignedTo      String?
   openedBy        String?
   bucketName      String?

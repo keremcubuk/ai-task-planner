@@ -8,16 +8,17 @@ import {
   ComponentAnalysisResult,
   OllamaStatus,
 } from '@lib/api';
-import { Folder, Users, UserCheck, Layers, TrendingUp } from 'lucide-react';
+import { Folder, Users, UserCheck, Layers, TrendingUp, CheckSquare } from 'lucide-react';
 import { TaskDetail } from '@components/TaskDetail';
 import { ProjectsTab } from '@components/analytics/ProjectsTab';
 import { DevelopersTab } from '@components/analytics/DevelopersTab';
 import { OpenersTab } from '@components/analytics/OpenersTab';
 import { ComponentsTab } from '@components/analytics/ComponentsTab';
 import { TrendsTab } from '@components/analytics/TrendsTab';
+import { TasksTab } from '@components/analytics/TasksTab';
 import { TabNavigation, Modal, PageHeader } from '@components/ui';
 
-type TabType = 'projects' | 'developers' | 'openers' | 'components' | 'trends';
+type TabType = 'projects' | 'developers' | 'openers' | 'components' | 'trends' | 'tasks';
 
 interface AnalyticsData {
   totalTasks: number;
@@ -105,6 +106,33 @@ interface AnalyticsData {
   >;
   projectCount: number;
   topProjectsByTickets: Array<{ project: string; count: number }>;
+  taskAnalytics: {
+    bucketDistribution: {
+      solvedInComponent: { count: number; percent: number };
+      solvedInProject: { count: number; percent: number };
+      declined: { count: number; percent: number };
+      design: { count: number; percent: number };
+      other: { count: number; percent: number };
+      none: { count: number; percent: number };
+      total: number;
+    };
+    resolutionTime: {
+      avgDays: number;
+      minDays: number;
+      maxDays: number;
+      medianDays: number;
+      totalResolved: number;
+    };
+    resolutionBySeverity: Array<{ severity: string; avgDays: number; count: number }>;
+    resolutionByProject: Array<{ project: string; avgDays: number; count: number }>;
+    monthlyOpenedClosed: Array<{
+      month: string;
+      year: number;
+      opened: number;
+      closed: number;
+      netChange: number;
+    }>;
+  };
 }
 
 export default function Analytics() {
@@ -204,6 +232,7 @@ export default function Analytics() {
     { id: 'developers', label: 'Developerlar', icon: <Users size={18} /> },
     { id: 'openers', label: 'Issue Açanlar', icon: <UserCheck size={18} /> },
     { id: 'components', label: 'Componentler', icon: <Layers size={18} /> },
+    { id: 'tasks', label: 'Task Analizi', icon: <CheckSquare size={18} /> },
     { id: 'trends', label: 'Trend Analizi', icon: <TrendingUp size={18} /> },
   ];
 
@@ -261,6 +290,9 @@ export default function Analytics() {
             toggleComponentExpand={toggleComponentExpand}
             onTaskClick={taskId => setSelectedTaskId(taskId)}
           />
+        )}
+        {activeTab === 'tasks' && data.taskAnalytics && (
+          <TasksTab taskAnalytics={data.taskAnalytics} />
         )}
         {activeTab === 'trends' && <TrendsTab />}
       </div>

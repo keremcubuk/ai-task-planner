@@ -151,6 +151,53 @@ export interface ComponentBucketStats {
   solvedInComponentPercent: number;
 }
 
+// Task Analytics Types
+export interface BucketDistribution {
+  solvedInComponent: { count: number; percent: number };
+  solvedInProject: { count: number; percent: number };
+  declined: { count: number; percent: number };
+  design: { count: number; percent: number };
+  other: { count: number; percent: number };
+  none: { count: number; percent: number };
+  total: number;
+}
+
+export interface ResolutionTimeStats {
+  avgDays: number;
+  minDays: number;
+  maxDays: number;
+  medianDays: number;
+  totalResolved: number;
+}
+
+export interface ResolutionBySeverity {
+  severity: string;
+  avgDays: number;
+  count: number;
+}
+
+export interface ResolutionByProject {
+  project: string;
+  avgDays: number;
+  count: number;
+}
+
+export interface MonthlyOpenedClosed {
+  month: string;
+  year: number;
+  opened: number;
+  closed: number;
+  netChange: number;
+}
+
+export interface TaskAnalytics {
+  bucketDistribution: BucketDistribution;
+  resolutionTime: ResolutionTimeStats;
+  resolutionBySeverity: ResolutionBySeverity[];
+  resolutionByProject: ResolutionByProject[];
+  monthlyOpenedClosed: MonthlyOpenedClosed[];
+}
+
 // Analytics Response
 export interface AnalyticsResponse {
   totalTasks: number;
@@ -166,6 +213,7 @@ export interface AnalyticsResponse {
   avgCompletionTimeDays: number;
   projectCount: number;
   topProjectsByTickets: Array<{ project: string; count: number }>;
+  taskAnalytics: TaskAnalytics;
 }
 
 // Trend Analytics Types
