@@ -41,6 +41,13 @@ export interface ResolutionTimeStats {
   maxDays: number;
   medianDays: number;
   totalResolved: number;
+  maxResolutionTask?: {
+    id: number;
+    title: string;
+    project: string;
+    severity: string;
+    resolutionDays: number;
+  };
 }
 
 export interface ResolutionBySeverity {

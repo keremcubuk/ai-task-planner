@@ -149,6 +149,11 @@ export interface ComponentBucketStats {
   bucketBreakdown: BucketCategoryBreakdown;
   solvedInProjectPercent: number;
   solvedInComponentPercent: number;
+  statusBreakdown: {
+    open: number;
+    inProgress: number;
+    done: number;
+  };
 }
 
 // Task Analytics Types
@@ -168,6 +173,13 @@ export interface ResolutionTimeStats {
   maxDays: number;
   medianDays: number;
   totalResolved: number;
+  maxResolutionTask?: {
+    id: number;
+    title: string;
+    project: string;
+    severity: string;
+    resolutionDays: number;
+  };
 }
 
 export interface ResolutionBySeverity {

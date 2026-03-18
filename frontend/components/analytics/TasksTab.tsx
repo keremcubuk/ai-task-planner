@@ -1,19 +1,22 @@
 import React, { useState } from 'react';
-import { Download } from 'lucide-react';
+import { Download, Info } from 'lucide-react';
+import { PieChart, Pie, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 import {
   TaskAnalytics,
   ResolutionBySeverity,
   ResolutionByProject,
   MonthlyOpenedClosed,
 } from '@lib/api';
-import { StatCard, StatCardGrid, DataTable, DataTableColumn, ProgressBar } from '@components/ui';
+import { StatCard, StatCardGrid, DataTable, DataTableColumn } from '@components/ui';
 import { exportTaskAnalyticsToPdf } from '@lib/pdfExport';
 
 interface TasksTabProps {
   taskAnalytics: TaskAnalytics;
 }
 
-export function TasksTab({ taskAnalytics }: TasksTabProps) {
+type BucketColor = 'blue' | 'green' | 'purple' | 'red' | 'gray';
+
+export function TasksTab({ taskAnalytics }: Readonly<TasksTabProps>) {
   const [exporting, setExporting] = useState(false);
   const {
     bucketDistribution,
@@ -134,43 +137,94 @@ export function TasksTab({ taskAnalytics }: TasksTabProps) {
     { label: 'Belirsiz', data: bucketDistribution.none, color: 'gray' },
   ];
 
+  const pieColors: Record<BucketColor, string> = {
+    blue: '#3B82F6',
+    green: '#10B981',
+    purple: '#8B5CF6',
+    red: '#EF4444',
+    gray: '#6B7280',
+  };
+
+  const bucketChartData = bucketItems.map(item => ({
+    name: item.label,
+    value: item.data.count,
+    percent: item.data.percent,
+    color: pieColors[item.color as BucketColor],
+    fill: pieColors[item.color as BucketColor],
+  }));
+
+  const hasBucketData = bucketChartData.some(item => item.value > 0);
+
   return (
     <div className="space-y-6">
-      {/* Export Button */}
-      <div className="flex justify-end">
-        <button
-          onClick={handleExportPdf}
-          disabled={exporting}
-          className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-400"
-        >
-          <Download size={16} />
-          {exporting ? 'PDF Oluşturuluyor...' : 'PDF İndir'}
-        </button>
-      </div>
-
       {/* Bucket Distribution */}
       <div className="rounded-lg bg-white p-6 shadow">
-        <h3 className="mb-4 text-lg font-medium text-gray-900">Bucket Dağılımı</h3>
+        <div className="mb-4 flex items-center justify-between">
+          <h3 className="text-lg font-medium text-gray-900">Bucket Dağılımı</h3>
+          <button
+            onClick={handleExportPdf}
+            disabled={exporting}
+            className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-400"
+          >
+            <Download size={16} />
+            {exporting ? 'PDF Oluşturuluyor...' : 'PDF İndir'}
+          </button>
+        </div>
         <p className="mb-4 text-sm text-gray-500">
           Tüm taskların çözüm kategorilerine göre dağılımı (Toplam: {bucketDistribution.total} task)
         </p>
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {bucketItems.map(item => (
-            <div key={item.label} className="rounded-lg border p-4">
-              <div className="mb-2 flex items-center justify-between">
-                <span className="text-sm font-medium text-gray-700">{item.label}</span>
-                <span className="text-lg font-bold text-gray-900">{item.data.count}</span>
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <div className="h-80 w-full">
+            {hasBucketData ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={bucketChartData}
+                    dataKey="value"
+                    nameKey="name"
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={110}
+                    labelLine={false}
+                    label={({ value }) => {
+                      const numericValue = Number(value) || 0;
+                      const labelPercent =
+                        bucketDistribution.total > 0
+                          ? (numericValue / bucketDistribution.total) * 100
+                          : 0;
+                      return labelPercent > 0 ? `${labelPercent.toFixed(1)}%` : '';
+                    }}
+                  />
+                  <Tooltip />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex h-full items-center justify-center rounded-lg border border-dashed text-sm text-gray-500">
+                Pie chart için yeterli veri bulunamadı.
               </div>
-              <ProgressBar
-                value={item.data.percent}
-                color={item.color as 'blue' | 'green' | 'purple' | 'red' | 'gray'}
-                size="md"
-                showLabel
-                labelPosition="right"
-                labelClassName="text-sm"
-              />
-            </div>
-          ))}
+            )}
+          </div>
+
+          <div className="space-y-3">
+            {bucketChartData.map(item => (
+              <div
+                key={item.name}
+                className="flex items-center justify-between rounded-lg border p-3"
+              >
+                <div className="flex items-center gap-2">
+                  <span
+                    className="inline-block h-3 w-3 rounded-full"
+                    style={{ backgroundColor: item.color }}
+                  />
+                  <span className="text-sm font-medium text-gray-700">{item.name}</span>
+                </div>
+                <span className="text-sm font-semibold text-gray-900">
+                  {item.value} ({item.percent.toFixed(1)}%)
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -184,7 +238,36 @@ export function TasksTab({ taskAnalytics }: TasksTabProps) {
         <StatCardGrid columns={4}>
           <StatCard label="Ortalama" value={`${resolutionTime.avgDays} gün`} />
           <StatCard label="Minimum" value={`${resolutionTime.minDays} gün`} valueColor="green" />
-          <StatCard label="Maksimum" value={`${resolutionTime.maxDays} gün`} valueColor="red" />
+          <StatCard
+            label="Maksimum"
+            value={`${resolutionTime.maxDays} gün`}
+            valueColor="red"
+            subtitle={
+              resolutionTime.maxResolutionTask
+                ? `#${resolutionTime.maxResolutionTask.id}`
+                : undefined
+            }
+            icon={resolutionTime.maxResolutionTask ? <Info size={16} /> : undefined}
+            tooltip={
+              resolutionTime.maxResolutionTask ? (
+                <div className="space-y-1">
+                  <p className="font-semibold">{resolutionTime.maxResolutionTask.title}</p>
+                  <p className="text-sm">
+                    <span className="font-medium">Proje:</span>{' '}
+                    {resolutionTime.maxResolutionTask.project}
+                  </p>
+                  <p className="text-sm">
+                    <span className="font-medium">Severity:</span>{' '}
+                    {resolutionTime.maxResolutionTask.severity}
+                  </p>
+                  <p className="text-sm">
+                    <span className="font-medium">Çözüm:</span>{' '}
+                    {resolutionTime.maxResolutionTask.resolutionDays} gün
+                  </p>
+                </div>
+              ) : undefined
+            }
+          />
           <StatCard label="Medyan" value={`${resolutionTime.medianDays} gün`} valueColor="blue" />
         </StatCardGrid>
       </div>
@@ -227,6 +310,12 @@ export function TasksTab({ taskAnalytics }: TasksTabProps) {
             const maxVal = Math.max(
               ...monthlyOpenedClosed.slice(-12).map(m => Math.max(m.opened, m.closed))
             );
+            let netChangeColor = 'text-gray-600';
+            if (item.netChange > 0) {
+              netChangeColor = 'text-red-600';
+            } else if (item.netChange < 0) {
+              netChangeColor = 'text-green-600';
+            }
             return (
               <div key={`${item.year}-${item.month}`} className="flex items-center gap-4">
                 <span className="w-24 text-sm text-gray-600">
@@ -252,15 +341,7 @@ export function TasksTab({ taskAnalytics }: TasksTabProps) {
                     </span>
                   </div>
                 </div>
-                <span
-                  className={`w-12 text-right text-sm font-medium ${
-                    item.netChange > 0
-                      ? 'text-red-600'
-                      : item.netChange < 0
-                        ? 'text-green-600'
-                        : 'text-gray-600'
-                  }`}
-                >
+                <span className={`w-12 text-right text-sm font-medium ${netChangeColor}`}>
                   {item.netChange > 0 ? '+' : ''}
                   {item.netChange}
                 </span>

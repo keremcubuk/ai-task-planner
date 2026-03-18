@@ -102,6 +102,11 @@ interface AnalyticsData {
       };
       solvedInProjectPercent: number;
       solvedInComponentPercent: number;
+      statusBreakdown: {
+        open: number;
+        inProgress: number;
+        done: number;
+      };
     }
   >;
   projectCount: number;

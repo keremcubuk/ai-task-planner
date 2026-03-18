@@ -359,10 +359,25 @@ export class TasksService {
             bucketBreakdown: emptyBucketBreakdown(),
             solvedInProjectPercent: 0,
             solvedInComponentPercent: 0,
+            statusBreakdown: {
+              open: 0,
+              inProgress: 0,
+              done: 0,
+            },
           };
         }
         byComponentBucket[componentName].total++;
         byComponentBucket[componentName].bucketBreakdown[bucketCategory]++;
+
+        // Track status breakdown (done only counts if solvedInComponent)
+        const statusLower = s.toLowerCase();
+        if (statusLower === 'open') {
+          byComponentBucket[componentName].statusBreakdown.open++;
+        } else if (statusLower === 'in_progress') {
+          byComponentBucket[componentName].statusBreakdown.inProgress++;
+        } else if ((statusLower === 'done' || statusLower === 'completed') && bucketCategory === 'solvedInComponent') {
+          byComponentBucket[componentName].statusBreakdown.done++;
+        }
 
         // Avg time calculation
         if (task.status === 'done' && task.createdAt && task.updatedAt) {
@@ -882,6 +897,7 @@ export class TasksService {
   private calculateTaskAnalytics(
     allTasks: Array<{
       id: number;
+      title: string;
       createdAt: Date;
       completedDate?: Date | null;
       status?: string | null;
@@ -943,6 +959,13 @@ export class TasksService {
     const resolutionTimes: number[] = [];
     const resolutionBySeverityMap: Record<string, number[]> = {};
     const resolutionByProjectMap: Record<string, number[]> = {};
+    let maxResolutionTask: {
+      id: number;
+      title: string;
+      project: string;
+      severity: string;
+      resolutionDays: number;
+    } | null = null;
 
     for (const task of allTasks) {
       if (task.completedDate && task.createdAt) {
@@ -953,6 +976,20 @@ export class TasksService {
 
         if (durationDays >= 0) {
           resolutionTimes.push(durationDays);
+
+          // Track max resolution task
+          if (
+            !maxResolutionTask ||
+            durationDays > maxResolutionTask.resolutionDays
+          ) {
+            maxResolutionTask = {
+              id: task.id,
+              title: task.title,
+              project: task.project || 'No Project',
+              severity: task.severity || 'unknown',
+              resolutionDays: Math.round(durationDays * 10) / 10,
+            };
+          }
 
           // By severity
           const severity = task.severity || 'unknown';
@@ -994,6 +1031,7 @@ export class TasksService {
             10
           : 0,
       totalResolved: resolutionTimes.length,
+      maxResolutionTask: maxResolutionTask || undefined,
     };
 
     // Resolution by severity

@@ -18,6 +18,11 @@ interface ComponentBucketStats {
   bucketBreakdown: BucketBreakdown;
   solvedInProjectPercent: number;
   solvedInComponentPercent: number;
+  statusBreakdown: {
+    open: number;
+    inProgress: number;
+    done: number;
+  };
 }
 
 interface ComponentsTabProps {
@@ -269,11 +274,25 @@ export function ComponentsTab({
     },
   ];
 
+  const totalOpen = Object.values(byComponentBucket).reduce(
+    (sum, stats) => sum + stats.statusBreakdown.open,
+    0
+  );
+  const totalInProgress = Object.values(byComponentBucket).reduce(
+    (sum, stats) => sum + stats.statusBreakdown.inProgress,
+    0
+  );
+  const totalDone = Object.values(byComponentBucket).reduce(
+    (sum, stats) => sum + stats.statusBreakdown.done,
+    0
+  );
+
   return (
     <div className="space-y-6">
-      <StatCardGrid columns={2}>
-        <StatCard label="Projede Çözülen" value={totalSolvedInProject} valueColor="green" />
-        <StatCard label="Componentte Çözülen" value={totalSolvedInComponent} valueColor="blue" />
+      <StatCardGrid columns={3}>
+        <StatCard label="Açık" value={totalOpen} valueColor="red" />
+        <StatCard label="In Progress" value={totalInProgress} valueColor="blue" />
+        <StatCard label="Done (Component)" value={totalDone} valueColor="green" />
       </StatCardGrid>
       <div className="rounded-lg bg-white p-6 shadow">
         <h3 className="mb-4 text-lg font-medium text-gray-900">Component Bucket Analizi</h3>

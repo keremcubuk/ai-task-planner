@@ -19,6 +19,7 @@ interface StatCardProps {
     indicator: React.ReactNode;
   };
   className?: string;
+  tooltip?: React.ReactNode;
 }
 
 const valueColorClasses: Record<ValueColor, string> = {
@@ -58,11 +59,12 @@ export function StatCard({
   icon,
   change,
   className,
+  tooltip,
 }: StatCardProps) {
   const bgStyles = bgColorClasses[bgColor];
   const sizeStyles = sizeClasses[size];
 
-  return (
+  const cardContent = (
     <div
       className={cn(
         'flex flex-col items-center rounded-lg shadow',
@@ -89,6 +91,22 @@ export function StatCard({
       {subtitle && <div className="mt-1 text-xs text-gray-500">{subtitle}</div>}
     </div>
   );
+
+  if (tooltip) {
+    return (
+      <div className="group relative">
+        {cardContent}
+        <div className="invisible absolute bottom-full left-1/2 z-50 mb-2 -translate-x-1/2 transform rounded-lg bg-gray-900 px-3 py-2 text-sm whitespace-nowrap text-white opacity-0 shadow-lg transition-all duration-200 group-hover:visible group-hover:opacity-100">
+          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-full transform">
+            <div className="border-4 border-transparent border-t-gray-900"></div>
+          </div>
+          {tooltip}
+        </div>
+      </div>
+    );
+  }
+
+  return cardContent;
 }
 
 interface StatCardGridProps {
