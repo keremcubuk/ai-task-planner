@@ -301,11 +301,10 @@ export class ConfluenceService {
       const title = task.taskName;
       if (!title) continue;
 
-      const contentHash = this.generateContentHash(
-        title,
-        task.projectName,
-        'confluence',
-      );
+      // contentHash sadece taskId yoksa oluşturulur
+      const contentHash = task.taskId
+        ? undefined
+        : this.generateContentHash(title, task.projectName, 'confluence');
 
       // Safe date parsing
       const parseDueDate = (dateStr: string): Date | undefined => {
@@ -344,16 +343,14 @@ export class ConfluenceService {
         contentHash,
       };
 
-      // Önce externalId ile kontrol et
+      // Task ID (externalId) varsa, sadece bununla kontrol et
+      // Task ID yoksa, contentHash ile kontrol et
       let existing = null;
       if (task.taskId) {
         existing = await this.prisma.task.findFirst({
           where: { externalId: task.taskId },
         });
-      }
-
-      // externalId ile bulunamadıysa, contentHash ile ara
-      if (!existing) {
+      } else if (contentHash) {
         existing = await this.prisma.task.findFirst({
           where: { contentHash },
         });

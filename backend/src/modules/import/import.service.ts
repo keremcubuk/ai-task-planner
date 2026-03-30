@@ -69,13 +69,13 @@ export class ImportService {
 
       let existing = null;
 
+      // Task ID (externalId) varsa, sadece bununla kontrol et
+      // Task ID yoksa, contentHash ile kontrol et
       if (taskData.externalId) {
         existing = await this.prisma.task.findFirst({
           where: { externalId: taskData.externalId },
         });
-      }
-
-      if (!existing) {
+      } else if (taskData.contentHash) {
         existing = await this.prisma.task.findFirst({
           where: { contentHash: taskData.contentHash },
         });

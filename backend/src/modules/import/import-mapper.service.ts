@@ -19,7 +19,7 @@ export interface MappedTaskData {
   openedBy?: string;
   bucketName?: string;
   componentName?: string;
-  contentHash: string;
+  contentHash?: string; // Sadece externalId yoksa kullanılır
   manualPriority?: number;
   aiScore?: number;
   aiPriority?: number;
@@ -193,7 +193,11 @@ export class ImportMapperService {
     const aiScore = row['AI Score'] || row['aiScore'];
     const aiPriority = row['AI Priority'] || row['aiPriority'];
 
-    const contentHash = this.generateContentHash(title, project, source);
+    // contentHash sadece externalId yoksa oluşturulur
+    // Task ID varsa, o zaten unique identifier olarak yeterlidir
+    const contentHash = externalId
+      ? undefined
+      : this.generateContentHash(title, project, source);
 
     return {
       title,

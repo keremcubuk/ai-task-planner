@@ -14,6 +14,7 @@ export interface Task {
   transitionDate?: string;
   dueDate?: string;
   completedDate?: string;
+  estimatedDueDate?: string | null;
   assignedTo?: string;
   openedBy?: string;
   componentName?: string;

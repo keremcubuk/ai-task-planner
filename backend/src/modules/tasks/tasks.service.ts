@@ -109,6 +109,126 @@ export class TasksService {
     });
   }
 
+  /**
+   * Task için tahmini iş süresi hesaplama (gün)
+   * - Severity bazlı aralıklar (2 haftalık sprint, 3 developer):
+   *   Urgent/Critical: 1-3 gün | Important/Major: 1-5 gün
+   *   Minor: 10-20 gün | Low: 15-30 gün
+   * - AI score ile aralık içinde interpolasyon (yüksek score = daha kısa süre)
+   */
+  private calculateTaskDuration(task: {
+    severity: string | null;
+    aiScore: number | null;
+  }): number {
+    // Severity bazlı teslimat aralıkları (gün)
+    const severityRanges: Record<string, { min: number; max: number }> = {
+      urgent: { min: 1, max: 3 },
+      critical: { min: 1, max: 3 },
+      important: { min: 1, max: 5 },
+      major: { min: 1, max: 5 },
+      minor: { min: 10, max: 20 },
+      low: { min: 15, max: 30 },
+    };
+
+    const severity = (task.severity || 'low').toLowerCase();
+    const range = severityRanges[severity] || severityRanges['low'];
+
+    // AI score normalizasyonu (0-1, max teorik skor ≈ 15)
+    const maxPossibleScore = 15;
+    const normalizedScore = Math.min(
+      (task.aiScore || 0) / maxPossibleScore,
+      1,
+    );
+
+    // Yüksek AI score = daha kısa teslimat süresi (min'e yakın)
+    const estimatedDays = Math.round(
+      range.max - normalizedScore * (range.max - range.min),
+    );
+
+    return estimatedDays;
+  }
+
+  /**
+   * Sprint kapasitesi ve developer sayısını dikkate alarak
+   * taskları sıralı şekilde planlar
+   *
+   * Kısıtlar:
+   * - 3 developer
+   * - Her developer sprint başına max 10 gün iş alabilir
+   * - Sprint süresi: 2 hafta (10 iş günü)
+   * - Toplam sprint kapasitesi: 3 dev × 10 gün = 30 gün/sprint
+   */
+  enrichWithEstimates(
+    tasks: Array<{
+      dueDate: Date | null;
+      status: string | null;
+      severity: string | null;
+      aiScore: number | null;
+      aiPriority: number | null;
+      createdAt: Date;
+      [key: string]: unknown;
+    }>,
+  ) {
+    const DEVELOPERS = 3;
+
+    // Bugünden başla
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+
+    // Developer'ların mevcut durumu (her biri ne zaman müsait olacak)
+    const developerAvailability: Date[] = Array.from(
+      { length: DEVELOPERS },
+      () => new Date(now),
+    );
+
+    // AI priority'ye göre sırala (yüksek öncelik önce)
+    const sortedTasks = [...tasks].sort(
+      (a, b) => (b.aiPriority || 0) - (a.aiPriority || 0),
+    );
+
+    return sortedTasks.map((task) => {
+      // dueDate varsa veya tamamlanmışsa, tahmini tarih hesaplama
+      if (task.dueDate) {
+        return { ...task, estimatedDueDate: null };
+      }
+
+      const status = (task.status || '').toLowerCase();
+      if (status === 'done' || status === 'completed') {
+        return { ...task, estimatedDueDate: null };
+      }
+
+      // Task'ın tahmini süresini hesapla
+      const taskDuration = this.calculateTaskDuration(task);
+
+      // En erken müsait olan developer'ı bul
+      const earliestAvailableIndex = developerAvailability.reduce(
+        (minIdx, date, idx) =>
+          date < developerAvailability[minIdx] ? idx : minIdx,
+        0,
+      );
+
+      // Task başlangıç tarihi = developer'ın müsait olduğu tarih
+      const startDate = new Date(developerAvailability[earliestAvailableIndex]);
+
+      // Eğer başlangıç tarihi geçmişte ise, bugünden başlat
+      if (startDate < now) {
+        startDate.setTime(now.getTime());
+      }
+
+      // Task bitiş tarihi = başlangıç + süre
+      const endDate = new Date(startDate);
+      endDate.setDate(endDate.getDate() + taskDuration);
+
+      // Developer'ın müsaitlik tarihini güncelle
+      developerAvailability[earliestAvailableIndex] = endDate;
+
+      return {
+        ...task,
+        estimatedDueDate: endDate.toISOString(),
+      };
+    });
+  }
+
   findOne(id: number) {
     return this.prisma.task.findUnique({ where: { id } });
   }

@@ -538,3 +538,161 @@ export async function exportElementToPdf(
 
   pdf.save(filename);
 }
+
+export async function exportTaskListToPdf(
+  tasks: Array<{
+    id: number;
+    title: string;
+    status: string;
+    severity?: string;
+    aiScore: number;
+    aiPriority: number;
+    createdAt: string;
+    dueDate?: string;
+    estimatedDueDate?: string | null;
+    assignedTo?: string;
+    project?: string;
+  }>,
+  options: PdfExportOptions = {}
+): Promise<void> {
+  const {
+    title = 'Task Listesi - Backlog Raporu',
+    subtitle = `Oluşturulma Tarihi: ${new Date().toLocaleDateString('tr-TR')} | Toplam: ${tasks.length} task`,
+    filename = `task-listesi-${new Date().toISOString().split('T')[0]}.pdf`,
+  } = options;
+
+  const pdf = new jsPDF({
+    orientation: 'l',
+    unit: 'mm',
+    format: 'a4',
+  });
+
+  // Register custom font for Turkish character support
+  pdf.addFileToVFS('Roboto-Regular.ttf', RobotoBase64);
+  pdf.addFont('Roboto-Regular.ttf', 'Roboto', 'normal');
+  pdf.setFont('Roboto');
+
+  const pageWidth = pdf.internal.pageSize.getWidth();
+
+  // Title
+  pdf.setFontSize(18);
+  pdf.setTextColor(...COLORS.dark);
+  pdf.text(title, pageWidth / 2, 15, { align: 'center' });
+
+  // Subtitle
+  pdf.setFontSize(10);
+  pdf.setTextColor(...COLORS.gray);
+  pdf.text(subtitle, pageWidth / 2, 22, { align: 'center' });
+
+  // Severity legend
+  pdf.setFontSize(8);
+  pdf.setTextColor(...COLORS.gray);
+  pdf.text(
+    'Tahmini Teslimat: Urgent/Critical: 1-3 gün | Important/Major: 1-5 gün | Minor: 10-20 gün | Low: 15-30 gün (AI Score ile interpolasyon)',
+    pageWidth / 2,
+    28,
+    { align: 'center' }
+  );
+
+  const formatPdfDate = (dateStr?: string | null) => {
+    if (!dateStr) return '-';
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return '-';
+    return `${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}.${d.getFullYear()}`;
+  };
+
+  const tableData = tasks.map((task, idx) => [
+    String(idx + 1),
+    task.title.length > 40 ? task.title.substring(0, 40) + '...' : task.title,
+    task.status || '-',
+    task.severity || '-',
+    String(task.aiPriority || 0),
+    String(task.aiScore?.toFixed(1) || '0'),
+    task.project || '-',
+    task.assignedTo || '-',
+    formatPdfDate(task.createdAt),
+    formatPdfDate(task.dueDate),
+    task.dueDate ? '-' : formatPdfDate(task.estimatedDueDate),
+  ]);
+
+  autoTable(pdf, {
+    startY: 32,
+    head: [
+      [
+        '#',
+        'Başlık',
+        'Durum',
+        'Severity',
+        'AI Pri',
+        'Score',
+        'Proje',
+        'Atanan',
+        'Oluşturulma',
+        'Due Date',
+        'Tahmini',
+      ],
+    ],
+    body: tableData,
+    styles: {
+      font: 'Roboto',
+      fontSize: 7,
+      cellPadding: 1.5,
+    },
+    headStyles: {
+      fillColor: COLORS.dark,
+      textColor: [255, 255, 255],
+      fontStyle: 'bold',
+      fontSize: 7,
+    },
+    columnStyles: {
+      0: { cellWidth: 8 },
+      1: { cellWidth: 50 },
+      2: { cellWidth: 18 },
+      3: { cellWidth: 18 },
+      4: { cellWidth: 12 },
+      5: { cellWidth: 12 },
+      6: { cellWidth: 30 },
+      7: { cellWidth: 25 },
+      8: { cellWidth: 22 },
+      9: { cellWidth: 22 },
+      10: { cellWidth: 22 },
+    },
+    didParseCell: data => {
+      // Color estimated due date column
+      if (data.section === 'body' && data.column.index === 10) {
+        const cellText = data.cell.text.join('');
+        if (cellText !== '-') {
+          const task = tasks[data.row.index];
+          if (task?.estimatedDueDate) {
+            const estDate = new Date(task.estimatedDueDate);
+            const now = new Date();
+            if (estDate <= now) {
+              data.cell.styles.textColor = COLORS.danger;
+              data.cell.styles.fontStyle = 'bold';
+            } else if (estDate <= new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000)) {
+              data.cell.styles.textColor = COLORS.warning;
+              data.cell.styles.fontStyle = 'bold';
+            } else {
+              data.cell.styles.textColor = COLORS.primary;
+            }
+          }
+        }
+      }
+      // Color severity
+      if (data.section === 'body' && data.column.index === 3) {
+        const sev = data.cell.text.join('').toLowerCase();
+        if (sev === 'critical' || sev === 'urgent') {
+          data.cell.styles.textColor = COLORS.danger;
+          data.cell.styles.fontStyle = 'bold';
+        } else if (sev === 'major' || sev === 'important') {
+          data.cell.styles.textColor = COLORS.warning;
+        }
+      }
+    },
+    alternateRowStyles: {
+      fillColor: [245, 247, 250],
+    },
+  });
+
+  pdf.save(filename);
+}

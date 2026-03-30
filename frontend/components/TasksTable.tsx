@@ -31,6 +31,17 @@ const formatDate = (dateString: string) => {
   return `${day}-${month}-${year}`;
 };
 
+const getEstimatedDateColor = (estimatedDueDate: string): string => {
+  const estDate = new Date(estimatedDueDate);
+  const now = new Date();
+  const threeDaysFromNow = new Date(now);
+  threeDaysFromNow.setDate(threeDaysFromNow.getDate() + 3);
+
+  if (estDate <= now) return 'text-red-600';
+  if (estDate <= threeDaysFromNow) return 'text-orange-500';
+  return 'text-blue-600';
+};
+
 interface TasksTableProps {
   tasks: Task[];
   onSort: (field: keyof Task) => void;
@@ -95,6 +106,17 @@ function SortableRow({
       </td>
       <td className="border-b border-gray-200 px-6 py-4 text-sm whitespace-nowrap text-gray-500">
         {formatDate(task.dueDate || '')}
+      </td>
+      <td className="border-b border-gray-200 px-6 py-4 text-sm whitespace-nowrap">
+        {task.dueDate ? (
+          <span className="text-gray-400">-</span>
+        ) : task.estimatedDueDate ? (
+          <span className={`font-medium ${getEstimatedDateColor(task.estimatedDueDate)}`}>
+            {formatDate(task.estimatedDueDate)}
+          </span>
+        ) : (
+          <span className="text-gray-400">-</span>
+        )}
       </td>
       <td className="max-w-3xs truncate border-b border-gray-200 px-6 py-4 text-sm whitespace-nowrap text-gray-500">
         {task.openedBy || '-'}
@@ -176,6 +198,12 @@ export const TasksTable: React.FC<TasksTableProps> = ({
                 onClick={() => onSort('dueDate')}
               >
                 Due Date <ArrowUpDown size={14} className="inline" />
+              </th>
+              <th
+                className="cursor-pointer border-b border-gray-200 bg-gray-50 px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
+                onClick={() => onSort('estimatedDueDate')}
+              >
+                Est. Due Date <ArrowUpDown size={14} className="inline" />
               </th>
               <th className="border-b border-gray-200 bg-gray-50 px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
                 Opened By

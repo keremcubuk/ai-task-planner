@@ -10,6 +10,7 @@ import {
   getProjectsStats,
   Task,
 } from '@lib/api';
+import { exportTaskListToPdf } from '@lib/pdfExport';
 import { TasksTable } from '@components/TasksTable';
 import { TaskFilters } from '@components/TaskFilters';
 import { AiPriorityInfo } from '@components/AiPriorityInfo';
@@ -41,7 +42,7 @@ export default function Dashboard() {
   }, []);
 
   const [filters, setFilters] = useState({
-    status: [] as string[],
+    status: [] as string[], // Varsayılan olarak done/completed hariç tut
     assignedTo: [] as string[],
     severity: '',
     minAiScore: '',
@@ -189,7 +190,7 @@ export default function Dashboard() {
 
   const clearFilters = () => {
     setFilters({
-      status: [],
+      status: [], // Varsayılan olarak done/completed hariç tut (backend'de filtreleniyor)
       assignedTo: availableAssignees,
       severity: '',
       minAiScore: '',
@@ -330,6 +331,17 @@ export default function Dashboard() {
                     className="block w-full justify-start text-left"
                   >
                     Statistics
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      exportTaskListToPdf(tasks);
+                      setIsExportOpen(false);
+                    }}
+                    className="block w-full justify-start text-left"
+                  >
+                    PDF (Task List)
                   </Button>
                 </div>
               </div>

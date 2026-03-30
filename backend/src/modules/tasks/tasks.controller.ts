@@ -64,7 +64,7 @@ export class TasksController {
   }
 
   @Get()
-  findAll(
+  async findAll(
     @Query('sort') sort?: string,
     @Query('order') order?: 'asc' | 'desc',
     @Query('project') project?: string,
@@ -121,6 +121,11 @@ export class TasksController {
     if (status) {
       const statuses = status.split(',').map((s) => s.trim());
       where.status = { in: statuses };
+    } else {
+      // Varsayılan olarak done/completed task'ları filtrele
+      where.status = {
+        notIn: ['done', 'completed'],
+      };
     }
 
     if (assignedTo) {
@@ -174,7 +179,8 @@ export class TasksController {
     }
 
     const orderBy = sort ? { [sort]: order || 'asc' } : undefined;
-    return this.tasksService.findAll({ where, orderBy });
+    const tasks = await this.tasksService.findAll({ where, orderBy });
+    return this.tasksService.enrichWithEstimates(tasks);
   }
 
   @Get(':id')
