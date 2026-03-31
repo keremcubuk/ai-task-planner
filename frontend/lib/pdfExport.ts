@@ -34,6 +34,12 @@ const formatChangePercent = (change: number | null) => {
   return `${sign}${change}%`;
 };
 
+function registerRobotoFont(pdf: jsPDF) {
+  pdf.addFileToVFS('Roboto-Regular.ttf', RobotoBase64);
+  pdf.addFont('Roboto-Regular.ttf', 'Roboto', 'normal');
+  pdf.addFont('Roboto-Regular.ttf', 'Roboto', 'bold');
+}
+
 export async function exportTrendsToPdf(
   data: TrendAnalyticsResponse,
   options: PdfExportOptions = {}
@@ -50,10 +56,7 @@ export async function exportTrendsToPdf(
     format: 'a4',
   });
 
-  // Add Roboto font with Turkish character support
-  pdf.addFileToVFS('Roboto-Regular.ttf', RobotoBase64);
-  pdf.addFont('Roboto-Regular.ttf', 'Roboto', 'normal');
-  pdf.addFont('Roboto-Regular.ttf', 'Roboto', 'bold');
+  registerRobotoFont(pdf);
   pdf.setFont('Roboto');
 
   const pageWidth = pdf.internal.pageSize.getWidth();
@@ -319,9 +322,7 @@ export async function exportTaskAnalyticsToPdf(
     format: 'a4',
   });
 
-  pdf.addFileToVFS('Roboto-Regular.ttf', RobotoBase64);
-  pdf.addFont('Roboto-Regular.ttf', 'Roboto', 'normal');
-  pdf.addFont('Roboto-Regular.ttf', 'Roboto', 'bold');
+  registerRobotoFont(pdf);
   pdf.setFont('Roboto');
 
   const pageWidth = pdf.internal.pageSize.getWidth();
@@ -567,9 +568,7 @@ export async function exportTaskListToPdf(
     format: 'a4',
   });
 
-  // Register custom font for Turkish character support
-  pdf.addFileToVFS('Roboto-Regular.ttf', RobotoBase64);
-  pdf.addFont('Roboto-Regular.ttf', 'Roboto', 'normal');
+  registerRobotoFont(pdf);
   pdf.setFont('Roboto');
 
   const pageWidth = pdf.internal.pageSize.getWidth();
@@ -637,12 +636,14 @@ export async function exportTaskListToPdf(
       font: 'Roboto',
       fontSize: 7,
       cellPadding: 1.5,
+      fontStyle: 'normal',
     },
     headStyles: {
       fillColor: COLORS.dark,
       textColor: [255, 255, 255],
       fontStyle: 'bold',
       fontSize: 7,
+      font: 'Roboto',
     },
     columnStyles: {
       0: { cellWidth: 8 },
