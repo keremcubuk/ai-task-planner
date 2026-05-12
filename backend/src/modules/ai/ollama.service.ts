@@ -125,52 +125,109 @@ export class OllamaService {
       }
     > = new Map();
 
-    let analyzedCount = 0;
+    // Track which tasks need Ollama processing
+    const tasksNeedingOllama: typeof tasks = [];
 
+    // Phase 1: Fast pattern-based extraction for all tasks (synchronous)
     for (const task of tasks) {
-      // Use the priority-based extraction
-      const components = await this.extractComponentForTask(
-        {
-          componentName: task.componentName,
-          title: task.title,
-          description: task.description,
-        },
-        useOllama,
-        config,
-      );
+      const components = this.detector.extractComponentForTask({
+        componentName: task.componentName,
+        title: task.title,
+        description: task.description,
+      });
 
-      analyzedCount++;
+      if (components.length > 0) {
+        // Pattern matching found components, add to map
+        const isCompleted = task.status === 'done' || task.status === 'completed';
+        for (const component of components) {
+          const normalizedComponent = component.toLowerCase().trim();
+          if (!normalizedComponent) continue;
 
-      const isCompleted = task.status === 'done' || task.status === 'completed';
+          if (!componentMap.has(normalizedComponent)) {
+            componentMap.set(normalizedComponent, {
+              count: 0,
+              activeTasks: 0,
+              completedTasks: 0,
+              tasks: [],
+            });
+          }
 
-      for (const component of components) {
-        // Normalize to lowercase for grouping
-        const normalizedComponent = component.toLowerCase().trim();
-        if (!normalizedComponent) continue;
-
-        if (!componentMap.has(normalizedComponent)) {
-          componentMap.set(normalizedComponent, {
-            count: 0,
-            activeTasks: 0,
-            completedTasks: 0,
-            tasks: [],
+          const entry = componentMap.get(normalizedComponent)!;
+          entry.count++;
+          if (isCompleted) {
+            entry.completedTasks++;
+          } else {
+            entry.activeTasks++;
+          }
+          entry.tasks.push({
+            id: task.id,
+            title: task.title,
+            description: task.description || undefined,
+            status: task.status || 'unknown',
+            severity: task.severity || undefined,
           });
         }
+      } else if (useOllama) {
+        // No pattern match found, needs Ollama
+        tasksNeedingOllama.push(task);
+      }
+    }
 
-        const entry = componentMap.get(normalizedComponent)!;
-        entry.count++;
-        if (isCompleted) {
-          entry.completedTasks++;
-        } else {
-          entry.activeTasks++;
+    this.logger.log(
+      `Pattern matching: ${tasks.length - tasksNeedingOllama.length}/${tasks.length} tasks resolved, ${tasksNeedingOllama.length} need Ollama`,
+    );
+
+    // Phase 2: Batch Ollama processing for remaining tasks
+    if (tasksNeedingOllama.length > 0 && useOllama) {
+      const isAvailable = await this.client.isAvailable(config);
+      if (isAvailable) {
+        try {
+          const batchResults = await this.extractComponentsBatchWithLLM(
+            tasksNeedingOllama,
+            config,
+          );
+
+          // Apply Ollama results to component map
+          for (const result of batchResults) {
+            const task = tasksNeedingOllama.find((t) => t.id === result.taskId);
+            if (!task || result.components.length === 0) continue;
+
+            const isCompleted = task.status === 'done' || task.status === 'completed';
+
+            for (const component of result.components) {
+              const normalizedComponent = component.toLowerCase().trim();
+              if (!normalizedComponent) continue;
+
+              if (!componentMap.has(normalizedComponent)) {
+                componentMap.set(normalizedComponent, {
+                  count: 0,
+                  activeTasks: 0,
+                  completedTasks: 0,
+                  tasks: [],
+                });
+              }
+
+              const entry = componentMap.get(normalizedComponent)!;
+              entry.count++;
+              if (isCompleted) {
+                entry.completedTasks++;
+              } else {
+                entry.activeTasks++;
+              }
+              entry.tasks.push({
+                id: task.id,
+                title: task.title,
+                description: task.description || undefined,
+                status: task.status || 'unknown',
+                severity: task.severity || undefined,
+              });
+            }
+          }
+        } catch (error) {
+          this.logger.warn(`Batch Ollama processing failed: ${error}`);
         }
-        entry.tasks.push({
-          id: task.id,
-          title: task.title,
-          description: task.description || undefined,
-          status: task.status || 'unknown',
-          severity: task.severity || undefined,
-        });
+      } else {
+        this.logger.warn('Ollama not available for batch processing');
       }
     }
 
@@ -191,13 +248,107 @@ export class OllamaService {
       });
 
     this.logger.log(
-      `Analysis complete: ${components.length} unique components found, ${analyzedCount} tasks analyzed`,
+      `Analysis complete: ${components.length} unique components found, ${tasks.length} tasks analyzed`,
     );
 
     return {
       components,
       totalTasks: tasks.length,
-      analyzedTasks: analyzedCount,
+      analyzedTasks: tasks.length,
     };
+  }
+
+  /**
+   * Batch extract components from multiple tasks using chunked LLM calls
+   * Process in chunks of 50 to avoid timeouts
+   */
+  private async extractComponentsBatchWithLLM(
+    tasks: { id: number; title: string; description?: string | null }[],
+    config?: Partial<OllamaConfig>,
+  ): Promise<{ taskId: number; components: string[] }[]> {
+    if (tasks.length === 0) return [];
+
+    const CHUNK_SIZE = 10;
+    const allResults: { taskId: number; components: string[] }[] = [];
+
+    // Process in chunks to avoid timeout
+    for (let i = 0; i < tasks.length; i += CHUNK_SIZE) {
+      const chunk = tasks.slice(i, i + CHUNK_SIZE);
+      const chunkResults = await this.processChunkWithLLM(chunk, i, config);
+      allResults.push(...chunkResults);
+      
+      this.logger.log(
+        `Processed chunk ${Math.floor(i / CHUNK_SIZE) + 1}/${Math.ceil(tasks.length / CHUNK_SIZE)} (${chunk.length} tasks)`,
+      );
+    }
+
+    this.logger.log(
+      `Batch LLM processed ${tasks.length} tasks in ${Math.ceil(tasks.length / CHUNK_SIZE)} chunks`,
+    );
+    return allResults;
+  }
+
+  private async processChunkWithLLM(
+    tasks: { id: number; title: string; description?: string | null }[],
+    offset: number,
+    config?: Partial<OllamaConfig>,
+  ): Promise<{ taskId: number; components: string[] }[]> {
+    const taskTexts = tasks
+      .map(
+        (t, i) =>
+          `[${offset + i}] ID:${t.id} | ${t.title}${t.description ? ' | ' + t.description.slice(0, 100) : ''}`,
+      )
+      .join('\n');
+
+    const prompt = `Analyze the following ${tasks.length} task titles and extract UI component names for each.
+UI components are: button, modal, dialog, dropdown, table, tooltip, label, input, card, etc.
+
+Tasks:
+${taskTexts}
+
+Return ONLY a JSON object where keys are task indices [${offset}], [${offset + 1}], etc. and values are arrays of component names found.
+Example: {"[${offset}]": ["button", "modal"], "[${offset + 1}]": ["table"], "[${offset + 2}]": []}
+
+JSON response:`;
+
+    try {
+      const response = await this.client.generateCompletion(prompt, {
+        ...config,
+        numPredict: 1000,
+        temperature: 0.1,
+        timeoutMs: 120000, // 120 seconds per chunk
+      });
+
+      const cleaned = response
+        .trim()
+        .replace(/```json\n?/g, '')
+        .replace(/```\n?/g, '');
+
+      try {
+        const parsed = JSON.parse(cleaned);
+        const results: { taskId: number; components: string[] }[] = [];
+
+        for (let i = 0; i < tasks.length; i++) {
+          const key = `[${offset + i}]`;
+          const components = parsed[key];
+          if (Array.isArray(components)) {
+            const prioritized = this.detector.prioritizeComponents(
+              components.filter((c) => typeof c === 'string'),
+            );
+            results.push({ taskId: tasks[i].id, components: prioritized });
+          } else {
+            results.push({ taskId: tasks[i].id, components: [] });
+          }
+        }
+
+        return results;
+      } catch {
+        this.logger.warn(`Failed to parse chunk LLM response: ${cleaned}`);
+        return tasks.map((t) => ({ taskId: t.id, components: [] }));
+      }
+    } catch (error) {
+      this.logger.error(`Chunk LLM extraction failed: ${error}`);
+      return tasks.map((t) => ({ taskId: t.id, components: [] }));
+    }
   }
 }

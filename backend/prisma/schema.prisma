@@ -60,3 +60,18 @@ model ProjectReviewScore {
 
   @@unique([projectName, reportDate])
 }
+
+model CompIssueSummary {
+  id             Int      @id @default(autoincrement())
+  componentName  String
+  scope          String   // 'open' | 'all'
+  summary        String   // Markdown özet metin
+  focusAreas     String   // JSON: string[] (odaklanılacak konular)
+  taskCount      Int
+  inputHash      String   // sha256(sorted task ids + descriptions)
+  model          String   // Ollama model adı
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@unique([componentName, scope])
+}

@@ -282,6 +282,54 @@ export const getComponentAnalysis = async (
   return response.data;
 };
 
+// Component Issue Summary (AI Özet)
+export type CompIssueScope = 'open' | 'all';
+
+export interface CompIssueSummary {
+  componentName: string;
+  scope: CompIssueScope;
+  summary: string;
+  focusAreas: string[];
+  taskCount: number;
+  inputHash: string;
+  model: string;
+  createdAt: string;
+  updatedAt: string;
+  isStale?: boolean;
+  currentTaskCount?: number;
+}
+
+export const getComponentIssueSummary = async (
+  componentName: string,
+  scope: CompIssueScope
+): Promise<CompIssueSummary | null> => {
+  try {
+    const response = await api.get('/ai/component-issue-summary', {
+      params: { componentName, scope },
+    });
+    return response.data;
+  } catch (err: unknown) {
+    if (axios.isAxiosError(err) && err.response?.status === 404) {
+      return null;
+    }
+    throw err;
+  }
+};
+
+export const generateComponentIssueSummary = async (
+  componentName: string,
+  scope: CompIssueScope,
+  options?: { force?: boolean; model?: string }
+): Promise<CompIssueSummary> => {
+  const response = await api.post('/ai/component-issue-summary/generate', {
+    componentName,
+    scope,
+    force: options?.force ?? false,
+    model: options?.model,
+  });
+  return response.data;
+};
+
 // Trend Analytics Types
 export interface PeriodData {
   period: string;

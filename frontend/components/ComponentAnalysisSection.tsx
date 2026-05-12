@@ -1,7 +1,8 @@
-import React from 'react';
-import { ChevronDown, ChevronUp, Cpu, Layers } from 'lucide-react';
+import React, { useState } from 'react';
+import { ChevronDown, ChevronUp, Cpu, Layers, Sparkles } from 'lucide-react';
 import { ComponentAnalysisResult, OllamaStatus } from '../lib/api';
 import { Badge } from './ui';
+import { ComponentIssueSummaryModal } from './ComponentIssueSummaryModal';
 
 interface ComponentAnalysisSectionProps {
   ollamaStatus: OllamaStatus | null;
@@ -26,6 +27,9 @@ export function ComponentAnalysisSection({
   toggleComponentExpand,
   onTaskClick,
 }: ComponentAnalysisSectionProps) {
+  const [summaryComponent, setSummaryComponent] = useState<string | null>(null);
+  const ollamaAvailable = ollamaStatus?.available === true;
+
   return (
     <div className="rounded-lg bg-white p-6 shadow">
       <div className="mb-4 flex items-center justify-between">
@@ -90,11 +94,11 @@ export function ComponentAnalysisSection({
                     key={component.name}
                     className={`rounded-lg border ${isCritical ? 'border-red-300 bg-red-50' : ''}`}
                   >
-                    <button
-                      onClick={() => toggleComponentExpand(component.name)}
-                      className="flex w-full items-center justify-between px-4 py-3 hover:rounded-lg hover:bg-gray-50"
-                    >
-                      <div className="flex flex-wrap items-center gap-3">
+                    <div className="flex w-full items-center justify-between px-4 py-3 hover:rounded-lg hover:bg-gray-50">
+                      <button
+                        onClick={() => toggleComponentExpand(component.name)}
+                        className="flex flex-1 flex-wrap items-center gap-3 text-left"
+                      >
                         <span className="font-medium text-gray-900">{component.name}</span>
 
                         {/* Active Tasks Badge */}
@@ -122,13 +126,32 @@ export function ComponentAnalysisSection({
                             ⚠️ KRİTİK
                           </Badge>
                         )}
+                      </button>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={e => {
+                            e.stopPropagation();
+                            setSummaryComponent(component.name);
+                          }}
+                          title="AI ile sorun özeti üret"
+                          className="inline-flex items-center gap-1 rounded-md border border-indigo-200 bg-indigo-50 px-2.5 py-1 text-xs font-medium text-indigo-700 hover:bg-indigo-100"
+                        >
+                          <Sparkles size={14} /> AI Özet
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => toggleComponentExpand(component.name)}
+                          className="p-1"
+                        >
+                          {expandedComponents.has(component.name) ? (
+                            <ChevronUp size={20} className="text-gray-400" />
+                          ) : (
+                            <ChevronDown size={20} className="text-gray-400" />
+                          )}
+                        </button>
                       </div>
-                      {expandedComponents.has(component.name) ? (
-                        <ChevronUp size={20} className="text-gray-400" />
-                      ) : (
-                        <ChevronDown size={20} className="text-gray-400" />
-                      )}
-                    </button>
+                    </div>
 
                     {expandedComponents.has(component.name) && (
                       <div className="border-t bg-gray-50 px-4 pb-3">
@@ -278,6 +301,14 @@ export function ComponentAnalysisSection({
           </span>
         </div>
       )}
+
+      <ComponentIssueSummaryModal
+        key={summaryComponent || 'empty'}
+        isOpen={summaryComponent !== null}
+        componentName={summaryComponent}
+        onClose={() => setSummaryComponent(null)}
+        ollamaAvailable={ollamaAvailable}
+      />
     </div>
   );
 }

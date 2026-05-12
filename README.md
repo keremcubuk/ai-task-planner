@@ -12,11 +12,11 @@ A local-first, AI-assisted task planner application built with **NestJS** and **
 
 ### 📊 Data Intelligence
 - **Import**: Support for bulk importing tasks via CSV and XLSX.
-- **Export**: 
-  - **Raw**: Export data in original import format for backup.
-  - **Stats**: Export summary statistics and detailed reports.
-- **AI Prioritization**: Intelligent scoring engine that re-ranks tasks based on severity, deadlines, and manual priority.
-- **Analytics**: Visual dashboard showing task completion rates, severity distribution, and team performance.
+- **Export**: Single dropdown with "Raw" (backup) and "Stats" (reports) options.
+- **AI Prioritization**: Intelligent scoring engine with normalized task age (capped at 30 days).
+- **Analytics**: Visual dashboard with projects, developers, issue openers, components, and trends.
+- **Component Analysis**: AI-powered UI component detection and issue tracking from task descriptions.
+- **AI Issue Summary**: Turkish language summaries of component issues using local LLM (Ollama).
 
 ### 🎨 User Experience
 - **Modern UI**: Clean interface built with Tailwind CSS and Lucide Icons.
@@ -26,6 +26,7 @@ A local-first, AI-assisted task planner application built with **NestJS** and **
 ## Prerequisites
 - Node.js (v18+)
 - npm
+- **Optional**: [Ollama](https://ollama.com) for AI features (component analysis, AI summaries)
 
 ## Installation & Running
 
@@ -55,9 +56,19 @@ This script will automatically:
 
 ## Architecture
 
-- **Backend**: NestJS, Prisma ORM, SQLite.
-- **Frontend**: Next.js (Pages Router), Tailwind CSS, Axios, dnd-kit, Recharts.
+- **Backend**: NestJS, Prisma ORM, SQLite, Ollama client service.
+- **Frontend**: Next.js 16 (App Router), React 19, Tailwind CSS v4, React Query, Zustand, Zod.
 - **Storage**: Local SQLite database (`backend/db/planner.sqlite`).
+- **AI**: Optional Ollama integration for local LLM processing.
+
+## Ollama Configuration (Optional)
+
+To enable AI features:
+
+1. Install Ollama: https://ollama.com
+2. Pull a model (e.g., `ollama pull llama3.2`)
+3. Ensure Ollama is running on `localhost:11434`
+4. In Analytics → Components tab, click "Use AI" before analyzing
 
 ## Development
 

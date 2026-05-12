@@ -1,60 +1,66 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# AI Task Planner - Backend
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+NestJS backend for the AI Task Planner application with SQLite database and optional Ollama AI integration.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Tech Stack
 
-## Description
+- **Framework**: NestJS
+- **Database**: SQLite with Prisma ORM
+- **AI Integration**: Ollama client service for local LLM processing
+- **File Processing**: CSV/XLSX import/export support
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## Project Structure
 
-## Project setup
+```
+src/
+├── modules/
+│   ├── tasks/           # Task CRUD operations
+│   ├── import/          # CSV/XLSX import with duplicate detection
+│   ├── export/          # Data export functionality
+│   ├── ai/              # AI services
+│   │   ├── ollama-client.service.ts      # Ollama HTTP client
+│   │   ├── component-issue-summary.service.ts  # AI summary generation
+│   │   └── ai.service.ts                 # Priority scoring
+│   └── analytics/       # Analytics aggregation
+├── shared/
+│   └── prisma/          # Prisma service and schema
+└── main.ts
 
-```bash
-$ npm install
+prisma/
+├── schema.prisma        # Database schema
+└── migrations/
+
+db/
+└── planner.sqlite       # SQLite database file
 ```
 
-## Compile and run the project
+## Setup
 
 ```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+npm install
+npx prisma generate      # Generate Prisma client
+npx prisma migrate dev   # Run database migrations
 ```
 
-## Run tests
+## Development
 
 ```bash
-# unit tests
-$ npm run test
+npm run start:dev      # Watch mode on port 3000
+```
 
-# e2e tests
-$ npm run test:e2e
+## Production
 
-# test coverage
-$ npm run test:cov
+```bash
+npm run build
+npm run start:prod
+```
+
+## Testing
+
+```bash
+npm run test           # Unit tests
+npm run test:e2e       # E2E tests
+npm run test:cov       # Coverage report
 ```
 
 ## Deployment
@@ -70,29 +76,51 @@ $ mau deploy
 
 With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
 
+## Key Features
+
+### Task Management
+- Full CRUD operations with soft delete
+- Manual priority (0-5) and AI-calculated priority scores
+- Drag-and-drop position management
+- Duplicate detection via content hashing
+
+### Import/Export
+- CSV and XLSX import with column mapping
+- Duplicate detection during import
+- Export in raw format (backup) or stats format (reports)
+
+### AI Services
+- **Ollama Client**: HTTP client with AbortController timeout handling
+- **Component Issue Summary**: Turkish language AI summaries using local LLM
+- **AI Prioritization**: Rule-based scoring with normalized task age
+
+### Analytics
+- Project-level aggregations
+- Developer performance metrics
+- Component-based issue tracking
+- Bucket category analysis (solvedInComponent, solvedInProject, etc.)
+
+## Environment Variables
+
+```env
+DATABASE_URL="file:./db/planner.sqlite"
+```
+
+## Ollama Configuration
+
+AI features require Ollama running locally:
+
+1. Install Ollama: https://ollama.com
+2. Pull model: `ollama pull llama3.2`
+3. Start Ollama service on default port 11434
+
+The `OllamaClientService` supports:
+- Configurable timeout (default 30s, 120s for summaries)
+- JSON mode for structured output
+- Automatic fallback to pattern matching when Ollama unavailable
+
 ## Resources
 
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+- [NestJS Documentation](https://docs.nestjs.com)
+- [Prisma Documentation](https://www.prisma.io/docs)
+- [Ollama API Documentation](https://github.com/ollama/ollama/blob/main/docs/api.md)

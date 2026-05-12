@@ -149,7 +149,7 @@ export default function Analytics() {
   const [componentLoading, setComponentLoading] = useState(false);
   const [ollamaStatus, setOllamaStatus] = useState<OllamaStatus | null>(null);
   const [expandedComponents, setExpandedComponents] = useState<Set<string>>(new Set());
-  const [useOllama, setUseOllama] = useState(true);
+  const [useOllama, setUseOllama] = useState(false);
   const [selectedTaskId, setSelectedTaskId] = useState<number | null>(null);
 
   const loadAnalytics = async () => {
@@ -167,11 +167,9 @@ export default function Analytics() {
     try {
       const status = await getOllamaStatus();
       setOllamaStatus(status);
-      setUseOllama(status.available);
     } catch (error) {
       console.error('Failed to check Ollama status', error);
       setOllamaStatus({ available: false, message: 'Failed to check Ollama status' });
-      setUseOllama(false);
     }
   };
 

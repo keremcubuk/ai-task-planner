@@ -5,6 +5,7 @@ import { LocalLlmService } from './local-llm.service';
 import { OllamaService } from './ollama.service';
 import { OllamaClientService } from './ollama-client.service';
 import { ComponentDetectorService } from './component-detector.service';
+import { CompIssueSummaryService } from './component-issue-summary.service';
 
 @Module({
   controllers: [AiController],
@@ -14,6 +15,7 @@ import { ComponentDetectorService } from './component-detector.service';
     OllamaService,
     OllamaClientService,
     ComponentDetectorService,
+    CompIssueSummaryService,
   ],
   exports: [OllamaService],
 })

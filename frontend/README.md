@@ -1,40 +1,78 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/pages/api-reference/create-next-app).
+# AI Task Planner - Frontend
 
-## Getting Started
+Next.js 16 frontend for the AI Task Planner application.
 
-First, run the development server:
+## Tech Stack
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- **Framework**: Next.js 16.0.7 with App Router
+- **React**: 19.2.0 with TypeScript strict mode
+- **Styling**: Tailwind CSS v4
+- **State Management**:
+  - React Query (@tanstack/react-query v5) for server state
+  - Zustand for client state
+- **Validation**: Zod
+- **Notifications**: Sonner toast
+- **Icons**: Lucide React
+- **Charts**: Recharts
+
+## Project Structure
+
+```
+app/                    # Next.js App Router
+├── page.tsx           # Dashboard (Server Component)
+├── analytics/         # Analytics page
+├── calendar/          # Calendar view
+├── projects/[name]/   # Project detail pages
+├── import/            # Task import page
+├── api/hello/         # API routes
+├── layout.tsx         # Root layout with providers
+├── loading.tsx        # Global loading state
+├── error.tsx          # Global error boundary
+└── not-found.tsx      # 404 page
+
+components/
+├── DashboardClient.tsx       # Dashboard interactive logic
+├── AnalyticsClient.tsx       # Analytics interactive logic
+├── ComponentAnalysisSection.tsx  # Component analysis UI
+├── ComponentIssueSummaryModal.tsx # AI summary modal
+└── ui/                       # Reusable UI components
+
+hooks/
+├── useTasks.ts
+├── useProjects.ts
+├── useAnalytics.ts
+└── useReviewScores.ts
+
+lib/
+├── api.ts             # API client functions
+└── utils.ts           # Utility functions
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Architecture Patterns
 
-You can start editing the page by modifying `pages/index.tsx`. The page auto-updates as you edit the file.
+- **Server Components**: Page routes are Server Components by default for better performance
+- **Client Components**: Interactive components use `'use client'` directive
+- **Path Aliases**: `@/*` (root), `@lib/*`, `@components/*`
 
-[API routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.ts`.
+## Development
 
-The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes) instead of React pages.
+```bash
+npm run dev      # Start development server on port 3001
+npm run build    # Production build
+npm run lint     # Run ESLint
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/pages/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Testing
 
-## Learn More
+```bash
+npm run test:run # Vitest unit tests
+npm run test:e2e # Playwright E2E tests
+```
 
-To learn more about Next.js, take a look at the following resources:
+## Key Features
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn-pages-router) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/pages/building-your-application/deploying) for more details.
+- **Dashboard**: Task management with drag-and-drop reordering
+- **Analytics**: Multi-tab analytics (Projects, Developers, Openers, Components, Trends, Tasks)
+- **Component Analysis**: AI-powered UI component detection (optional Ollama)
+- **AI Issue Summary**: Turkish language summaries of component issues
+- **Task Import**: CSV/XLSX bulk import with duplicate detection

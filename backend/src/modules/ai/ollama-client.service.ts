@@ -4,6 +4,10 @@ import * as http from 'http';
 export interface OllamaConfig {
   baseUrl: string;
   model: string;
+  numPredict?: number;
+  temperature?: number;
+  timeoutMs?: number;
+  format?: 'json';
 }
 
 @Injectable()
@@ -51,18 +55,33 @@ export class OllamaClientService {
   ): Promise<string> {
     const baseUrl = config?.baseUrl || this.defaultConfig.baseUrl;
     const model = config?.model || this.defaultConfig.model;
+    const numPredict = config?.numPredict ?? 100;
+    const temperature = config?.temperature ?? 0;
+    const timeoutMs = config?.timeoutMs ?? 30000;
+    const format = config?.format;
 
     return new Promise((resolve, reject) => {
       const url = new URL(baseUrl);
-      const postData = JSON.stringify({
+      const requestBody: Record<string, unknown> = {
         model,
         prompt,
         stream: false,
         options: {
-          temperature: 0,
-          num_predict: 100,
+          temperature,
+          num_predict: numPredict,
         },
-      });
+      };
+      if (format === 'json') {
+        requestBody.format = 'json';
+      }
+      const postData = JSON.stringify(requestBody);
+
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => {
+        controller.abort();
+        this.logger.error(`Ollama request timeout after ${timeoutMs}ms`);
+        reject(new Error(`Request timeout after ${timeoutMs}ms`));
+      }, timeoutMs);
 
       const options = {
         hostname: url.hostname,
@@ -73,7 +92,7 @@ export class OllamaClientService {
           'Content-Type': 'application/json',
           'Content-Length': Buffer.byteLength(postData),
         },
-        timeout: 30000,
+        signal: controller.signal,
       };
 
       const req = http.request(options, (res) => {
@@ -84,6 +103,7 @@ export class OllamaClientService {
         });
 
         res.on('end', () => {
+          clearTimeout(timeoutId);
           try {
             const parsed = JSON.parse(data);
             if (parsed.response) {
@@ -99,15 +119,13 @@ export class OllamaClientService {
         });
       });
 
-      req.on('error', (error) => {
+      req.on('error', (error: Error) => {
+        clearTimeout(timeoutId);
+        if (error.name === 'AbortError') {
+          return;
+        }
         this.logger.error(`Ollama request failed: ${error.message}`);
         reject(error);
-      });
-
-      req.on('timeout', () => {
-        req.destroy();
-        this.logger.error('Ollama request timeout');
-        reject(new Error('Request timeout'));
       });
 
       req.write(postData);
