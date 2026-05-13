@@ -3,6 +3,7 @@ import { ConfluenceService } from './confluence.service';
 import type {
   ConfluenceCrawlRequest,
   ConfluenceConfirmRequest,
+  ConfluencePushRequest,
 } from './confluence.service';
 
 @Controller('confluence')
@@ -48,5 +49,21 @@ export class ConfluenceController {
     }
 
     return this.confluenceService.extractCookiesWithLogin(body.baseUrl);
+  }
+
+  @Post('push')
+  async push(@Body() body: ConfluencePushRequest) {
+    if (!body.url) {
+      throw new BadRequestException('URL is required');
+    }
+
+    // URL validasyonu
+    try {
+      new URL(body.url);
+    } catch {
+      throw new BadRequestException('Invalid URL format');
+    }
+
+    return this.confluenceService.pushTasksToConfluence(body.url, body.cookies);
   }
 }

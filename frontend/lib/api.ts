@@ -239,6 +239,14 @@ export const extractConfluenceCookies = async (
   return response.data;
 };
 
+export const pushToConfluence = async (
+  url: string,
+  cookies?: string
+): Promise<{ success: boolean; message: string; taskCount: number; error?: string }> => {
+  const response = await api.post('/confluence/push', { url, cookies });
+  return response.data;
+};
+
 // AI Component Analysis API
 export interface ComponentInfo {
   name: string;

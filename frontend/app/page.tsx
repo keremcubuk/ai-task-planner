@@ -8,6 +8,8 @@ import {
   reorderTasks,
   resetDb,
   getProjectsStats,
+  pushToConfluence,
+  extractConfluenceCookies,
   Task,
 } from '@lib/api';
 import { exportTaskListToPdf } from '@lib/pdfExport';
@@ -15,7 +17,7 @@ import { TasksTable } from '@components/TasksTable';
 import { TaskFilters } from '@components/TaskFilters';
 import { AiPriorityInfo } from '@components/AiPriorityInfo';
 import Link from 'next/link';
-import { RefreshCw, Download, Upload, Trash2, Info } from 'lucide-react';
+import { RefreshCw, Download, Upload, Trash2, Info, Globe } from 'lucide-react';
 import { TaskForm } from '@components/TaskForm';
 import { TaskDetail } from '@components/TaskDetail';
 import { Button, Modal, PageHeader } from '@components/ui';
@@ -26,8 +28,14 @@ export default function Dashboard() {
   const [search, setSearch] = useState('');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
+  const [isConfluencePushOpen, setIsConfluencePushOpen] = useState(false);
   const [selectedTaskId, setSelectedTaskId] = useState<number | null>(null);
   const [isExportOpen, setIsExportOpen] = useState(false);
+  const [confluenceUrl, setConfluenceUrl] = useState('');
+  const [confluenceCookies, setConfluenceCookies] = useState('');
+  const [isPushing, setIsPushing] = useState(false);
+  const [isExtractingCookies, setIsExtractingCookies] = useState(false);
+  const [pushMessage, setPushMessage] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [availableProjects, setAvailableProjects] = useState<string[]>([]);
   const [availableAssignees, setAvailableAssignees] = useState<string[]>([]);
@@ -273,6 +281,61 @@ export default function Dashboard() {
     }
   };
 
+  const handleConfluencePush = async () => {
+    if (!confluenceUrl.trim()) {
+      alert('Please enter a Confluence URL');
+      return;
+    }
+
+    setIsPushing(true);
+    setPushMessage('');
+
+    try {
+      const result = await pushToConfluence(confluenceUrl, confluenceCookies || undefined);
+
+      if (result.success) {
+        setPushMessage(result.message);
+        setTimeout(() => {
+          setIsConfluencePushOpen(false);
+          setPushMessage('');
+          setConfluenceUrl('');
+        }, 2000);
+      } else {
+        setPushMessage(result.error || 'Failed to push to Confluence');
+      }
+    } catch (error) {
+      setPushMessage('Failed to push to Confluence. Please check your credentials.');
+      console.error(error);
+    } finally {
+      setIsPushing(false);
+    }
+  };
+
+  const handleAutoExtractCookies = async () => {
+    if (!confluenceUrl.trim()) {
+      alert('Please enter a Confluence URL first');
+      return;
+    }
+
+    try {
+      const baseUrl = new URL(confluenceUrl).origin;
+      setIsExtractingCookies(true);
+      setPushMessage('Opening browser for login... Please login and wait.');
+
+      const result = await extractConfluenceCookies(baseUrl);
+      if (result.success) {
+        setConfluenceCookies(result.cookies);
+        setPushMessage('✅ Cookies extracted successfully!');
+      } else {
+        setPushMessage(result.error || 'Failed to extract cookies');
+      }
+    } catch {
+      setPushMessage('Invalid URL or extraction failed');
+    } finally {
+      setIsExtractingCookies(false);
+    }
+  };
+
   return (
     <>
       <PageHeader title="Task Management" description="Manage, prioritize, and track all tasks">
@@ -342,6 +405,17 @@ export default function Dashboard() {
                     className="block w-full justify-start text-left"
                   >
                     PDF (Task List)
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setIsExportOpen(false);
+                      setIsConfluencePushOpen(true);
+                    }}
+                    className="block w-full justify-start text-left"
+                  >
+                    Confluence Push
                   </Button>
                 </div>
               </div>
@@ -431,6 +505,92 @@ export default function Dashboard() {
         title="How AI Prioritization Works"
       >
         <AiPriorityInfo />
+      </Modal>
+
+      <Modal
+        isOpen={isConfluencePushOpen}
+        onClose={() => setIsConfluencePushOpen(false)}
+        title="Push to Confluence"
+      >
+        <div className="space-y-4">
+          <div>
+            <label className="mb-2 block text-sm font-medium text-gray-700">
+              Confluence Page URL *
+            </label>
+            <input
+              type="url"
+              value={confluenceUrl}
+              onChange={e => setConfluenceUrl(e.target.value)}
+              placeholder="https://confluence.example.com/display/SPACE/PageTitle"
+              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+            />
+          </div>
+
+          <div>
+            <div className="mb-2 flex items-center justify-between">
+              <label className="block text-sm font-medium text-gray-700">
+                Authentication Cookies (Optional)
+              </label>
+              <button
+                onClick={handleAutoExtractCookies}
+                disabled={isExtractingCookies || !confluenceUrl.trim()}
+                className="flex items-center gap-1 rounded bg-green-600 px-3 py-1 text-xs text-white hover:bg-green-700 disabled:opacity-50"
+              >
+                {isExtractingCookies ? (
+                  <>
+                    <RefreshCw className="h-3 w-3 animate-spin" /> Extracting...
+                  </>
+                ) : (
+                  <>
+                    <Globe className="h-3 w-3" /> Auto Extract
+                  </>
+                )}
+              </button>
+            </div>
+            <textarea
+              value={confluenceCookies}
+              onChange={e => setConfluenceCookies(e.target.value)}
+              placeholder='[{"name": "cloud.session.token", "value": "your_token_here", "domain": ".atlassian.net"}]'
+              rows={4}
+              className="w-full rounded-md border border-gray-300 px-3 py-2 font-mono text-xs"
+            />
+            <p className="mt-1 text-xs text-gray-500">
+              Leave empty to use saved cookies from database.
+            </p>
+          </div>
+
+          {pushMessage && (
+            <div
+              className={`rounded p-3 text-sm ${
+                pushMessage.includes('Successfully')
+                  ? 'bg-green-50 text-green-800'
+                  : 'bg-red-50 text-red-800'
+              }`}
+            >
+              {pushMessage}
+            </div>
+          )}
+
+          <div className="flex gap-2">
+            <Button
+              variant="secondary"
+              onClick={() => setIsConfluencePushOpen(false)}
+              disabled={isPushing}
+              className="flex-1"
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="primary"
+              onClick={handleConfluencePush}
+              disabled={isPushing || !confluenceUrl.trim()}
+              className="flex-1"
+              leftIcon={<Globe size={18} />}
+            >
+              {isPushing ? 'Pushing...' : 'Push'}
+            </Button>
+          </div>
+        </div>
       </Modal>
     </>
   );

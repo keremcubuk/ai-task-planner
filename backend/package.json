@@ -27,12 +27,13 @@
     "@nestjs/platform-express": "^11.0.1",
     "@prisma/client": "^5.22.0",
     "@types/multer": "^2.0.0",
+    "axios": "^1.16.0",
     "csv-parser": "^3.2.0",
     "multer": "^2.0.2",
+    "puppeteer": "^23.6.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
-    "xlsx": "^0.18.5",
-    "puppeteer": "^23.6.0"
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",
